@@ -5,6 +5,7 @@ events that land in the run's JSONL log. The server binds localhost by
 default and stores runs exactly where the CLI does.
 """
 
+import os
 import shutil
 import tempfile
 import threading
@@ -16,8 +17,16 @@ from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
+from rxsweep.audit import AuditLog
+from rxsweep.chat import chat_reply
 from rxsweep.pipeline import SweepResult, run_sweep
+
+
+class ChatRequest(BaseModel):
+    question: str
+    history: list[dict] = []
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -129,6 +138,22 @@ def create_app(runs_root: Path = Path("runs")) -> FastAPI:
                 raise HTTPException(status_code=409, detail="sweep not finished")
             path = state.result.report_path
         return FileResponse(path, media_type="text/html")
+
+    @app.post("/api/sweeps/{sweep_id}/chat")
+    async def sweep_chat(sweep_id: str, req: ChatRequest) -> dict:
+        state = _get(sweep_id)
+        with state.lock:
+            if state.status != "done" or state.result is None:
+                raise HTTPException(status_code=409, detail="sweep not finished")
+            result = state.result
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            raise HTTPException(
+                status_code=503,
+                detail="Chat needs an Anthropic API key. Set ANTHROPIC_API_KEY in .env and restart.",
+            )
+        audit = AuditLog(result.run_dir)
+        reply = chat_reply(result.findings, req.history, req.question, audit)
+        return {"reply": reply}
 
     app.state.runs = runs  # exposed for the chat endpoint and tests
 
