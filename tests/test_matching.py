@@ -58,6 +58,17 @@ def test_token_overlap_goes_to_candidates():
     assert res.candidates and not res.hits
 
 
+def test_common_chemistry_tokens_do_not_make_candidates():
+    # "chloride"/"injection" appearing in recall text must not flag unrelated items
+    recall = {
+        "product_description": "Potassium Chloride injection, 10 mEq vials",
+        "classification": "Class II",
+        "openfda": {},
+    }
+    res = match_items([_item("Sodium Chloride 0.9%", None)], [recall], [], {})
+    assert not res.hits and not res.candidates
+
+
 def test_no_relation_goes_unmatched():
     res = match_items([_item("Metformin HCl")], [RECALL], [SHORTAGE], {})
     assert not res.hits and not res.candidates and len(res.unmatched) == 1
@@ -66,6 +77,38 @@ def test_no_relation_goes_unmatched():
 def test_normalize_name_strips_salt():
     assert normalize_name("Metformin HCl") == "metformin"
     assert normalize_name("Cefazolin Sodium") == "cefazolin"
+
+
+def test_normalize_name_keeps_leading_salt_word_and_drops_numbers():
+    # "Sodium" is the drug here, not a salt suffix
+    assert normalize_name("Sodium Chloride 0.9%") == "sodium chloride"
+
+
+def test_aggregate_shortages_groups_package_records():
+    from rxsweep.matching import aggregate_shortages
+
+    records = [
+        {"generic_name": "Amoxicillin", "status": "Current", "package_ndc": "0093-4155-73"},
+        {"generic_name": "Amoxicillin", "status": "Current", "package_ndc": "0093-4155-01"},
+        {"generic_name": "Amoxicillin", "status": "Resolved", "package_ndc": "0093-4160-73"},
+        {"generic_name": "Cefazolin Sodium", "status": "Current", "package_ndc": "0409-4058-01"},
+    ]
+    groups = aggregate_shortages(records)
+    assert len(groups) == 2
+    amox = next(g for g in groups if g["generic_name"] == "Amoxicillin")
+    assert amox["status"] == "Current"  # any Current wins
+    assert amox["package_count"] == 3
+
+
+def test_shortage_group_yields_single_hit():
+    from rxsweep.matching import aggregate_shortages
+
+    records = [
+        {"generic_name": "Amoxicillin", "status": "Current", "package_ndc": "0093-4155-73"},
+        {"generic_name": "Amoxicillin", "status": "Current", "package_ndc": "0093-4155-01"},
+    ]
+    res = match_items([_item("Amoxicillin 500mg Cap")], [], aggregate_shortages(records), {})
+    assert len(res.hits) == 1
 
 
 def test_ambiguous_ndc_downgraded_to_candidate():

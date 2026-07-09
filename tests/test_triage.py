@@ -100,6 +100,22 @@ def test_build_findings_orders_by_severity_and_renumbers():
     assert findings[1].label == "ai_matched"
 
 
+def test_build_findings_groups_multiple_records_per_item_and_source():
+    hits = [
+        Hit(item=_item("DrugA"), source="recall", label="exact_ndc",
+            record={"classification": "Class II", "recall_number": "D-1"}),
+        Hit(item=_item("DrugA"), source="recall", label="exact_ndc",
+            record={"classification": "Class II", "recall_number": "D-2"}),
+        Hit(item=_item("DrugA"), source="recall", label="exact_ndc",
+            record={"classification": "Class I", "recall_number": "D-3"}),
+    ]
+    findings = build_findings(MatchResults(hits=hits, candidates=[], unmatched=[]), [])
+    assert len(findings) == 1
+    f = findings[0]
+    assert f.severity == "critical"  # worst record wins
+    assert "+2 more record" in f.severity_rationale
+
+
 def test_build_findings_rejected_verdicts_excluded():
     v = Verdict(candidate=_candidate(), is_match=False, confidence="low", rationale="different")
     findings = build_findings(MatchResults(hits=[], candidates=[v.candidate], unmatched=[]), [v])

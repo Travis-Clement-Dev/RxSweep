@@ -22,6 +22,14 @@ _PAD = {(4, 4, 2): 0, (5, 3, 2): 1, (5, 4, 1): 2}
 _SALTS = {
     "sodium", "hcl", "hydrochloride", "sulfate", "tartrate",
     "besylate", "succinate", "mesylate", "maleate", "citrate",
+    "phosphate", "acetate", "tromethamine",
+}
+# Words too common in drug text to identify a product on their own —
+# they never qualify an item as a fuzzy candidate.
+_COMMON = _SALTS | {
+    "potassium", "calcium", "magnesium", "chloride", "dextrose",
+    "injection", "solution", "suspension", "tablet", "tablets",
+    "capsule", "capsules", "cream", "ointment",
 }
 _NDC_IN_TEXT = re.compile(r"\b\d{4,5}-\d{3,4}-\d{1,2}\b")
 
@@ -82,9 +90,14 @@ def normalize_ndc(raw: str) -> NormalizedNDC:
 
 
 def normalize_name(s: str) -> str:
-    """Lowercase, strip punctuation and common salt suffixes."""
+    """Lowercase, strip punctuation, numbers, and *trailing* salt words.
+
+    The leading token is always kept: in "Sodium Chloride" the sodium IS the
+    drug, while in "Cefazolin Sodium" it's a salt suffix.
+    """
     tokens = re.sub(r"[^\w\s]", " ", s.lower()).split()
-    return " ".join(t for t in tokens if t not in _SALTS)
+    tokens = [t for t in tokens if not t.isdigit()]
+    return " ".join(t for i, t in enumerate(tokens) if i == 0 or t not in _SALTS)
 
 
 def extract_ndcs_from_text(text: str) -> set[str]:
@@ -130,8 +143,40 @@ def _recall_ndcs(rec: dict) -> set[str]:
     return out
 
 
-def _tokens(name_norm: str) -> set[str]:
-    return {t for t in name_norm.split() if len(t) >= 5}
+def _lead_token(name_norm: str) -> str | None:
+    """The item's identifying token: first word, ≥5 chars, not a common word."""
+    tokens = name_norm.split()
+    if tokens and len(tokens[0]) >= 5 and tokens[0] not in _COMMON:
+        return tokens[0]
+    return None
+
+
+def aggregate_shortages(records: list[dict]) -> list[dict]:
+    """Collapse package-level shortage records into one group per drug.
+
+    The FDA shortage dataset is package-level: one drug in shortage can span
+    dozens of records. Matching against groups keeps it to one hit per drug.
+    Any "Current" status wins the group.
+    """
+    groups: dict[str, dict] = {}
+    for rec in records:
+        key = normalize_name(rec.get("generic_name", "")) or "(unnamed)"
+        g = groups.setdefault(
+            key,
+            {
+                "generic_name": rec.get("generic_name", ""),
+                "status": rec.get("status", ""),
+                "package_count": 0,
+                "package_ndcs": [],
+                "therapeutic_category": rec.get("therapeutic_category"),
+            },
+        )
+        g["package_count"] += 1
+        if rec.get("package_ndc"):
+            g["package_ndcs"].append(rec["package_ndc"])
+        if (rec.get("status") or "").lower() == "current":
+            g["status"] = rec["status"]
+    return list(groups.values())
 
 
 _MODELS_READY = False
@@ -162,9 +207,18 @@ def match_items(
     _ensure_models()
     today = date.today().strftime("%Y%m%d")
     recall_index = [(rec, _recall_ndcs(rec), normalize_name(rec.get("product_description", ""))) for rec in recalls]
+
+    def _shortage_ndcs(rec: dict) -> set[str]:
+        raws = rec.get("package_ndcs") or ([rec["package_ndc"]] if rec.get("package_ndc") else [])
+        out: set[str] = set()
+        for raw in raws:
+            n = normalize_ndc(raw)
+            if n.valid and not n.ambiguous:
+                out.update(n.canonical)
+        return out
+
     shortage_index = [
-        (rec, set(normalize_ndc(rec["package_ndc"]).canonical) if rec.get("package_ndc") else set(),
-         normalize_name(rec.get("generic_name", "")))
+        (rec, _shortage_ndcs(rec), normalize_name(rec.get("generic_name", "")))
         for rec in shortages
     ]
 
@@ -175,7 +229,7 @@ def match_items(
     for item in items:
         item_hit = False
         name_norm = normalize_name(item.name)
-        toks = _tokens(name_norm)
+        lead = _lead_token(name_norm)
         canonicals = set(item.ndc.canonical) if item.ndc else set()
         ambiguous = bool(item.ndc and item.ndc.ambiguous)
 
@@ -190,7 +244,7 @@ def match_items(
             elif name_norm and desc_norm and name_norm in desc_norm:
                 hits.append(Hit(item=item, source="recall", label="name_match", record=rec))
                 item_hit = True
-            elif toks & set(desc_norm.split()):
+            elif lead and lead in set(desc_norm.split()):
                 candidates.append(Candidate(item=item, source="recall", record=rec,
                                             reason="partial name overlap with recall text"))
 

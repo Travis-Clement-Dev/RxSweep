@@ -218,6 +218,26 @@ def build_findings(results: MatchResults, verdicts: list[Verdict]) -> list[Findi
             )
 
     order = {"critical": 0, "high": 1, "moderate": 2, "info": 3}
+
+    # One row per (item, source, label): a drug with a dozen recall records is
+    # one thing for a pharmacist to act on. Worst severity represents the group.
+    grouped: dict[tuple, Finding] = {}
+    extra: dict[tuple, int] = {}
+    for f in findings:
+        key = (f.item_row, f.source, f.label)
+        best = grouped.get(key)
+        if best is None:
+            grouped[key] = f
+        else:
+            extra[key] = extra.get(key, 0) + 1
+            if order.get(f.severity, 9) < order.get(best.severity, 9):
+                f.ai_rationale = f.ai_rationale or best.ai_rationale
+                grouped[key] = f
+    findings = list(grouped.values())
+    for key, n in extra.items():
+        g = grouped[key]
+        g.severity_rationale += f" (+{n} more record{'s' if n > 1 else ''})"
+
     findings.sort(key=lambda f: order.get(f.severity, 9))
     for i, f in enumerate(findings, start=1):
         f.citation = i

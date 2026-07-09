@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 from rxsweep.audit import AuditLog
 from rxsweep.ingest import load_formulary
-from rxsweep.matching import match_items
+from rxsweep.matching import aggregate_shortages, match_items
 from rxsweep.report import render_report
 from rxsweep.sources.openfda import OpenFDAClient, fetch_ndc_status, fetch_recalls, fetch_shortages
 from rxsweep.triage import DEFAULT_MODEL, adjudicate, build_findings, summarize
@@ -52,7 +52,7 @@ def check(
             return [] if label != "ndc directory" else {}
 
     recalls = _fetch("recalls", fetch_recalls, months_back)
-    shortages = _fetch("shortages", fetch_shortages)
+    shortages = aggregate_shortages(_fetch("shortages", fetch_shortages))
     canonicals = sorted(
         {c for item in fl.items if item.ndc and not item.ndc.ambiguous for c in item.ndc.canonical}
     )
