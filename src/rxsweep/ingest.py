@@ -33,13 +33,22 @@ class FormularyLoad(BaseModel):
     columns: dict[str, str]
 
 
+# Most-specific first: "Item Number"/"Item ID" columns must not shadow a
+# real "Drug Name"/"Description" column sitting to their right.
+_NAME_PRIORITY = (r"(?i)description", r"(?i)drug", r"(?i)name", r"(?i)item")
+
+
 def _detect(headers: list[str]) -> dict[str, str]:
     cols: dict[str, str] = {}
     for h in headers:
-        if "ndc" not in cols and re.search(r"(?i)ndc", h):
+        if re.search(r"(?i)ndc", h):
             cols["ndc"] = h
-        if "name" not in cols and re.search(r"(?i)(drug|description|name|item)", h):
-            cols["name"] = h
+            break
+    for pattern in _NAME_PRIORITY:
+        match = next((h for h in headers if re.search(pattern, h)), None)
+        if match:
+            cols["name"] = match
+            break
     if "ndc" not in cols or "name" not in cols:
         raise ValueError(f"Could not detect NDC/name columns in headers: {headers}")
     return cols

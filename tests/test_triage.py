@@ -56,6 +56,19 @@ def test_adjudicate_api_failure_degrades_to_empty(mock_cls, tmp_path):
 
 
 @patch("rxsweep.triage.Anthropic")
+def test_adjudicate_malformed_structured_output_degrades(mock_cls, tmp_path):
+    from pydantic import ValidationError
+
+    mock_cls.return_value.messages.parse.side_effect = ValidationError.from_exception_data(
+        "AdjudicationResult", []
+    )
+    audit = AuditLog(tmp_path)
+    assert adjudicate([_candidate()], audit) == []
+    kinds = [json.loads(line)["kind"] for line in audit.path.read_text().splitlines()]
+    assert "ai_unavailable" in kinds
+
+
+@patch("rxsweep.triage.Anthropic")
 def test_summarize_returns_text(mock_cls, tmp_path):
     block = MagicMock()
     block.type = "text"

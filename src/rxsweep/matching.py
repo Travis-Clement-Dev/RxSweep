@@ -202,8 +202,11 @@ def match_items(
     items: list["FormularyItem"],
     recalls: list[dict],
     shortages: list[dict],
-    ndc_status: dict[str, dict],
+    ndc_status: dict[str, dict] | None,
 ) -> MatchResults:
+    """ndc_status=None means the directory couldn't be queried at all —
+    skip directory judgments entirely rather than mislabeling every item
+    as "not found in directory" (the caller discloses the outage)."""
     _ensure_models()
     today = date.today().strftime("%Y%m%d")
     recall_index = [(rec, _recall_ndcs(rec), normalize_name(rec.get("product_description", ""))) for rec in recalls]
@@ -259,7 +262,7 @@ def match_items(
                 hits.append(Hit(item=item, source="shortage", label="name_match", record=rec))
                 item_hit = True
 
-        if item.ndc and not ambiguous:
+        if item.ndc and not ambiguous and ndc_status is not None:
             canonical = item.ndc.canonical[0]
             rec = ndc_status.get(canonical)
             if rec is None:

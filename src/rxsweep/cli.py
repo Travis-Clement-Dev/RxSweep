@@ -33,7 +33,12 @@ def check(
     audit.event(kind="run_start", csv=str(csv_path), months_back=months_back, no_ai=no_ai)
 
     fl = load_formulary(csv_path)
-    audit.event(kind="ingest", items=len(fl.items), quarantined=len(fl.quarantined))
+    audit.event(
+        kind="ingest",
+        items=len(fl.items),
+        quarantined=len(fl.quarantined),
+        columns=fl.columns,
+    )
 
     client = OpenFDAClient(
         api_key=os.environ.get("OPENFDA_API_KEY"),
@@ -49,10 +54,13 @@ def check(
             unchecked.append(
                 f"{label} source unavailable — {len(fl.items)} items unchecked against {label}"
             )
-            return [] if label != "ndc directory" else {}
+            # None = source failed; [] would be indistinguishable from a
+            # legitimate empty result and mislabel items downstream.
+            return None
 
-    recalls = _fetch("recalls", fetch_recalls, months_back)
-    shortages = aggregate_shortages(_fetch("shortages", fetch_shortages))
+    recalls = _fetch("recalls", fetch_recalls, months_back) or []
+    raw_shortages = _fetch("shortages", fetch_shortages)
+    shortages = aggregate_shortages(raw_shortages) if raw_shortages is not None else []
     canonicals = sorted(
         {c for item in fl.items if item.ndc and not item.ndc.ambiguous for c in item.ndc.canonical}
     )

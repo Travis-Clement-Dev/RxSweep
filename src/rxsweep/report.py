@@ -2,15 +2,18 @@
 
 from urllib.parse import quote
 
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment, PackageLoader
 
 from rxsweep.ingest import QuarantinedRow
 from rxsweep.matching import Candidate
 from rxsweep.triage import Finding
 
+# autoescape=True, not select_autoescape(["html"]): suffix sniffing checks the
+# TEMPLATE name (report.html.j2 ends in .j2) and would silently disable
+# escaping — CSV drug names and AI text must never render as live HTML.
 _env = Environment(
     loader=PackageLoader("rxsweep", "templates"),
-    autoescape=select_autoescape(["html"]),
+    autoescape=True,
 )
 
 

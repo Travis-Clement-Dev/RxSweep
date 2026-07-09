@@ -48,7 +48,7 @@ FDA source record.
 
 | Failure mode | Behavior | Where handled |
 |---|---|---|
-| Ambiguous 10-digit NDC (no hyphens) | Never claimed as exact; downgraded to a needs-verification candidate with all 3 possible readings | `matching.py` (`normalize_ndc`, ambiguity downgrade) |
+| Ambiguous 10-digit NDC (no hyphens) | Never claimed as exact; downgraded to a needs-verification candidate with all 3 possible readings. Design choice: ambiguous NDCs are excluded from the NDC-directory status check (a discontinuation judgment on a guessed reading would be false certainty) | `matching.py` (`normalize_ndc`, ambiguity downgrade), `cli.py` |
 | Recall free-text doesn't name NDCs | Deterministic pass harvests NDCs from `code_info`/description text; residual fuzz goes to AI adjudication, labeled as such | `matching.py` (`extract_ndcs_from_text`) |
 | Claude API unavailable | Run completes deterministic-only; report banner discloses that candidates were not adjudicated; candidates appear under "Needs manual review" | `triage.py`, `cli.py` |
 | openFDA source unavailable after retries | Run completes; report lists **unchecked items** explicitly ("treat as unknown, not clear") | `cli.py` (`_fetch`) |

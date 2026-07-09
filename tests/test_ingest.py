@@ -33,6 +33,17 @@ def test_row_numbers_are_csv_line_numbers():
     assert cef.row == 2  # header is line 1
 
 
+def test_item_number_does_not_shadow_drug_name():
+    f = FIX.parent / "priority.csv"
+    f.write_text("NDC,Item Number,Drug Name,Qty\n0409-4058-01,10023,Cefazolin Sodium,5\n")
+    try:
+        fl = load_formulary(f)
+        assert fl.columns["name"] == "Drug Name"
+        assert fl.items[0].name == "Cefazolin Sodium"
+    finally:
+        f.unlink()
+
+
 def test_undetectable_columns_raise():
     bad = FIX.parent / "no_columns.csv"
     bad.write_text("Foo,Bar\n1,2\n")

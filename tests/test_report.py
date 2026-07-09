@@ -66,6 +66,17 @@ def test_ai_unavailable_banner_and_manual_review():
     assert "Needs manual review (1)" in html
 
 
+def test_untrusted_text_is_escaped():
+    f = _finding(
+        item_name="<script>alert(1)</script>",
+        severity_rationale='<img src=x onerror="x()">',
+    )
+    html = render_report([f], [], [], [], "<b>summary</b> [1]", META)
+    assert "<script>alert(1)</script>" not in html
+    assert "<img src=x" not in html
+    assert "<b>summary</b>" not in html
+
+
 def test_no_external_assets():
     html = render_report([_finding()], [], [], [], None, META)
     for tag in ("<script src", "<link rel=\"stylesheet\"", "@import", "fonts.googleapis"):

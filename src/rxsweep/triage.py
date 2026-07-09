@@ -13,8 +13,23 @@ so — it never fails the run or silently drops candidates.
 import os
 from typing import Literal
 
-from anthropic import Anthropic, APIConnectionError, APIStatusError, RateLimitError
-from pydantic import BaseModel
+from anthropic import (
+    Anthropic,
+    APIConnectionError,
+    APIResponseValidationError,
+    APIStatusError,
+    RateLimitError,
+)
+from pydantic import BaseModel, ValidationError
+
+# Every way an AI call can fail; the pipeline degrades, never crashes.
+_AI_ERRORS = (
+    RateLimitError,
+    APIStatusError,
+    APIConnectionError,
+    APIResponseValidationError,
+    ValidationError,
+)
 
 from rxsweep.audit import AuditLog
 from rxsweep.matching import Candidate, MatchResults
@@ -100,7 +115,7 @@ def adjudicate(
                 messages=[{"role": "user", "content": prompt}],
                 output_format=AdjudicationResult,
             )
-        except (RateLimitError, APIStatusError, APIConnectionError) as exc:
+        except _AI_ERRORS as exc:
             audit.event(kind="ai_unavailable", stage="adjudicate", error=str(exc))
             return []
         result: AdjudicationResult = response.parsed_output
@@ -141,7 +156,7 @@ def summarize(findings: list[Finding], audit: AuditLog, model: str | None = None
             max_tokens=2048,
             messages=[{"role": "user", "content": prompt}],
         )
-    except (RateLimitError, APIStatusError, APIConnectionError) as exc:
+    except _AI_ERRORS as exc:
         audit.event(kind="ai_unavailable", stage="summarize", error=str(exc))
         return None
     text = "".join(block.text for block in response.content if block.type == "text")

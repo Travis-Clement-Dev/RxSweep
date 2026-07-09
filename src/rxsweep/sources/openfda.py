@@ -74,6 +74,11 @@ def _paged(client: OpenFDAClient, endpoint: str, search: str | None) -> list[dic
         skip += PAGE
         if skip >= total or not results:
             break
+    if total > len(out):
+        # openFDA caps skip-paging; never truncate silently
+        client.on_event(
+            {"kind": "fda_truncated", "endpoint": endpoint, "fetched": len(out), "total": total}
+        )
     return out
 
 

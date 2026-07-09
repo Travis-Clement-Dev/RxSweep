@@ -60,6 +60,21 @@ def test_check_fda_outage_disclosed(tmp_path, monkeypatch):
 
 
 @respx.mock
+def test_ndc_directory_outage_not_mislabeled_as_not_found(tmp_path, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    _mock_openfda()
+    respx.get(url__regex=r".*drug/ndc\.json.*").mock(return_value=httpx.Response(503))
+    result = runner.invoke(
+        app,
+        ["check", "src/rxsweep/data/sample_formulary.csv", "--out", str(tmp_path), "--no-ai"],
+    )
+    assert result.exit_code == 0, result.output
+    html = (next(tmp_path.iterdir()) / "report.html").read_text()
+    assert "ndc directory source unavailable" in html
+    assert "not found in directory" not in html
+
+
+@respx.mock
 def test_demo_command(tmp_path, monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     _mock_openfda()
