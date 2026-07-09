@@ -33,3 +33,6 @@ dev = [
 testpaths = ["tests"]
 markers = ["live: hits real APIs; excluded by default"]
 addopts = "-m 'not live'"
+# Direct src import: immune to the macOS UF_HIDDEN quirk where Python
+# silently skips hidden .pth files (see plans/2026-07-09-day1-build.md notes)
+pythonpath = ["src"]
