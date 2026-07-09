@@ -12,13 +12,17 @@ replace manual eyeball-reconciliation of FDA notices against thousands of line i
 
 ## Exactly where AI is used — and where it is not
 
-Claude has **two jobs** in this system, both in [`triage.py`](../src/rxsweep/triage.py):
+Claude has **three jobs** in this system, in [`triage.py`](../src/rxsweep/triage.py)
+and [`chat.py`](../src/rxsweep/chat.py):
 
 1. **Candidate adjudication** (`adjudicate()`): judging whether a *fuzzy* candidate —
    a formulary item and an FDA record that share partial name text — refers to the
    same product. The prompt instructs conservatism: when in doubt, not a match.
 2. **Summary drafting** (`summarize()`): a two-paragraph executive summary in which
    every drug mentioned carries a `[n]` citation to its finding.
+3. **Run-grounded chat** (`chat_reply()`, web app only): answering pharmacist
+   questions strictly from one run's numbered findings, with mandatory citations;
+   questions beyond the findings are declined and redirected to primary sources.
 
 AI is **never** used for: exact NDC matching, name matching, severity ranking,
 data fetching, or report assembly — those are deterministic code

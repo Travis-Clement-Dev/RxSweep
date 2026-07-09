@@ -39,8 +39,8 @@ FDA responses are logged as counts plus a SHA-256 body hash.
 | `fda_unavailable` | `source`, `error` | Source failed after retries; items disclosed as unchecked |
 | `match` | `hits`, `candidates`, `unmatched` | Deterministic matching result |
 | `ai_skipped` | `reason` | AI not used (`--no-ai` or no key) |
-| `ai_request` | `model`, `prompt` | Verbatim prompt sent to Claude |
-| `ai_response` | `model`, `completion` | Verbatim/structured model output |
+| `ai_request` | `model`, `prompt`, optional `stage: "chat"` | Verbatim prompt sent to Claude (chat questions included) |
+| `ai_response` | `model`, `completion`, optional `stage: "chat"` | Verbatim/structured model output (chat replies included) |
 | `ai_unavailable` | `stage`, `error` | API failure; run degraded to deterministic-only |
 | `run_end` | `findings`, `tiers` | Final counts by severity |
 
