@@ -28,10 +28,13 @@ export default function Dashboard({
     setTab("Findings");
     setSeverityFilter(null);
     setFlashRow(citation);
-    requestAnimationFrame(() =>
-      document
-        .getElementById(`finding-${citation}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+    // wait for React to commit the tab/filter reset before scrolling
+    setTimeout(
+      () =>
+        document
+          .getElementById(`finding-${citation}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      60,
     );
     setTimeout(() => setFlashRow(null), 1800);
   }

@@ -105,7 +105,9 @@ def create_app(runs_root: Path = Path("runs")) -> FastAPI:
         use_ai: bool = True,
     ) -> dict:
         sweep_id = uuid.uuid4().hex[:12]
-        tmp = Path(tempfile.mkstemp(suffix=".csv")[1])
+        # keep the uploaded filename: it appears in the report and audit log
+        safe_name = Path(file.filename or "formulary.csv").name
+        tmp = Path(tempfile.mkdtemp(prefix="rxsweep-")) / safe_name
         with open(tmp, "wb") as out:
             shutil.copyfileobj(file.file, out)
         state = _RunState()

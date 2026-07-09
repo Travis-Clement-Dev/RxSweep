@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "rxsweep",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "rxsweep", "serve", "--port", "8555"],
+      "port": 8555
+    }
+  ]
+}
