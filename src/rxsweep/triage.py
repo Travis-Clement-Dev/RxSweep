@@ -156,10 +156,10 @@ def rank_severity(
     shortage_status: str | None,
     ndc_missing: bool,
 ) -> tuple[str, str]:
-    """Severity rubric — HUMAN-AUTHORED (see docs/SYSTEM_CARD.md).
+    """Severity rubric — human-reviewed and approved by Travis Clement,
+    PharmD (2026-07-09); see docs/SYSTEM_CARD.md.
 
-    DRAFT pending Travis Clement, PharmD — replace/approve at the Task 7
-    checkpoint. Tiers: critical | high | moderate | info.
+    Tiers: critical | high | moderate | info.
     """
     if source == "recall" and recall_class == "Class I":
         return "critical", "Class I recall: reasonable probability of serious harm"
