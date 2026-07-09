@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets — never committed (see docs/GOVERNANCE.md)
+.env
+.env.*
+
+# Per-run outputs: user formulary data + audit logs stay local
+runs/
+
+# Frontend (Day 2)
+node_modules/
+
+# OS
+.DS_Store
