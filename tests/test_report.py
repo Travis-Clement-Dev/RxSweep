@@ -50,7 +50,7 @@ def test_quarantine_and_unchecked_sections():
     html = render_report([], [q], [], ["shortages source unavailable"], None, META)
     assert "Quarantined rows (1)" in html
     assert "Unchecked items (1)" in html
-    assert "treat as unknown, not clear" in html
+    assert "Treat them as unknown, not clear" in html
 
 
 def test_ai_unavailable_banner_and_manual_review():

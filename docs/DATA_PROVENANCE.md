@@ -21,6 +21,24 @@ cited record.*
   counts plus a SHA-256 hash of the raw body, so a run's inputs can be verified
   after the fact.
 
+## openFDA's own disclaimer, propagated
+
+Every openFDA response carries this notice, and RxSweep displays it verbatim in
+every report rather than burying it:
+
+> "Do not rely on openFDA to make decisions regarding medical care. While we make
+> every effort to ensure that data is accurate, you should assume all results are
+> unvalidated. We may limit or otherwise restrict your access to the API in line
+> with our Terms of Service."
+> — [openFDA terms](https://open.fda.gov/terms/) · [license](https://open.fda.gov/license/)
+
+RxSweep's design is the operational response to that disclaimer: the tool triages
+attention and links to primary records; a pharmacist's verification against the
+source is the decision step. "Unvalidated upstream" is why findings say
+"needs verification," not a reason the sweep can't exist. The access-restriction
+clause is why the client supports an optional `OPENFDA_API_KEY`, retries with
+backoff, and discloses outages as unchecked items instead of failing silently.
+
 ## The user's own data
 
 The formulary CSV never leaves the machine except as the item names/NDCs embedded

@@ -140,14 +140,20 @@ def summarize(findings: list[Finding], audit: AuditLog, model: str | None = None
     client = Anthropic()
     model = model or _model()
     lines = [
-        f"[{f.citation}] {f.item_name} — {f.source} ({f.severity}): {f.severity_rationale}"
+        f"[{f.citation}] {f.item_name}, {f.source} ({f.severity}): {f.severity_rationale}"
         for f in findings
     ]
     prompt = (
         "Draft a two-paragraph executive summary of these formulary sweep "
-        "findings for a pharmacy operations huddle. Every drug you mention "
-        "must carry its [n] citation. Factual and specific; no advice beyond "
-        "flagging what needs pharmacist review.\n\n" + "\n".join(lines)
+        "findings for a pharmacy operations huddle.\n\n"
+        "Write in the plain regulatory register of an FDA drug safety "
+        "communication: short declarative sentences, active voice, standard "
+        "terminology (recall classification, shortage status, presentation). "
+        "Every drug you mention must carry its [n] citation. Factual and "
+        "specific; no advice beyond flagging what needs pharmacist review.\n\n"
+        "Format: plain text only. Two paragraphs separated by a blank line. "
+        "No markdown of any kind (no #, no **, no bullets, no headings). "
+        "No em dashes; use commas, periods, or parentheses.\n\n" + "\n".join(lines)
     )
     audit.event(kind="ai_request", model=model, prompt=prompt)
     try:
@@ -181,17 +187,17 @@ def rank_severity(
     if source == "recall" and recall_class == "Class II":
         if label == "exact_ndc":
             return "high", "Class II recall with exact NDC match to a stocked item"
-        return "moderate", "Class II recall, name-level match — verify product identity"
+        return "moderate", "Class II recall, name-level match. Verify product identity."
     if source == "recall":
-        return "moderate", f"Recall ({recall_class or 'unclassified'}) — verify scope"
+        return "moderate", f"Recall ({recall_class or 'unclassified'}). Verify scope."
     if source == "shortage" and (shortage_status or "").lower() == "current":
         return "high", "Active shortage on a stocked item"
     if source == "shortage":
         return "info", f"Shortage record with status {shortage_status!r}"
     if source == "ndc" and ndc_missing:
-        return "moderate", "NDC not found in FDA directory — possible data issue"
+        return "moderate", "NDC not found in FDA directory. Possible data issue."
     if source == "ndc":
-        return "moderate", "NDC listing expired/discontinued — check reorder viability"
+        return "moderate", "NDC listing expired or discontinued. Check reorder viability."
     return "info", "Unclassified finding"
 
 

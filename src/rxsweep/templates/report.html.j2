@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RxSweep report — {{ meta.csv_name }}</title>
+<title>RxSweep report: {{ meta.csv_name }}</title>
 <style>
   :root {
     --paper:#F8FAF8; --ink:#1C2723; --ink-soft:#4A5A53; --ink-faint:#7A8A82;
@@ -70,14 +70,14 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>RxSweep — formulary sweep report</h1>
+  <h1>RxSweep formulary sweep report</h1>
   <p class="meta">
     {{ meta.csv_name }} · {{ meta.items_checked }} items checked · run {{ meta.run_ts }} ·
     recalls window {{ meta.months_back }} months · AI model: {{ meta.model if meta.ai_available else "unavailable" }}
   </p>
 
   <div class="banner">
-    Informational tool — a pharmacist verifies every finding before action.
+    Informational tool. A pharmacist verifies every finding before action.
     Not clinical advice. Every claim links to its FDA source record below.
   </div>
 
@@ -87,6 +87,14 @@
     adjudicated and appear under "Needs manual review". Deterministic findings are unaffected.
   </div>
   {% endif %}
+
+  <p class="meta">
+    Data source notice (openFDA): "Do not rely on openFDA to make decisions regarding
+    medical care. While we make every effort to ensure that data is accurate, you
+    should assume all results are unvalidated."
+    <a href="https://open.fda.gov/terms/">Terms</a> ·
+    <a href="https://open.fda.gov/license/">License</a>
+  </p>
 
   <div class="tiles">
     {% for tier in ["critical","high","moderate","info"] %}
@@ -99,7 +107,7 @@
 
   {% if summary %}
   <div class="summary">
-    <span class="ai-tag">AI-drafted summary — cited, pharmacist verifies</span>
+    <span class="ai-tag">AI-drafted summary: cited, pharmacist verifies</span>
     {% for para in summary.split("\n\n") %}<p>{{ para }}</p>{% endfor %}
   </div>
   {% endif %}
@@ -122,7 +130,7 @@
           <td>{{ f.source }}</td>
           <td>
             {% if f.label == "ai_matched" %}
-              <span class="chip lbl-chip needs-verify">AI-matched — needs verification</span>
+              <span class="chip lbl-chip needs-verify">AI-matched: needs verification</span>
             {% else %}
               <span class="chip lbl-chip">{{ f.label }}</span>
             {% endif %}
@@ -135,7 +143,7 @@
     </table>
   </div>
   {% else %}
-  <p>No findings — no recalls, shortages, or NDC-status issues matched your formulary.</p>
+  <p>No findings. No recalls, shortages, or NDC-status issues matched your formulary.</p>
   {% endif %}
 
   {% if manual_review %}
@@ -156,7 +164,7 @@
 
   {% if quarantined %}
   <h2>Quarantined rows ({{ quarantined|length }})</h2>
-  <p class="meta">Rows we could not fully process — shown, never silently dropped.</p>
+  <p class="meta">Rows we could not fully process. Shown, never silently dropped.</p>
   <div class="tablewrap">
     <table>
       <thead><tr><th>CSV line</th><th>Reason</th></tr></thead>
@@ -169,7 +177,7 @@
 
   {% if unchecked %}
   <h2>Unchecked items ({{ unchecked|length }})</h2>
-  <p class="meta">These items could not be checked against one or more sources this run — treat as unknown, not clear.</p>
+  <p class="meta">These items could not be checked against one or more sources this run. Treat them as unknown, not clear.</p>
   <ul>{% for u in unchecked %}<li>{{ u }}</li>{% endfor %}</ul>
   {% endif %}
 

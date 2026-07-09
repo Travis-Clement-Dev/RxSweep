@@ -52,7 +52,7 @@ def check(
         except Exception as exc:  # noqa: BLE001 - disclosed, never swallowed
             audit.event(kind="fda_unavailable", source=label, error=str(exc))
             unchecked.append(
-                f"{label} source unavailable — {len(fl.items)} items unchecked against {label}"
+                f"{label} source unavailable: {len(fl.items)} items unchecked against {label}"
             )
             # None = source failed; [] would be indistinguishable from a
             # legitimate empty result and mislabel items downstream.
