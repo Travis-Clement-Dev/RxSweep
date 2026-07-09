@@ -7,6 +7,7 @@ per request. openFDA returns 404 for an empty result set — that's data,
 not an error.
 """
 
+import hashlib
 import time
 from datetime import date, timedelta
 from typing import Callable
@@ -48,7 +49,12 @@ class OpenFDAClient:
             resp.raise_for_status()
             data = resp.json()
             self.on_event(
-                {"kind": "fda_response", "url": url, "count": len(data.get("results", []))}
+                {
+                    "kind": "fda_response",
+                    "url": url,
+                    "count": len(data.get("results", [])),
+                    "sha256": hashlib.sha256(resp.content).hexdigest(),
+                }
             )
             return data
         raise RuntimeError("retries exhausted")  # pragma: no cover - loop always returns/raises
