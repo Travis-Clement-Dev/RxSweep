@@ -1,6 +1,6 @@
 import pytest
 
-from rxsweep.matching import normalize_ndc
+from rxsweep.matching import denormalize_ndc, normalize_ndc
 
 
 @pytest.mark.parametrize(
@@ -33,3 +33,15 @@ def test_invalid(raw):
 def test_whitespace_tolerated():
     n = normalize_ndc("  0409-4058-01 ")
     assert n.valid and n.canonical == ["00409405801"]
+
+
+def test_denormalize_roundtrip():
+    # 00409405801 came from 0409-4058-01 (4-4-2)
+    assert "0409-4058-01" in denormalize_ndc("00409405801")
+    for c in denormalize_ndc("54868012301"):
+        assert len(c.replace("-", "")) == 10
+
+
+def test_denormalize_no_padded_zero():
+    # no segment starts with 0 → no valid 10-digit original exists
+    assert denormalize_ndc("54868123412") == []

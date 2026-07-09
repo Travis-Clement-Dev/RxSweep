@@ -26,6 +26,23 @@ def _pad(segs: tuple[str, str, str], idx: int) -> str:
     return "".join(parts)
 
 
+def denormalize_ndc(canonical: str) -> list[str]:
+    """11-digit (5-4-2) → possible 10-digit hyphenated originals.
+
+    Inverse of the pad in normalize_ndc: the original had one segment shorter
+    by a leading zero, so each zero-leading segment yields one candidate.
+    """
+    a, b, c = canonical[:5], canonical[5:9], canonical[9:]
+    out: list[str] = []
+    if a.startswith("0"):
+        out.append(f"{a[1:]}-{b}-{c}")  # was 4-4-2
+    if b.startswith("0"):
+        out.append(f"{a}-{b[1:]}-{c}")  # was 5-3-2
+    if c.startswith("0"):
+        out.append(f"{a}-{b}-{c[1:]}")  # was 5-4-1
+    return out
+
+
 def normalize_ndc(raw: str) -> NormalizedNDC:
     s = raw.strip()
     if "-" in s:

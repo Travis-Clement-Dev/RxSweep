@@ -1,0 +1,136 @@
+{
+ "meta": {
+  "disclaimer": "Do not rely on openFDA to make decisions regarding medical care. While we make every effort to ensure that data is accurate, you should assume all results are unvalidated. We may limit or otherwise restrict your access to the API in line with our Terms of Service.",
+  "terms": "https://open.fda.gov/terms/",
+  "license": "https://open.fda.gov/license/",
+  "last_updated": "2026-07-08",
+  "results": {
+   "skip": 0,
+   "limit": 2,
+   "total": 2
+  }
+ },
+ "results": [
+  {
+   "product_ndc": "37662-0293",
+   "generic_name": "Cicuta Virosa",
+   "labeler_name": "Hahnemann Laboratories, INC.",
+   "brand_name": "Cicuta Virosa",
+   "active_ingredients": [
+    {
+     "name": "CICUTA VIROSA ROOT",
+     "strength": "30 [hp_C]/1"
+    }
+   ],
+   "finished": true,
+   "packaging": [
+    {
+     "package_ndc": "37662-0293-1",
+     "description": "80 PELLET in 1 VIAL, GLASS (37662-0293-1)",
+     "marketing_start_date": "20220602",
+     "sample": false
+    },
+    {
+     "package_ndc": "37662-0293-2",
+     "description": "200 PELLET in 1 VIAL, GLASS (37662-0293-2)",
+     "marketing_start_date": "20220602",
+     "sample": false
+    },
+    {
+     "package_ndc": "37662-0293-3",
+     "description": "1200 PELLET in 1 BOTTLE, GLASS (37662-0293-3)",
+     "marketing_start_date": "20220602",
+     "sample": false
+    },
+    {
+     "package_ndc": "37662-0293-4",
+     "description": "4000 PELLET in 1 BOTTLE, GLASS (37662-0293-4)",
+     "marketing_start_date": "20220602",
+     "sample": false
+    }
+   ],
+   "listing_expiration_date": "20261231",
+   "openfda": {
+    "manufacturer_name": [
+     "Hahnemann Laboratories, INC."
+    ],
+    "spl_set_id": [
+     "e07ee903-2c94-6b5e-e053-2995a90a413e"
+    ],
+    "is_original_packager": [
+     true
+    ],
+    "unii": [
+     "YEA9P21S8N"
+    ]
+   },
+   "marketing_category": "UNAPPROVED HOMEOPATHIC",
+   "dosage_form": "PELLET",
+   "spl_id": "e07ee903-2c95-6b5e-e053-2995a90a413e",
+   "product_type": "HUMAN OTC DRUG",
+   "route": [
+    "ORAL"
+   ],
+   "marketing_start_date": "20220602",
+   "product_id": "37662-0293_e07ee903-2c95-6b5e-e053-2995a90a413e",
+   "brand_name_base": "Cicuta Virosa"
+  },
+  {
+   "product_ndc": "0121-1038",
+   "generic_name": "Megestrol Acetate",
+   "labeler_name": "PAI Holdings, LLC dba PAI Pharma",
+   "brand_name": "Megestrol Acetate",
+   "active_ingredients": [
+    {
+     "name": "MEGESTROL ACETATE",
+     "strength": "400 mg/10mL"
+    }
+   ],
+   "finished": true,
+   "packaging": [
+    {
+     "package_ndc": "0121-1038-00",
+     "description": "10 TRAY in 1 CASE (0121-1038-00)  / 10 CUP, UNIT-DOSE in 1 TRAY / 10 mL in 1 CUP, UNIT-DOSE (0121-1038-10)",
+     "marketing_start_date": "20251017",
+     "sample": false
+    },
+    {
+     "package_ndc": "0121-1038-40",
+     "description": "4 TRAY in 1 CASE (0121-1038-40)  / 10 CUP, UNIT-DOSE in 1 TRAY / 10 mL in 1 CUP, UNIT-DOSE (0121-1038-10)",
+     "marketing_start_date": "20251017",
+     "sample": false
+    }
+   ],
+   "listing_expiration_date": "20261231",
+   "openfda": {
+    "manufacturer_name": [
+     "PAI Holdings, LLC dba PAI Pharma"
+    ],
+    "rxcui": [
+     "860225"
+    ],
+    "spl_set_id": [
+     "2d5b58cd-cbb1-4f5c-b13f-63185c0f8e31"
+    ],
+    "unii": [
+     "TJ2M0FR8ES"
+    ]
+   },
+   "marketing_category": "ANDA",
+   "dosage_form": "SUSPENSION",
+   "spl_id": "5dbcf915-968f-4377-b56f-8ef863e398ca",
+   "product_type": "HUMAN PRESCRIPTION DRUG",
+   "route": [
+    "ORAL"
+   ],
+   "marketing_start_date": "20251017",
+   "product_id": "0121-1038_5dbcf915-968f-4377-b56f-8ef863e398ca",
+   "application_number": "ANDA077404",
+   "brand_name_base": "Megestrol Acetate",
+   "pharm_class": [
+    "Progesterone Congeners [CS]",
+    "Progestin [EPC]"
+   ]
+  }
+ ]
+}

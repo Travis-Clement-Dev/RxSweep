@@ -1,0 +1,162 @@
+{
+ "meta": {
+  "disclaimer": "Do not rely on openFDA to make decisions regarding medical care. While we make every effort to ensure that data is accurate, you should assume all results are unvalidated. We may limit or otherwise restrict your access to the API in line with our Terms of Service.",
+  "terms": "https://open.fda.gov/terms/",
+  "license": "https://open.fda.gov/license/",
+  "last_updated": "2026-07-09",
+  "results": {
+   "skip": 0,
+   "limit": 2,
+   "total": 2
+  }
+ },
+ "results": [
+  {
+   "update_type": "Revised",
+   "initial_posting_date": "02/17/2015",
+   "package_ndc": "0143-9931-25",
+   "generic_name": "Cefotaxime Sodium Powder, for Solution",
+   "contact_info": "800-631-2174",
+   "availability": "Unavailable",
+   "related_info": "Estimated recovery: TBD",
+   "openfda": {
+    "application_number": [
+     "ANDA065072"
+    ],
+    "brand_name": [
+     "CEFOTAXIME"
+    ],
+    "generic_name": [
+     "CEFOTAXIME"
+    ],
+    "manufacturer_name": [
+     "Hikma Pharmaceuticals USA Inc."
+    ],
+    "product_ndc": [
+     "0143-9931",
+     "0143-9933",
+     "0143-9930"
+    ],
+    "product_type": [
+     "HUMAN PRESCRIPTION DRUG"
+    ],
+    "route": [
+     "INTRAMUSCULAR",
+     "INTRAVENOUS"
+    ],
+    "substance_name": [
+     "CEFOTAXIME SODIUM"
+    ],
+    "rxcui": [
+     "309068",
+     "1656313",
+     "1656318"
+    ],
+    "spl_id": [
+     "7e0897ec-2275-4438-9cc5-4c951e52ad97"
+    ],
+    "spl_set_id": [
+     "ed23b6bc-32c7-4c50-a53d-313ae78e5623"
+    ],
+    "package_ndc": [
+     "0143-9931-01",
+     "0143-9931-25",
+     "0143-9933-01",
+     "0143-9933-25",
+     "0143-9930-01",
+     "0143-9930-10"
+    ],
+    "unii": [
+     "258J72S7TZ"
+    ]
+   },
+   "update_date": "06/25/2026",
+   "therapeutic_category": [
+    "Anti-Infective",
+    "Pediatric"
+   ],
+   "dosage_form": "Powder, For Solution",
+   "presentation": "Cefotaxime Sodium, Powder, for Solution, 1 g (NDC 0143-9931-25)",
+   "company_name": "Hikma Pharmaceuticals USA, Inc.",
+   "shortage_reason": "Demand increase for the drug",
+   "status": "Current"
+  },
+  {
+   "update_type": "Revised",
+   "initial_posting_date": "07/14/2023",
+   "package_ndc": "42858-164-01",
+   "generic_name": "Lisdexamfetamine Dimesylate Capsule",
+   "contact_info": "888-827-0616",
+   "availability": "Limited Availability",
+   "related_info": "Estimated recovery: TBD",
+   "openfda": {
+    "application_number": [
+     "ANDA215330"
+    ],
+    "brand_name": [
+     "LISDEXAMFETAMINE DIMESYLATE"
+    ],
+    "generic_name": [
+     "LISDEXAMFETAMINE DIMESYLATE"
+    ],
+    "manufacturer_name": [
+     "Rhodes Pharmaceuticals LLC"
+    ],
+    "product_ndc": [
+     "42858-164",
+     "42858-161",
+     "42858-162",
+     "42858-163",
+     "42858-165",
+     "42858-166",
+     "42858-167"
+    ],
+    "product_type": [
+     "HUMAN PRESCRIPTION DRUG"
+    ],
+    "route": [
+     "ORAL"
+    ],
+    "substance_name": [
+     "LISDEXAMFETAMINE DIMESYLATE"
+    ],
+    "rxcui": [
+     "854830",
+     "854834",
+     "854838",
+     "854842",
+     "854846",
+     "854850",
+     "1593856"
+    ],
+    "spl_id": [
+     "0002e227-1109-4ecc-a8c5-4b4f11fac3cc"
+    ],
+    "spl_set_id": [
+     "d918b40d-a461-41bc-b6c0-83dc76c28e32"
+    ],
+    "package_ndc": [
+     "42858-161-01",
+     "42858-162-01",
+     "42858-163-01",
+     "42858-164-01",
+     "42858-165-01",
+     "42858-166-01",
+     "42858-167-01"
+    ],
+    "unii": [
+     "SJT761GEGS"
+    ]
+   },
+   "update_date": "06/24/2026",
+   "therapeutic_category": [
+    "Psychiatry"
+   ],
+   "dosage_form": "Capsule",
+   "presentation": "Lisdexamfetamine Dimesylate, Capsule, 40 mg (NDC 42858-164-01)",
+   "company_name": "Rhodes Pharmaceuticals L.P.",
+   "shortage_reason": "Shortage of an active ingredient",
+   "status": "Current"
+  }
+ ]
+}
