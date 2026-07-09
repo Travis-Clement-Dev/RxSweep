@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RxSweep report — {{ meta.csv_name }}</title>
+<style>
+  :root {
+    --paper:#F8FAF8; --ink:#1C2723; --ink-soft:#4A5A53; --ink-faint:#7A8A82;
+    --line:#DCE5E0; --card:#FFFFFF; --accent:#0E7C6B; --accent-soft:#E2F0EC;
+    --accent-ink:#0A5A4E;
+    --critical:#B0483C; --critical-soft:#F6E4E1;
+    --high:#B0483C;     --high-soft:#F6E4E1;
+    --moderate:#A9741B; --moderate-soft:#F5EBD8;
+    --info:#2E7D4F;     --info-soft:#E3F0E8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:#131B18; --ink:#E6EDE9; --ink-soft:#A8B8B0; --ink-faint:#74847C;
+      --line:#2A3833; --card:#1A2521; --accent:#34B39C; --accent-soft:#16332C;
+      --accent-ink:#6FD3BF;
+      --critical:#DB8377; --critical-soft:#3A211D;
+      --high:#DB8377;     --high-soft:#3A211D;
+      --moderate:#D9A94F; --moderate-soft:#372C15;
+      --info:#5CB884;     --info-soft:#1C3227;
+    }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:24px 20px 64px; background:var(--paper); color:var(--ink);
+         font:15px/1.5 "Seravek", -apple-system, system-ui, sans-serif; }
+  .wrap { max-width:1000px; margin:0 auto; }
+  h1,h2 { font-family:"Avenir Next", system-ui, sans-serif; line-height:1.15; }
+  h1 { font-size:1.6rem; margin:.2em 0; }
+  h2 { font-size:1.1rem; margin:2em 0 .6em; }
+  .meta { color:var(--ink-soft); font-size:.85rem; }
+  .banner { margin:18px 0; padding:12px 16px; border-radius:10px; font-size:.9rem;
+            background:var(--accent-soft); color:var(--accent-ink);
+            border:1px solid var(--accent); }
+  .banner.warn { background:var(--moderate-soft); color:var(--moderate); border-color:var(--moderate); }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; margin:20px 0; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:12px;
+          padding:14px 16px; border-top:4px solid var(--line); }
+  .tile .n { font-size:1.9rem; font-weight:700; font-variant-numeric:tabular-nums; }
+  .tile .lbl { font-size:.72rem; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-faint); }
+  .tile.critical { border-top-color:var(--critical); }
+  .tile.high { border-top-color:var(--high); }
+  .tile.moderate { border-top-color:var(--moderate); }
+  .tile.info { border-top-color:var(--info); }
+  .summary { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; }
+  .ai-tag { display:inline-block; font-size:.7rem; font-weight:700; letter-spacing:.08em;
+            text-transform:uppercase; color:var(--accent-ink); background:var(--accent-soft);
+            border-radius:999px; padding:3px 10px; margin-bottom:8px; }
+  .tablewrap { overflow-x:auto; background:var(--card); border:1px solid var(--line); border-radius:12px; }
+  table { border-collapse:collapse; width:100%; min-width:720px; font-size:.88rem; }
+  th,td { padding:10px 12px; text-align:left; border-top:1px solid var(--line); vertical-align:top; }
+  thead th { border-top:none; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase;
+             color:var(--ink-faint); }
+  .chip { display:inline-block; font-size:.72rem; font-weight:600; border-radius:999px;
+          padding:2px 10px; white-space:nowrap; }
+  .sev-critical { background:var(--critical-soft); color:var(--critical); }
+  .sev-high { background:var(--high-soft); color:var(--high); }
+  .sev-moderate { background:var(--moderate-soft); color:var(--moderate); }
+  .sev-info { background:var(--info-soft); color:var(--info); }
+  .lbl-chip { background:var(--accent-soft); color:var(--accent-ink); }
+  .lbl-chip.needs-verify { background:var(--moderate-soft); color:var(--moderate); }
+  a { color:var(--accent-ink); }
+  .foot { margin-top:36px; color:var(--ink-faint); font-size:.8rem; border-top:1px solid var(--line); padding-top:14px; }
+  code { font-family:ui-monospace, "SF Mono", Menlo, monospace; font-size:.85em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>RxSweep — formulary sweep report</h1>
+  <p class="meta">
+    {{ meta.csv_name }} · {{ meta.items_checked }} items checked · run {{ meta.run_ts }} ·
+    recalls window {{ meta.months_back }} months · AI model: {{ meta.model if meta.ai_available else "unavailable" }}
+  </p>
+
+  <div class="banner">
+    Informational tool — a pharmacist verifies every finding before action.
+    Not clinical advice. Every claim links to its FDA source record below.
+  </div>
+
+  {% if not meta.ai_available %}
+  <div class="banner warn">
+    AI triage was unavailable for this run: fuzzy candidates were <strong>not</strong>
+    adjudicated and appear under "Needs manual review". Deterministic findings are unaffected.
+  </div>
+  {% endif %}
+
+  <div class="tiles">
+    {% for tier in ["critical","high","moderate","info"] %}
+    <div class="tile {{ tier }}">
+      <div class="n">{{ counts.get(tier, 0) }}</div>
+      <div class="lbl">{{ tier }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if summary %}
+  <div class="summary">
+    <span class="ai-tag">AI-drafted summary — cited, pharmacist verifies</span>
+    {% for para in summary.split("\n\n") %}<p>{{ para }}</p>{% endfor %}
+  </div>
+  {% endif %}
+
+  <h2>Findings ({{ findings|length }})</h2>
+  {% if findings %}
+  <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th>#</th><th>Severity</th><th>Item</th><th>NDC</th><th>Source</th>
+        <th>Match</th><th>Why it's flagged</th><th>FDA record</th>
+      </tr></thead>
+      <tbody>
+      {% for f in findings %}
+        <tr>
+          <td>[{{ f.citation }}]</td>
+          <td><span class="chip sev-{{ f.severity }}">{{ f.severity }}</span></td>
+          <td>{{ f.item_name }} <span class="meta">(row {{ f.item_row }})</span></td>
+          <td><code>{{ f.item_ndc or "—" }}</code></td>
+          <td>{{ f.source }}</td>
+          <td>
+            {% if f.label == "ai_matched" %}
+              <span class="chip lbl-chip needs-verify">AI-matched — needs verification</span>
+            {% else %}
+              <span class="chip lbl-chip">{{ f.label }}</span>
+            {% endif %}
+          </td>
+          <td>{{ f.severity_rationale }}{% if f.ai_rationale %}<br><span class="meta">AI: {{ f.ai_rationale }}</span>{% endif %}</td>
+          <td>{% if f.source_url %}<a href="{{ f.source_url }}">source [{{ f.citation }}]</a>{% else %}—{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p>No findings — no recalls, shortages, or NDC-status issues matched your formulary.</p>
+  {% endif %}
+
+  {% if manual_review %}
+  <h2>Needs manual review ({{ manual_review|length }})</h2>
+  <p class="meta">Fuzzy candidates that were not AI-adjudicated this run.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Item</th><th>Source</th><th>Reason</th></tr></thead>
+      <tbody>
+      {% for c in manual_review %}
+        <tr><td>{{ c.item.name }} <span class="meta">(row {{ c.item.row }})</span></td>
+            <td>{{ c.source }}</td><td>{{ c.reason }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if quarantined %}
+  <h2>Quarantined rows ({{ quarantined|length }})</h2>
+  <p class="meta">Rows we could not fully process — shown, never silently dropped.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>CSV line</th><th>Reason</th></tr></thead>
+      <tbody>
+      {% for q in quarantined %}<tr><td>{{ q.row }}</td><td>{{ q.reason }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if unchecked %}
+  <h2>Unchecked items ({{ unchecked|length }})</h2>
+  <p class="meta">These items could not be checked against one or more sources this run — treat as unknown, not clear.</p>
+  <ul>{% for u in unchecked %}<li>{{ u }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <p class="foot">
+    Generated by <a href="https://github.com/Travis-Clement-Dev/RxSweep">RxSweep</a>.
+    Audit trail: <code>{{ meta.audit_path }}</code> · Governance: SYSTEM_CARD.md ·
+    DATA_PROVENANCE.md · GOVERNANCE.md · Severity rubric human-authored (Travis Clement, PharmD).
+  </p>
+</div>
+</body>
+</html>
