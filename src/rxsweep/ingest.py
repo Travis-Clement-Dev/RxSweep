@@ -45,6 +45,13 @@ def _detect(headers: list[str]) -> dict[str, str]:
     return cols
 
 
+# FormularyItem now exists — resolve matching's forward references so
+# Hit/Candidate/MatchResults are constructible by any importer.
+from rxsweep import matching as _matching  # noqa: E402
+
+_matching._ensure_models()
+
+
 def load_formulary(path: Path) -> FormularyLoad:
     items: list[FormularyItem] = []
     quarantined: list[QuarantinedRow] = []
