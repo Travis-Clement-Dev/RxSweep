@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ProgressBar } from "react-aria-components";
 import { getSweep, type SweepProgress } from "../api";
 
 export default function Progress({
@@ -48,7 +49,13 @@ export default function Progress({
 
   return (
     <section className="panel flex flex-col items-center gap-6 p-10" aria-live="polite">
-      <div className="sweep" aria-hidden="true" />
+      <ProgressBar
+        isIndeterminate
+        aria-label={`Sweep in progress: ${progress?.phase ?? "starting"}`}
+        className="flex flex-col items-center"
+      >
+        <div className="sweep" aria-hidden="true" />
+      </ProgressBar>
       <h2 className="m-0 text-lg font-bold capitalize">
         {progress?.phase ?? "starting"}
       </h2>
