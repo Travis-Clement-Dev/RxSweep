@@ -27,6 +27,7 @@
   --moderate-soft: #f5ebd8;
   --info-soft: #e3f0e8;
   --focus-row: #e6f4f0;
+  --btn-ink: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -52,6 +53,7 @@
     --moderate-soft: #372c15;
     --info-soft: #1c3227;
     --focus-row: #1e332c;
+    --btn-ink: #0c1512;
   }
 }
 
@@ -90,7 +92,7 @@ code, .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size:
 
 /* ---- buttons & chips ---- */
 .btn { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: none;
-       font: 600 13px/1 inherit; background: var(--accent); color: #fff; padding: 10px 16px; }
+       font: 600 13px/1 inherit; background: var(--accent); color: var(--btn-ink); padding: 10px 16px; }
 .btn:hover { filter: brightness(1.08); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn-quiet { background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent); }

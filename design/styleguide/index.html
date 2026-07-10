@@ -1,0 +1,386 @@
+<title>RxSweep Style Guide — Federal Clarity, Contemporary Craft</title>
+<style>
+  :root, :root[data-theme="light"] {
+    --paper:#ffffff; --ground:#f2f3f1; --ink:#1b1b1b; --ink-soft:#4b5550; --ink-faint:#6d746f;
+    --line:#a9aeb1; --line-soft:#dde1de; --band:#14201c; --band-ink:#ffffff;
+    --accent:#0e7c6b; --accent-ink:#0a5a4e; --accent-soft:#e2f0ec;
+    --critical:#9a3a2e; --moderate:#8a5d0b; --info:#256b43;
+    --critical-soft:#f6e4e1; --moderate-soft:#f5ebd8; --info-soft:#e3f0e8;
+    --focus-row:#e6f4f0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:#17211d; --ground:#101815; --ink:#e2eae6; --ink-soft:#a8b8b0; --ink-faint:#7e938c;
+      --line:#3a4a43; --line-soft:#24322c; --band:#0c1512; --band-ink:#f2f7f5;
+      --accent:#34b39c; --accent-ink:#6fd3bf; --accent-soft:#16332c;
+      --critical:#db8377; --moderate:#d9a94f; --info:#5cb884;
+      --critical-soft:#3a211d; --moderate-soft:#372c15; --info-soft:#1c3227;
+      --focus-row:#1e332c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#17211d; --ground:#101815; --ink:#e2eae6; --ink-soft:#a8b8b0; --ink-faint:#7e938c;
+    --line:#3a4a43; --line-soft:#24322c; --band:#0c1512; --band-ink:#f2f7f5;
+    --accent:#34b39c; --accent-ink:#6fd3bf; --accent-soft:#16332c;
+    --critical:#db8377; --moderate:#d9a94f; --info:#5cb884;
+    --critical-soft:#3a211d; --moderate-soft:#372c15; --info-soft:#1c3227;
+    --focus-row:#1e332c;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--ground); color:var(--ink);
+         font:14px/1.55 "Public Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .band { background:var(--band); color:var(--band-ink); border-bottom:4px solid var(--accent);
+          position:sticky; top:0; z-index:10; }
+  .band .inner { max-width:1080px; margin:0 auto; padding:10px 20px; display:flex;
+                 justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .band .brand { font-weight:800; font-size:15px; }
+  .band nav { display:flex; gap:14px; font-size:12px; flex-wrap:wrap; }
+  .band nav a { color:#b8c6c0; text-decoration:none; }
+  .band nav a:hover { color:#fff; }
+  .band .toggle { background:var(--accent); color:#fff; border:none; font:600 12px/1 inherit;
+                  padding:7px 12px; cursor:pointer; }
+  .wrap { max-width:1080px; margin:0 auto; padding:0 20px 80px; }
+  h1 { font-size:26px; font-weight:800; letter-spacing:-.01em; margin:26px 0 2px; }
+  .rule { border:none; border-top:3px solid var(--ink); margin:10px 0 0; }
+  .rule.thin { border-top:1px solid var(--line); margin-top:3px; }
+  h2 { font-size:13px; letter-spacing:.12em; text-transform:uppercase; font-weight:800;
+       margin:40px 0 12px; scroll-margin-top:70px; }
+  h3 { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin:20px 0 8px; }
+  p { max-width:72ch; }
+  .lede { color:var(--ink-soft); font-size:15px; max-width:70ch; }
+  .panel { background:var(--paper); border:1px solid var(--line-soft); padding:18px 20px; }
+  code, .mono { font-family:ui-monospace, "SF Mono", Menlo, monospace; font-size:.85em; }
+  a { color:var(--accent-ink); }
+  .meta { color:var(--ink-soft); font-size:12.5px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:760px){ .grid2 { grid-template-columns:1fr; } }
+
+  /* swatches */
+  .swatches { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; }
+  .swatch { border:1px solid var(--line-soft); background:var(--paper); }
+  .swatch .fill { height:64px; display:flex; align-items:flex-end; padding:8px 10px;
+                  font:700 12px/1 ui-monospace, Menlo, monospace; }
+  .swatch .info { padding:8px 10px; font-size:11.5px; }
+  .swatch .info b { display:block; font-size:12.5px; }
+  .ratio { font-family:ui-monospace, Menlo, monospace; }
+  .pass { color:var(--info); font-weight:700; }
+  .fail { color:var(--critical); font-weight:700; }
+
+  /* type scale */
+  .typerow { display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:baseline;
+             padding:10px 0; border-bottom:1px solid var(--line-soft); }
+
+  /* spec cards */
+  .spec { background:var(--paper); border:1px solid var(--line-soft); margin-bottom:16px; }
+  .spec .demo { padding:22px; border-bottom:1px solid var(--line-soft); background:var(--ground); }
+  .spec .docs { padding:12px 16px; font-size:12.5px; display:grid; gap:4px; }
+  .spec .docs .prov { color:var(--ink-soft); }
+  .prov b { color:var(--ink); }
+  .jstage { display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:.1em;
+            text-transform:uppercase; color:var(--accent-ink); background:var(--accent-soft);
+            padding:2px 8px; border:1px solid var(--accent); margin-right:8px; }
+
+  /* component styles (the system itself) */
+  .btn { display:inline-flex; align-items:center; gap:8px; cursor:pointer; border:none;
+         font:600 13px/1 inherit; background:var(--accent); color:#fff; padding:10px 16px; }
+  .btn.quiet { background:var(--accent-soft); color:var(--accent-ink); border:1px solid var(--accent); }
+  .btn:focus-visible, .demo [tabindex]:focus-visible, .demo input:focus-visible {
+    outline:2px solid var(--accent); outline-offset:2px; }
+  .chip { display:inline-block; font-size:11px; font-weight:700; letter-spacing:.06em;
+          text-transform:uppercase; padding:2px 8px; border:1px solid var(--accent);
+          background:var(--accent-soft); color:var(--accent-ink); }
+  .chip.verify { background:var(--moderate-soft); color:var(--moderate); border-color:var(--moderate); }
+  .svt { font-weight:800; font-size:11px; letter-spacing:.09em; text-transform:uppercase; }
+  .svt.critical { color:var(--critical); } .svt.moderate { color:var(--moderate); } .svt.info { color:var(--info); }
+  .svdot { display:inline-block; width:8px; height:8px; margin-right:6px; }
+  .svdot.critical { background:var(--critical); } .svdot.moderate { background:var(--moderate); } .svdot.info { background:var(--info); }
+  .qrow { display:grid; grid-template-columns:18px 1fr auto auto; gap:12px; align-items:center;
+          padding:9px 12px; border:1px solid var(--line-soft); background:var(--paper); font-size:13.5px; }
+  .tblrow { display:grid; grid-template-columns:44px 90px 1fr 120px 70px; gap:10px; padding:8px 12px;
+            background:var(--paper); border:1px solid var(--line-soft); font-size:12.5px; align-items:baseline; }
+  .tblrow.focused { background:var(--focus-row); box-shadow:inset 3px 0 0 var(--accent); }
+  .bubble { border:1px solid var(--line-soft); background:var(--ground); padding:8px 10px;
+            font-size:12.5px; max-width:340px; }
+  .bubble.user { background:var(--accent-soft); color:var(--accent-ink); }
+  .dont { border-left:4px solid var(--critical); }
+  .do { border-left:4px solid var(--info); }
+  .ddgrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:760px){ .ddgrid { grid-template-columns:1fr; } }
+  .ddgrid .panel { font-size:13px; }
+  .ddgrid h3 { margin-top:0; }
+  ul { padding-left:20px; } li { margin-bottom:6px; max-width:70ch; }
+</style>
+
+<div class="band">
+  <div class="inner">
+    <span class="brand">RxSweep Style Guide</span>
+    <nav>
+      <a href="#principles">Principles</a><a href="#color">Color</a><a href="#type">Type</a>
+      <a href="#space">Space</a><a href="#components">Components</a><a href="#states">States</a>
+      <a href="#writing">Writing</a><a href="#reject">What we reject</a>
+    </nav>
+    <button class="toggle" id="themeToggle">Toggle theme</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1>Federal clarity, contemporary craft</h1>
+  <hr class="rule"><hr class="rule thin">
+  <p class="lede">The design system for RxSweep's React Aria exploration. Every choice below is
+  anchored to Dana's journey (Prepare → Run → Triage → Verify → Act) and aimed at the known
+  failure of government-enterprise software: trustworthy but a decade old, or modern but
+  unserious. RxSweep is a regulatory instrument with the polish of the best modern tools.
+  This page is written in the system it defines.</p>
+
+  <h2 id="principles">1 · Principles</h2>
+  <div class="panel">
+    <ul>
+      <li><b>Worklist first.</b> The hero of every screen is what the pharmacist does next, never what the software produced.</li>
+      <li><b>Severity is state, not decoration.</b> Status colors are reserved for severity meaning; the teal accent never signals danger, danger colors never decorate.</li>
+      <li><b>Document language.</b> Square corners, rules, registers, exhibits: artifacts read as instruments of record, on screen and in print.</li>
+      <li><b>AI is labeled, cited, summoned.</b> Model output appears attached to objects or on demand, always with citations and its cost on the meter.</li>
+      <li><b>Accessibility is the floor, not a feature.</b> WCAG 2.1 AA contrast (verified below, computed live), full keyboard operability via React Aria, visible focus everywhere.</li>
+    </ul>
+  </div>
+
+  <h2 id="color">2 · Color tokens</h2>
+  <p class="meta">Contrast ratios below are <b>computed by this page at render time</b> against
+  the current theme's paper/ground, not asserted. AA normal text = 4.5:1, AA large/bold ≥ 3:1.
+  Toggle the theme to re-verify the dark palette.</p>
+  <div class="swatches" id="swatches"></div>
+
+  <h3>Severity semantics (reserved)</h3>
+  <div class="panel">
+    <p style="margin-top:0">
+      <span class="svdot critical"></span><span class="svt critical">Critical / High</span>
+      &nbsp;&nbsp;<span class="svdot moderate"></span><span class="svt moderate">Moderate</span>
+      &nbsp;&nbsp;<span class="svdot info"></span><span class="svt info">Info</span>
+    </p>
+    <p class="meta" style="margin-bottom:0">Severity renders as typographic state (small-caps colored text + square dot),
+    never as filled pill backgrounds at scale. Soft tints are reserved for stamps, tags, and row emphasis.</p>
+  </div>
+
+  <h2 id="type">3 · Typography</h2>
+  <p class="meta">Public Sans (the U.S. federal open-source face) with Helvetica fallback; production
+  bundles the woff2. Monospace (system SF Mono/Menlo) is reserved for identifiers: NDCs, run ids,
+  citations, file names. No decorative faces in the app; Georgia serif belongs to the memo export only.</p>
+  <div class="panel">
+    <div class="typerow"><span class="meta mono">Document title · 26/800</span><span style="font-size:26px;font-weight:800;letter-spacing:-.01em">Formulary Sweep Findings</span></div>
+    <div class="typerow"><span class="meta mono">Section label · 13/800 caps</span><span style="font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Required actions</span></div>
+    <div class="typerow"><span class="meta mono">Body · 14/400</span><span>A pharmacist verifies every finding before action.</span></div>
+    <div class="typerow"><span class="meta mono">Table/data · 12.5/400</span><span style="font-size:12.5px">Class I recall: reasonable probability of serious harm</span></div>
+    <div class="typerow"><span class="meta mono">Identifier · mono 11.5</span><span class="mono" style="font-size:11.5px">0409-4058-01 · run 20260710T014543Z · [17]</span></div>
+    <div class="typerow" style="border-bottom:none"><span class="meta mono">Micro label · 10.5/800 caps</span><span style="font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)">Severity</span></div>
+  </div>
+
+  <h2 id="space">4 · Space & density</h2>
+  <div class="panel">
+    <p style="margin-top:0">Base unit <b>4px</b>. Density targets an instrument, not a brochure:
+    table rows 32–36px tall, queue rows 40px, panel padding 18–22px, section gaps 40px.
+    One content column max-width 1280px with rail 208px and dock 300px. Corners:
+    <b>0px everywhere</b> (square is the identity); the only circles are severity dots and the radar sweep.</p>
+  </div>
+
+  <h2 id="components">5 · Component specimens & provenance</h2>
+  <p class="meta">Each specimen names the React Aria component that will power it, links to its
+  official documentation, tags the journey stage it serves, and gives the design rationale.
+  Specimens are rendered in this guide's CSS: what you see is the target styling.</p>
+
+  <div class="spec">
+    <div class="demo">
+      <button class="btn">Run sweep</button>&nbsp;
+      <button class="btn quiet">New sweep</button>&nbsp;
+      <button class="btn" disabled style="opacity:.45;cursor:not-allowed">Run sweep</button>
+    </div>
+    <div class="docs">
+      <span><span class="jstage">Prepare · Act</span><b>Button</b> — <a href="https://react-aria.adobe.com/Button" target="_blank" rel="noreferrer">react-aria.adobe.com/Button</a></span>
+      <span class="prov"><b>Why:</b> hover/press/disabled semantics and focus handling for free; primary filled teal, quiet variant for secondary actions. One primary action per view.</span>
+    </div>
+  </div>
+
+  <div class="spec">
+    <div class="demo">
+      <div class="qrow">
+        <input type="checkbox" aria-label="done" style="accent-color:var(--accent)">
+        <span><b>Verify lots for Sodium Chloride 0.9%</b> (0338-0049-04) against the recall record; quarantine affected stock.</span>
+        <span class="svt critical">Class I</span>
+        <span class="meta mono">[2]</span>
+      </div>
+    </div>
+    <div class="docs">
+      <span><span class="jstage">Triage</span><b>Checkbox + GridList row</b> — <a href="https://react-aria.adobe.com/Checkbox" target="_blank" rel="noreferrer">react-aria.adobe.com/Checkbox</a> · <a href="https://react-aria.adobe.com/GridList" target="_blank" rel="noreferrer">/GridList</a></span>
+      <span class="prov"><b>Why:</b> the action queue is a checkable worklist; GridList gives arrow-key row navigation and selection semantics screen readers announce correctly. Verb first, identifier mono, severity as typographic state.</span>
+    </div>
+  </div>
+
+  <div class="spec">
+    <div class="demo">
+      <div class="tblrow" style="border-bottom:none"><span class="meta mono">#</span><span class="meta" style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Severity</span><span class="meta" style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Item</span><span class="meta" style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">NDC</span><span class="meta" style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase">Match</span></div>
+      <div class="tblrow"><span class="mono">[1]</span><span><span class="svdot critical"></span><span class="svt critical">critical</span></span><span>Cefazolin Sodium</span><span class="mono">0409-4058-01</span><span class="chip">name</span></div>
+      <div class="tblrow focused"><span class="mono">[2]</span><span><span class="svdot critical"></span><span class="svt critical">critical</span></span><span>Sodium Chloride 0.9% <span class="meta">(row focused)</span></span><span class="mono">0338-0049-04</span><span class="chip">name</span></div>
+      <div class="tblrow"><span class="mono">[8]</span><span><span class="svdot moderate"></span><span class="svt moderate">moderate</span></span><span>Lidocaine HCl</span><span class="mono">0143-9575-01</span><span class="chip verify">AI: verify</span></div>
+    </div>
+    <div class="docs">
+      <span><span class="jstage">Triage · Verify</span><b>Table (sortable)</b> — <a href="https://react-aria.adobe.com/Table" target="_blank" rel="noreferrer">react-aria.adobe.com/Table</a></span>
+      <span class="prov"><b>Why:</b> replaces the hand-rolled register with native accessible column sorting, keyboard row focus (Enter opens the record), and correct grid semantics. This is the component that most improves on phase 3.</span>
+    </div>
+  </div>
+
+  <div class="spec">
+    <div class="demo" style="display:flex;gap:10px;flex-wrap:wrap">
+      <span style="border:1px solid var(--line);background:var(--paper);padding:8px 12px;font-size:12.5px">Verify drawer: focus-trapped panel, Esc closes, square, right-anchored ▸</span>
+      <span style="border:1px solid var(--line);background:var(--paper);padding:8px 12px;font-size:12.5px">Export menu: findings.csv · findings.xlsx · findings.md · memo ▾</span>
+    </div>
+    <div class="docs">
+      <span><span class="jstage">Verify · Act</span><b>Modal + Dialog</b> — <a href="https://react-aria.adobe.com/Modal" target="_blank" rel="noreferrer">react-aria.adobe.com/Modal</a> · <a href="https://react-aria.adobe.com/Dialog" target="_blank" rel="noreferrer">/Dialog</a>&nbsp;&nbsp;|&nbsp;&nbsp;<b>Menu</b> — <a href="https://react-aria.adobe.com/Menu" target="_blank" rel="noreferrer">react-aria.adobe.com/Menu</a></span>
+      <span class="prov"><b>Why:</b> Modal/Dialog carries the drawer's focus trap and restore (replacing Radix, one dependency family for everything); Menu upgrades the rail's export links to a proper keyboard-navigable menu with typeahead.</span>
+    </div>
+  </div>
+
+  <div class="spec">
+    <div class="demo">
+      <div class="bubble user" style="margin-bottom:8px">Which items have Class I recalls?</div>
+      <div class="bubble">Cefazolin Sodium <a class="mono" href="#components">[1]</a> and Sodium Chloride 0.9% <a class="mono" href="#components">[2]</a> carry Class I recalls.</div>
+      <p class="meta mono" style="margin:10px 0 0;font-size:11px">claude-haiku-4-5 · 823 in / 366 out tokens · ~$0.0027<br>Billed to your own API key. Every call is in this run's audit log.</p>
+    </div>
+    <div class="docs">
+      <span><span class="jstage">Act</span><b>Chat dock: TextField + Button</b> — <a href="https://react-aria.adobe.com/TextField" target="_blank" rel="noreferrer">react-aria.adobe.com/TextField</a></span>
+      <span class="prov"><b>Why:</b> docked-assistant placement follows the convention users know from modern enterprise suites; citations are interactive and jump to rows; the usage meter keeps BYO-key cost honest.</span>
+    </div>
+  </div>
+
+  <div class="spec">
+    <div class="demo" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <span style="border:2px dashed var(--line);background:var(--paper);padding:14px 18px;font-size:12.5px">Drop your formulary CSV here — or click to browse</span>
+      <span style="border:1px solid var(--line-soft);background:var(--paper);padding:8px 12px;font-size:12.5px" class="mono">39 items read · 7 FDA requests · 2 AI calls</span>
+    </div>
+    <div class="docs">
+      <span><span class="jstage">Prepare · Run</span><b>DropZone + FileTrigger</b> — <a href="https://react-aria.adobe.com/DropZone" target="_blank" rel="noreferrer">react-aria.adobe.com/DropZone</a> · <a href="https://react-aria.adobe.com/FileTrigger" target="_blank" rel="noreferrer">/FileTrigger</a>&nbsp;&nbsp;|&nbsp;&nbsp;<b>ProgressBar</b> — <a href="https://react-aria.adobe.com/ProgressBar" target="_blank" rel="noreferrer">/ProgressBar</a></span>
+      <span class="prov"><b>Why:</b> DropZone gives accessible drag-and-drop with keyboard alternative built in (our hand-rolled version approximated this); ProgressBar announces sweep progress to assistive tech while the radar animates for sighted users. The radar sweep stays: it is the product's signature moment.</span>
+    </div>
+  </div>
+
+  <div class="spec">
+    <div class="demo" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn quiet" aria-pressed="true" style="outline:2px solid var(--accent);outline-offset:2px">All findings · 16</button>
+      <button class="btn quiet" aria-pressed="false" style="background:var(--paper);color:var(--ink-soft);border-color:var(--line-soft)">Critical · 3</button>
+      <button class="btn quiet" aria-pressed="false" style="background:var(--paper);color:var(--ink-soft);border-color:var(--line-soft)">Quarantined · 1</button>
+    </div>
+    <div class="docs">
+      <span><span class="jstage">Triage</span><b>Rail filters: ToggleButtonGroup / Tabs</b> — <a href="https://react-aria.adobe.com/ToggleButtonGroup" target="_blank" rel="noreferrer">react-aria.adobe.com/ToggleButtonGroup</a> · <a href="https://react-aria.adobe.com/Tabs" target="_blank" rel="noreferrer">/Tabs</a></span>
+      <span class="prov"><b>Why:</b> severity filters are exclusive toggles with counts; registers (findings / manual review / quarantined / unchecked) are true tabs. Both get arrow-key group navigation from React Aria.</span>
+    </div>
+  </div>
+
+  <h2 id="states">6 · Interaction states</h2>
+  <div class="panel">
+    <ul style="margin:0">
+      <li><b>Focus:</b> 2px teal outline, 2px offset, on every interactive element; table rows use inset 3px left bar + tinted row. Focus is never suppressed.</li>
+      <li><b>Hover:</b> soft accent tint on rows and rail items; buttons brighten 8%. Hover never carries meaning alone.</li>
+      <li><b>Pressed/selected:</b> aria-pressed/selected drives the visual (React Aria state attributes), not click-order CSS.</li>
+      <li><b>Motion:</b> one signature animation (the radar sweep) plus row-flash on citation jump; everything else is instant. <code>prefers-reduced-motion</code> disables all.</li>
+      <li><b>Dark theme:</b> same tokens re-derived, verified by the computed ratios above; never an inversion filter.</li>
+    </ul>
+  </div>
+
+  <h2 id="writing">7 · Writing register</h2>
+  <div class="panel">
+    <ul style="margin:0">
+      <li>FDA drug-safety-communication register: short declarative sentences, active voice, standard terminology (recall classification, shortage status, presentation).</li>
+      <li>No em dashes. No markdown syntax in generated text. Plain text paragraphs.</li>
+      <li>Every AI-drafted element is labeled and cited; scope banner on every surface: informational tool, pharmacist verifies, not clinical advice.</li>
+      <li>Buttons say exactly what happens: "Run sweep", "Open FDA source record", "Brief me for the huddle".</li>
+      <li>openFDA's disclaimer travels verbatim with every artifact.</li>
+    </ul>
+  </div>
+
+  <h2 id="reject">8 · Generic-AI patterns we reject</h2>
+  <div class="ddgrid">
+    <div class="panel dont">
+      <h3 style="color:var(--critical)">Don't</h3>
+      <ul style="margin:0">
+        <li>Rounded cards with drop shadows as the default container</li>
+        <li>AI prose as the dashboard hero</li>
+        <li>Pill-shaped colored badges for every attribute</li>
+        <li>Purple/indigo gradients, glassmorphism, emoji as section markers</li>
+        <li>Centered marketing-style layouts for working screens</li>
+        <li>Severity colors reused as decoration or accents</li>
+      </ul>
+    </div>
+    <div class="panel do">
+      <h3 style="color:var(--info)">Do</h3>
+      <ul style="margin:0">
+        <li>Square panels, hairline borders, document rules</li>
+        <li>Verb-led worklist as the hero; AI summoned on demand</li>
+        <li>Typographic state (small-caps + dot) for severity</li>
+        <li>One teal identity, one signature motion, tabular numerals</li>
+        <li>Left-aligned instrument density with a rail and a dock</li>
+        <li>Provenance everywhere: citations, doc links, audit trail, cost meter</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="meta" style="margin-top:40px">RxSweep · design/styleguide · decisions in
+  <a href="https://github.com/Travis-Clement-Dev/RxSweep/blob/main/docs/DECISIONS.md">DECISIONS.md</a>
+  (D8: React Aria Components selection rubric). Typography note: this page approximates Public Sans
+  via system fallback; production bundles the real face.</p>
+</div>
+
+<script>
+  // Theme toggle
+  document.getElementById("themeToggle").addEventListener("click", () => {
+    const root = document.documentElement;
+    const dark = getComputedStyle(root).getPropertyValue("--paper").trim() !== "#ffffff";
+    root.dataset.theme = dark ? "light" : "dark";
+    renderSwatches();
+  });
+
+  // WCAG contrast, computed live — never asserted.
+  function lum(hex) {
+    const c = hex.replace("#", "");
+    const [r, g, b] = [0, 2, 4].map(i => parseInt(c.slice(i, i + 2), 16) / 255)
+      .map(v => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+  function ratio(a, b) {
+    const [l1, l2] = [lum(a), lum(b)].sort((x, y) => y - x);
+    return (l1 + 0.05) / (l2 + 0.05);
+  }
+  const TOKENS = [
+    ["--ink", "body text", "--paper", 4.5],
+    ["--ink-soft", "secondary text", "--paper", 4.5],
+    ["--accent-ink", "links / quiet buttons", "--paper", 4.5],
+    ["--critical", "severity critical/high", "--paper", 3.0],
+    ["--moderate", "severity moderate", "--paper", 3.0],
+    ["--info", "severity info", "--paper", 3.0],
+    ["--accent", "primary button fill (vs white text)", "#ffffff", 4.5],
+    ["--band-ink", "band text (vs band)", "--band", 4.5],
+  ];
+  function cssVal(name) {
+    return name.startsWith("#") ? name :
+      getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  function renderSwatches() {
+    const host = document.getElementById("swatches");
+    host.innerHTML = "";
+    for (const [token, role, against, need] of TOKENS) {
+      const fg = cssVal(token), bg = cssVal(against);
+      const r = ratio(fg, bg);
+      const ok = r >= need;
+      const el = document.createElement("div");
+      el.className = "swatch";
+      el.innerHTML =
+        '<div class="fill" style="background:' + fg + ";color:" +
+        (lum(fg) > 0.35 ? "#1b1b1b" : "#ffffff") + '">' + fg + "</div>" +
+        '<div class="info"><b>' + token + "</b>" + role +
+        '<br><span class="ratio">' + r.toFixed(2) + ":1 vs " + against +
+        '</span> · <span class="' + (ok ? "pass" : "fail") + '">' +
+        (ok ? "PASS" : "FAIL") + " (needs " + need + ":1)</span></div>";
+      host.appendChild(el);
+    }
+  }
+  renderSwatches();
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderSwatches);
+  }
+</script>
