@@ -1,8 +1,8 @@
 <title>RxSweep Style Guide — Federal Clarity, Contemporary Craft</title>
 <style>
   :root, :root[data-theme="light"] {
-    --paper:#ffffff; --ground:#f2f3f1; --ink:#1b1b1b; --ink-soft:#4b5550; --ink-faint:#6d746f;
-    --line:#a9aeb1; --line-soft:#dde1de; --band:#14201c; --band-ink:#ffffff;
+    --paper:#ffffff; --ground:#f3f4f4; --ink:#1b1b1b; --ink-soft:#565c65; --ink-faint:#71767a;
+    --line:#a9aeb1; --line-soft:#dfe1e2; --band:#1b1b1b; --band-ink:#ffffff;
     --accent:#0e7c6b; --accent-ink:#0a5a4e; --accent-soft:#e2f0ec;
     --critical:#9a3a2e; --moderate:#8a5d0b; --info:#256b43;
     --critical-soft:#f6e4e1; --moderate-soft:#f5ebd8; --info-soft:#e3f0e8;
@@ -10,21 +10,21 @@
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --paper:#17211d; --ground:#101815; --ink:#e2eae6; --ink-soft:#a8b8b0; --ink-faint:#7e938c;
-      --line:#3a4a43; --line-soft:#24322c; --band:#0c1512; --band-ink:#f2f7f5;
-      --accent:#34b39c; --accent-ink:#6fd3bf; --accent-soft:#16332c;
+      --paper:#1e2022; --ground:#16181a; --ink:#e6e7e8; --ink-soft:#a9adb1; --ink-faint:#7d8286;
+      --line:#3d4145; --line-soft:#2a2d30; --band:#101214; --band-ink:#f2f3f3;
+      --accent:#34b39c; --accent-ink:#7fd6c4; --accent-soft:#14302a;
       --critical:#db8377; --moderate:#d9a94f; --info:#5cb884;
       --critical-soft:#3a211d; --moderate-soft:#372c15; --info-soft:#1c3227;
-      --focus-row:#1e332c; --btn-ink:#0c1512;
+      --focus-row:#1d2c28; --btn-ink:#101214;
     }
   }
   :root[data-theme="dark"] {
-    --paper:#17211d; --ground:#101815; --ink:#e2eae6; --ink-soft:#a8b8b0; --ink-faint:#7e938c;
-    --line:#3a4a43; --line-soft:#24322c; --band:#0c1512; --band-ink:#f2f7f5;
-    --accent:#34b39c; --accent-ink:#6fd3bf; --accent-soft:#16332c;
+    --paper:#1e2022; --ground:#16181a; --ink:#e6e7e8; --ink-soft:#a9adb1; --ink-faint:#7d8286;
+    --line:#3d4145; --line-soft:#2a2d30; --band:#101214; --band-ink:#f2f3f3;
+    --accent:#34b39c; --accent-ink:#7fd6c4; --accent-soft:#14302a;
     --critical:#db8377; --moderate:#d9a94f; --info:#5cb884;
     --critical-soft:#3a211d; --moderate-soft:#372c15; --info-soft:#1c3227;
-    --focus-row:#1e332c; --btn-ink:#0c1512;
+    --focus-row:#1d2c28; --btn-ink:#101214;
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--ground); color:var(--ink);
@@ -144,6 +144,20 @@
   </div>
 
   <h2 id="color">2 · Color tokens</h2>
+  <div class="panel" style="margin-bottom:14px">
+    <h3 style="margin-top:0">Research grounding (primary sources)</h3>
+    <ul style="margin:0">
+      <li><b>USWDS</b>: "start in black and white"; color is progressive enhancement, never the sole carrier of meaning; contrast by grade arithmetic. (<a href="https://designsystem.digital.gov/design-tokens/color/overview/" target="_blank" rel="noreferrer">designsystem.digital.gov</a>)</li>
+      <li><b>NHS service manual</b>: pages sit on light grey, not white (glare + British Dyslexia Association guidance); white is reserved for surfaces that must stand out; color only in strict semantic roles; brand color exists for trust recognition. Notably, the NHS's own primary action color is green. (<a href="https://service-manual.nhs.uk/design-system/styles/colour" target="_blank" rel="noreferrer">service-manual.nhs.uk</a>)</li>
+      <li><b>VA.gov design system</b>: primitives strictly from USWDS; a single trust-color predominant; semantic tokens over decorative ones. (<a href="https://design.va.gov/foundation/color-palette" target="_blank" rel="noreferrer">design.va.gov</a>)</li>
+    </ul>
+    <p class="meta" style="margin:10px 0 0"><b>How this shaped the palette:</b> surfaces are true neutrals
+    (no brand-tinted backgrounds; none of the reference systems tint theirs), the light ground is
+    NHS-style grey with white reserved for panels, and teal remains the <em>single</em> sparse accent:
+    the blue-green trust family, at home in healthcare (NHS green), and deliberately distinct from
+    every blue EHR the audience stares at all day. Severity colors follow the shared semantic
+    convention: red urgent, amber caution, green normal/success.</p>
+  </div>
   <p class="meta">Contrast ratios below are <b>computed by this page at render time</b> against
   the current theme's paper/ground, not asserted. AA normal text = 4.5:1, AA large/bold ≥ 3:1.
   Toggle the theme to re-verify the dark palette.</p>

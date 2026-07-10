@@ -108,6 +108,25 @@ lives in [`JOURNAL.md`](./JOURNAL.md); this file is the *why* of the choices.
   disappoints (documented fallback).
 - **Status:** Decided; exploration in progress on `explore/react-aria-styleguide`.
 
+## D9 — Palette refined against primary-source research (2026-07-10)
+
+- **Context:** Travis challenged the green-cast neutral surfaces in style guide v1:
+  what does the evidence say this audience expects?
+- **Research (primary sources):** USWDS ("start in black and white"; color as
+  progressive enhancement, never sole carrier of meaning); NHS service manual
+  (grey ground rather than white for glare/dyslexia reasons, white reserved for
+  emphasis surfaces, strictly semantic color roles, green as the NHS's own action
+  color); VA.gov design system (USWDS primitives only, one trust color predominant).
+- **Decision:** Surfaces become true neutrals in both themes (no brand-tinted
+  backgrounds; no reference system tints theirs). Light ground = NHS-style grey
+  with white panels. Teal stays as the single sparse accent: blue-green trust
+  family, demonstrated at home in healthcare by the NHS, and deliberately distinct
+  from the blue EHRs the audience uses all day. Severity semantics unchanged
+  (red urgent / amber caution / green normal).
+- **Rationale:** Professional design for this audience is neutral-dominant with
+  semantic color discipline; the accent carries identity, the surfaces carry work.
+- **Status:** Final for the exploration; applies to the React Aria port tokens.
+
 ---
 
 *Template for new entries: date, Context, Options, Decision, Rationale, Status.*
