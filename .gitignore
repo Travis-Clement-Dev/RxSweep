@@ -20,3 +20,7 @@ node_modules/
 
 # OS
 .DS_Store
+
+# local preview copies, never committed
+src/rxsweep/webapp/static/comps.html
+src/rxsweep/webapp/static/styleguide.html

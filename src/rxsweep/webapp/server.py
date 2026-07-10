@@ -67,6 +67,15 @@ def create_app(runs_root: Path = Path("runs")) -> FastAPI:
     app = FastAPI(title="RxSweep", docs_url=None, redoc_url=None)
     runs: dict[str, _RunState] = {}
 
+    # The SPA entry point must never be cached: hashed assets are immutable,
+    # but a cached index.html pins users to a stale build after upgrades.
+    @app.middleware("http")
+    async def no_cache_html(request, call_next):
+        response = await call_next(request)
+        if response.headers.get("content-type", "").startswith("text/html"):
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
     def _on_event(state: _RunState, event: dict) -> None:
         with state.lock:
             kind = event.get("kind", "")

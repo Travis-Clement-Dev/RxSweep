@@ -48,6 +48,13 @@ Chronological narrative + cumulative lessons. Design reference →
   output — catch it in the same degradation path as API errors or a truncated model reply
   crashes the run.
 
+### Deployment
+- **A cached index.html is a stale deployment nobody can see.** Vite's hashed assets are
+  immutable, but the browser happily caches the entry page on localhost; after the React
+  Aria port, a previously-open browser showed the old build and read as a failed deploy
+  (2026-07-10). Server now sends `Cache-Control: no-cache` on all HTML. When "none of the
+  changes are there," compare disk vs served vs rendered before touching code.
+
 ### Product / governance
 - **Disclose, never mask, source failures**: an NDC-directory outage must not read as
   "NDC not found in directory" — a `None` sentinel (source failed) is not `{}` (source
