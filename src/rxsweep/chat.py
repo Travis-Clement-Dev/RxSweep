@@ -5,13 +5,22 @@ are audit-logged verbatim, citations are mandatory, scope is bounded, and
 failure degrades to a plain unavailable message instead of an error page.
 """
 
+from pydantic import BaseModel
+
 from rxsweep.audit import AuditLog
-from rxsweep.triage import _AI_ERRORS, Anthropic, Finding, _model
+from rxsweep.triage import _AI_ERRORS, Anthropic, Finding, _model, usage_tokens
 
 UNAVAILABLE = (
     "The AI assistant is unavailable right now. The findings table and the "
     "FDA source links remain fully usable."
 )
+
+
+class ChatResult(BaseModel):
+    reply: str
+    model: str
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 _SYSTEM = (
     "You are a pharmacy informatics assistant discussing the results of one "
@@ -41,7 +50,7 @@ def chat_reply(
     question: str,
     audit: AuditLog,
     model: str | None = None,
-) -> str:
+) -> ChatResult:
     client = Anthropic()
     model = model or _model()
     messages = [
@@ -60,7 +69,11 @@ def chat_reply(
         )
     except _AI_ERRORS as exc:
         audit.event(kind="ai_unavailable", stage="chat", error=str(exc))
-        return UNAVAILABLE
+        return ChatResult(reply=UNAVAILABLE, model=model)
     text = "".join(block.text for block in response.content if block.type == "text")
-    audit.event(kind="ai_response", stage="chat", model=model, completion=text)
-    return text
+    in_tok, out_tok = usage_tokens(response)
+    audit.event(
+        kind="ai_response", stage="chat", model=model, completion=text,
+        input_tokens=in_tok, output_tokens=out_tok,
+    )
+    return ChatResult(reply=text, model=model, input_tokens=in_tok, output_tokens=out_tok)

@@ -175,8 +175,18 @@ def create_app(runs_root: Path = Path("runs")) -> FastAPI:
                 detail="Chat needs an Anthropic API key. Set ANTHROPIC_API_KEY in .env and restart.",
             )
         audit = AuditLog(result.run_dir)
-        reply = chat_reply(result.findings, req.history, req.question, audit)
-        return {"reply": reply}
+        cr = chat_reply(result.findings, req.history, req.question, audit)
+        from rxsweep.pricing import estimate_cost
+
+        return {
+            "reply": cr.reply,
+            "usage": {
+                "model": cr.model,
+                "input_tokens": cr.input_tokens,
+                "output_tokens": cr.output_tokens,
+                "est_cost_usd": estimate_cost(cr.model, cr.input_tokens, cr.output_tokens),
+            },
+        }
 
     app.state.runs = runs  # exposed for the chat endpoint and tests
 

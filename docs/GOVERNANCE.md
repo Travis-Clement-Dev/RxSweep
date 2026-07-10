@@ -50,7 +50,7 @@ FDA responses are logged as counts plus a SHA-256 body hash.
 | `match` | `hits`, `candidates`, `unmatched` | Deterministic matching result |
 | `ai_skipped` | `reason` | AI not used (`--no-ai` or no key) |
 | `ai_request` | `model`, `prompt`, optional `stage: "chat"` | Verbatim prompt sent to Claude (chat questions included) |
-| `ai_response` | `model`, `completion`, optional `stage: "chat"` | Verbatim/structured model output (chat replies included) |
+| `ai_response` | `model`, `completion`, `input_tokens`, `output_tokens`, optional `stage: "chat"` | Verbatim/structured model output with token usage — AI cost is an audited, per-run fact |
 | `ai_unavailable` | `stage`, `error` | API failure; run degraded to deterministic-only |
 | `run_end` | `findings`, `tiers` | Final counts by severity |
 

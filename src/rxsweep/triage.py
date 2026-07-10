@@ -42,6 +42,17 @@ def _model() -> str:
     return os.environ.get("RXSWEEP_MODEL", DEFAULT_MODEL)
 
 
+def usage_tokens(response) -> tuple[int, int]:
+    """(input_tokens, output_tokens) from a Messages response; 0s if absent."""
+    usage = getattr(response, "usage", None)
+    in_tok = getattr(usage, "input_tokens", 0)
+    out_tok = getattr(usage, "output_tokens", 0)
+    return (
+        in_tok if isinstance(in_tok, int) else 0,
+        out_tok if isinstance(out_tok, int) else 0,
+    )
+
+
 class VerdictItem(BaseModel):
     index: int
     is_match: bool
@@ -119,7 +130,11 @@ def adjudicate(
             audit.event(kind="ai_unavailable", stage="adjudicate", error=str(exc))
             return []
         result: AdjudicationResult = response.parsed_output
-        audit.event(kind="ai_response", model=model, completion=result.model_dump())
+        in_tok, out_tok = usage_tokens(response)
+        audit.event(
+            kind="ai_response", model=model, completion=result.model_dump(),
+            input_tokens=in_tok, output_tokens=out_tok,
+        )
         for v in result.verdicts:
             if start <= v.index < start + len(batch):
                 verdicts.append(
@@ -166,7 +181,11 @@ def summarize(findings: list[Finding], audit: AuditLog, model: str | None = None
         audit.event(kind="ai_unavailable", stage="summarize", error=str(exc))
         return None
     text = "".join(block.text for block in response.content if block.type == "text")
-    audit.event(kind="ai_response", model=model, completion=text)
+    in_tok, out_tok = usage_tokens(response)
+    audit.event(
+        kind="ai_response", model=model, completion=text,
+        input_tokens=in_tok, output_tokens=out_tok,
+    )
     return text
 
 

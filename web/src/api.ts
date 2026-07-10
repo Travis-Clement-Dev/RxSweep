@@ -39,8 +39,16 @@ export interface SweepResultData {
     model: string;
     ai_available: boolean;
     audit_path: string;
+    ai_usage: AiUsage;
   };
   tiers: Record<string, number>;
+}
+
+export interface AiUsage {
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  est_cost_usd: number | null;
 }
 
 export interface SweepProgress {
@@ -78,7 +86,7 @@ export async function sendChat(
   sweepId: string,
   question: string,
   history: { role: string; content: string }[],
-): Promise<{ ok: true; reply: string } | { ok: false; detail: string }> {
+): Promise<{ ok: true; reply: string; usage: AiUsage } | { ok: false; detail: string }> {
   const resp = await fetch(`/api/sweeps/${sweepId}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -88,7 +96,8 @@ export async function sendChat(
     const detail = (await resp.json().catch(() => null))?.detail ?? `Chat failed (${resp.status})`;
     return { ok: false, detail };
   }
-  return { ok: true, reply: (await resp.json()).reply as string };
+  const body = await resp.json();
+  return { ok: true, reply: body.reply as string, usage: body.usage as AiUsage };
 }
 
 export function sourceUrl(f: Finding): string | null {

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { sendChat } from "../api";
+import { sendChat, type AiUsage } from "../api";
 
 interface Message {
   role: "user" | "assistant";
@@ -30,18 +30,27 @@ export default function ChatPanel({
   sweepId,
   aiAvailable,
   summary,
+  sweepUsage,
   onCite,
 }: {
   sweepId: string;
   aiAvailable: boolean;
   summary: string | null;
+  sweepUsage: AiUsage | null;
   onCite: (n: number) => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [chatTokens, setChatTokens] = useState({ in: 0, out: 0, cost: 0, costKnown: true });
   const logRef = useRef<HTMLDivElement>(null);
+
+  const sweepCost = sweepUsage?.est_cost_usd ?? null;
+  const totalIn = (sweepUsage?.input_tokens ?? 0) + chatTokens.in;
+  const totalOut = (sweepUsage?.output_tokens ?? 0) + chatTokens.out;
+  const totalCost =
+    sweepCost !== null && chatTokens.costKnown ? sweepCost + chatTokens.cost : null;
 
   function scrollLog() {
     requestAnimationFrame(() =>
@@ -74,6 +83,12 @@ export default function ChatPanel({
     const resp = await sendChat(sweepId, question, history);
     if (resp.ok) {
       setMessages((m) => [...m, { role: "assistant", content: resp.reply }]);
+      setChatTokens((t) => ({
+        in: t.in + resp.usage.input_tokens,
+        out: t.out + resp.usage.output_tokens,
+        cost: t.cost + (resp.usage.est_cost_usd ?? 0),
+        costKnown: t.costKnown && resp.usage.est_cost_usd !== null,
+      }));
     } else {
       setNotice(resp.detail);
       setMessages((m) => m.slice(0, -1));
@@ -141,6 +156,18 @@ export default function ChatPanel({
           Ask
         </button>
       </form>
+
+      <p
+        className="faint mono mt-3 mb-0 border-t pt-2 text-[11px]"
+        style={{ borderColor: "var(--line-soft)" }}
+        aria-label="AI usage for this run"
+      >
+        {sweepUsage?.model ?? "model unknown"} · {totalIn.toLocaleString()} in /{" "}
+        {totalOut.toLocaleString()} out tokens
+        {totalCost !== null ? ` · ~$${totalCost.toFixed(4)}` : " · cost unknown for this model"}
+        <br />
+        Billed to your own API key. Every call is in this run's audit log.
+      </p>
     </aside>
   );
 }

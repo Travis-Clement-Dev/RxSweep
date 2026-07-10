@@ -183,6 +183,7 @@ export default function Dashboard({
         sweepId={sweepId}
         aiAvailable={result.meta.ai_available}
         summary={result.summary}
+        sweepUsage={result.meta.ai_usage ?? null}
         onCite={citeJump}
       />
 

@@ -55,7 +55,18 @@ def run_sweep(
     run_ts = datetime.now(timezone.utc)
     run_id = run_ts.strftime("%Y%m%dT%H%M%SZ")
     run_dir = out_dir / run_id
-    audit = _TappedAudit(run_dir, on_progress)
+
+    # Usage tally rides the same audit-event stream everything else observes.
+    usage = {"input_tokens": 0, "output_tokens": 0}
+
+    def _tap(event: dict) -> None:
+        if event.get("kind") == "ai_response":
+            usage["input_tokens"] += event.get("input_tokens", 0) or 0
+            usage["output_tokens"] += event.get("output_tokens", 0) or 0
+        if on_progress:
+            on_progress(event)
+
+    audit = _TappedAudit(run_dir, _tap)
     audit.event(kind="run_start", csv=str(csv_path), months_back=months_back, no_ai=not use_ai)
 
     fl = load_formulary(csv_path)
@@ -110,14 +121,23 @@ def run_sweep(
     findings = build_findings(results, verdicts)
     summary = summarize(findings, audit) if ai_available and findings else None
 
+    from rxsweep.pricing import estimate_cost
+
+    model = os.environ.get("RXSWEEP_MODEL", DEFAULT_MODEL)
     meta = dict(
         csv_name=csv_path.name,
         items_checked=len(fl.items),
         run_ts=run_ts.isoformat(timespec="seconds"),
         months_back=months_back,
-        model=os.environ.get("RXSWEEP_MODEL", DEFAULT_MODEL),
+        model=model,
         ai_available=ai_available,
         audit_path=str(audit.path),
+        ai_usage=dict(
+            model=model,
+            input_tokens=usage["input_tokens"],
+            output_tokens=usage["output_tokens"],
+            est_cost_usd=estimate_cost(model, usage["input_tokens"], usage["output_tokens"]),
+        ),
     )
     report_path = run_dir / "report.html"
     report_path.write_text(

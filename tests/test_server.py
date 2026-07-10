@@ -52,6 +52,8 @@ def test_sweep_lifecycle(tmp_path, monkeypatch):
     result = payload["result"]
     # trimmed fixtures produce no deterministic findings; the shape is the contract
     assert "findings" in result and "tiers" in result and "summary" in result
+    usage = result["meta"]["ai_usage"]
+    assert set(usage) == {"model", "input_tokens", "output_tokens", "est_cost_usd"}
     assert result["quarantined"] and result["manual_review"]
 
     report = client.get(f"/api/sweeps/{sweep_id}/report")

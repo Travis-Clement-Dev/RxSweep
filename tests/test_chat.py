@@ -28,11 +28,14 @@ def test_chat_grounds_in_findings_and_audits(mock_cls, tmp_path):
     block.type = "text"
     block.text = "Cefazolin Sodium [1] carries a Class I recall."
     mock_client = mock_cls.return_value
-    mock_client.messages.create.return_value = MagicMock(content=[block])
+    mock_client.messages.create.return_value = MagicMock(
+        content=[block], usage=MagicMock(input_tokens=120, output_tokens=45)
+    )
 
     audit = AuditLog(tmp_path)
-    reply = chat_reply([_finding()], [], "Which items have Class I recalls?", audit)
-    assert "[1]" in reply
+    res = chat_reply([_finding()], [], "Which items have Class I recalls?", audit)
+    assert "[1]" in res.reply
+    assert res.input_tokens == 120 and res.output_tokens == 45
 
     # grounding context was sent as the first user message
     sent = mock_client.messages.create.call_args.kwargs["messages"]
@@ -47,8 +50,8 @@ def test_chat_grounds_in_findings_and_audits(mock_cls, tmp_path):
 @patch("rxsweep.chat.Anthropic")
 def test_chat_failure_returns_unavailable_message(mock_cls, tmp_path):
     mock_cls.return_value.messages.create.side_effect = APIConnectionError(request=MagicMock())
-    reply = chat_reply([_finding()], [], "anything", AuditLog(tmp_path))
-    assert reply == UNAVAILABLE
+    res = chat_reply([_finding()], [], "anything", AuditLog(tmp_path))
+    assert res.reply == UNAVAILABLE and res.input_tokens == 0
 
 
 def test_chat_endpoint_requires_finished_run_and_key(tmp_path, monkeypatch):

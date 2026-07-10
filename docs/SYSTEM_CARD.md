@@ -40,6 +40,10 @@ deterministic `exact_ndc` and `name_match` labels.
 - Override: `RXSWEEP_MODEL` environment variable.
 - API key: `ANTHROPIC_API_KEY` environment variable only — never a config file,
   never the repository. Users bring their own key.
+- **Usage metering:** every AI call's token counts land in the audit log; the UI
+  shows model, tokens, and an estimated cost from a dated pricing table
+  ([`pricing.py`](../src/rxsweep/pricing.py)). Unknown models show tokens only —
+  the tool never guesses a dollar figure.
 
 ## Human-in-the-loop boundary
 

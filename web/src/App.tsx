@@ -28,6 +28,8 @@ export default function App() {
             {phase.result.meta.items_checked} items · recall window{" "}
             {phase.result.meta.months_back} months · AI:{" "}
             {phase.result.meta.ai_available ? phase.result.meta.model : "off"}
+            {phase.result.meta.ai_usage?.est_cost_usd != null &&
+              ` · AI cost ~$${phase.result.meta.ai_usage.est_cost_usd.toFixed(4)}`}
           </p>
         ) : (
           <p className="docket">Sweep a formulary against FDA recalls, shortages, and discontinued NDCs.</p>
