@@ -3,82 +3,87 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RxSweep report: {{ meta.csv_name }}</title>
+<title>RxSweep memorandum: {{ meta.csv_name }}</title>
 <style>
   :root {
-    --paper:#F8FAF8; --ink:#1C2723; --ink-soft:#4A5A53; --ink-faint:#7A8A82;
-    --line:#DCE5E0; --card:#FFFFFF; --accent:#0E7C6B; --accent-soft:#E2F0EC;
-    --accent-ink:#0A5A4E;
-    --critical:#B0483C; --critical-soft:#F6E4E1;
-    --high:#B0483C;     --high-soft:#F6E4E1;
-    --moderate:#A9741B; --moderate-soft:#F5EBD8;
-    --info:#2E7D4F;     --info-soft:#E3F0E8;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --paper:#131B18; --ink:#E6EDE9; --ink-soft:#A8B8B0; --ink-faint:#74847C;
-      --line:#2A3833; --card:#1A2521; --accent:#34B39C; --accent-soft:#16332C;
-      --accent-ink:#6FD3BF;
-      --critical:#DB8377; --critical-soft:#3A211D;
-      --high:#DB8377;     --high-soft:#3A211D;
-      --moderate:#D9A94F; --moderate-soft:#372C15;
-      --info:#5CB884;     --info-soft:#1C3227;
-    }
+    --paper:#fbfaf7; --ground:#efece6; --ink:#23211c; --ink-soft:#565046; --ink-faint:#6d675c;
+    --line:#c9c2b4; --teal:#0e7c6b; --teal-ink:#0a5a4e; --teal-soft:#e2f0ec;
+    --critical:#9a3a2e; --high:#9a3a2e; --moderate:#8a5d0b; --info:#256b43;
+    --critical-soft:#f6e4e1; --high-soft:#f6e4e1; --moderate-soft:#f5ebd8; --info-soft:#e3f0e8;
   }
   * { box-sizing:border-box; }
-  body { margin:0; padding:24px 20px 64px; background:var(--paper); color:var(--ink);
-         font:15px/1.5 "Seravek", -apple-system, system-ui, sans-serif; }
-  .wrap { max-width:1000px; margin:0 auto; }
-  h1,h2 { font-family:"Avenir Next", system-ui, sans-serif; line-height:1.15; }
-  h1 { font-size:1.6rem; margin:.2em 0; }
-  h2 { font-size:1.1rem; margin:2em 0 .6em; }
-  .meta { color:var(--ink-soft); font-size:.85rem; }
-  .banner { margin:18px 0; padding:12px 16px; border-radius:10px; font-size:.9rem;
-            background:var(--accent-soft); color:var(--accent-ink);
-            border:1px solid var(--accent); }
-  .banner.warn { background:var(--moderate-soft); color:var(--moderate); border-color:var(--moderate); }
-  .tiles { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; margin:20px 0; }
-  .tile { background:var(--card); border:1px solid var(--line); border-radius:12px;
-          padding:14px 16px; border-top:4px solid var(--line); }
-  .tile .n { font-size:1.9rem; font-weight:700; font-variant-numeric:tabular-nums; }
-  .tile .lbl { font-size:.72rem; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-faint); }
-  .tile.critical { border-top-color:var(--critical); }
-  .tile.high { border-top-color:var(--high); }
-  .tile.moderate { border-top-color:var(--moderate); }
-  .tile.info { border-top-color:var(--info); }
-  .summary { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; }
-  .ai-tag { display:inline-block; font-size:.7rem; font-weight:700; letter-spacing:.08em;
-            text-transform:uppercase; color:var(--accent-ink); background:var(--accent-soft);
-            border-radius:999px; padding:3px 10px; margin-bottom:8px; }
-  .tablewrap { overflow-x:auto; background:var(--card); border:1px solid var(--line); border-radius:12px; }
-  table { border-collapse:collapse; width:100%; min-width:720px; font-size:.88rem; }
-  th,td { padding:10px 12px; text-align:left; border-top:1px solid var(--line); vertical-align:top; }
-  thead th { border-top:none; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase;
-             color:var(--ink-faint); }
-  .chip { display:inline-block; font-size:.72rem; font-weight:600; border-radius:999px;
-          padding:2px 10px; white-space:nowrap; }
-  .sev-critical { background:var(--critical-soft); color:var(--critical); }
-  .sev-high { background:var(--high-soft); color:var(--high); }
-  .sev-moderate { background:var(--moderate-soft); color:var(--moderate); }
-  .sev-info { background:var(--info-soft); color:var(--info); }
-  .lbl-chip { background:var(--accent-soft); color:var(--accent-ink); }
-  .lbl-chip.needs-verify { background:var(--moderate-soft); color:var(--moderate); }
-  a { color:var(--accent-ink); }
-  .foot { margin-top:36px; color:var(--ink-faint); font-size:.8rem; border-top:1px solid var(--line); padding-top:14px; }
+  body { margin:0; background:var(--ground); color:var(--ink);
+         font:14px/1.55 "Public Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  .sheet { max-width:860px; margin:34px auto; background:var(--paper); padding:52px 62px 44px;
+           box-shadow:0 2px 14px rgba(40,35,20,.18); }
+  .lh { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; }
+  .wordmark { font:800 21px/1 Georgia, "Times New Roman", serif; }
+  .wordmark span { color:var(--teal-ink); }
+  .cls { font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); }
+  hr.lhrule { border:none; border-top:2.5px solid var(--teal-ink); margin:10px 0 22px; }
+  .memotitle { font:700 14px/1.3 Georgia, serif; letter-spacing:.14em; text-transform:uppercase; margin:0 0 18px; }
+  table.head { font-size:13.5px; border-collapse:collapse; margin-bottom:18px; }
+  table.head td { padding:2.5px 0; vertical-align:baseline; }
+  table.head td.k { font-weight:700; width:84px; letter-spacing:.04em; }
+  .stamp { display:inline-block; border:2px solid var(--teal-ink); color:var(--teal-ink);
+           font:700 11px/1 inherit; letter-spacing:.12em; text-transform:uppercase;
+           padding:6px 10px; transform:rotate(-2deg); margin:0 10px 8px 0; }
+  .stamp.warn { border-color:var(--moderate); color:var(--moderate); }
+  .stamp.plain { border-color:var(--ink-faint); color:var(--ink-faint); }
+  h2 { font:700 13px/1.3 Georgia, serif; letter-spacing:.12em; text-transform:uppercase;
+       border-bottom:1px solid var(--line); padding-bottom:5px; margin:26px 0 10px; }
+  .banner { font-size:13px; padding:9px 12px; background:#f0ede5; border-left:4px solid var(--ink); margin:16px 0; }
+  .banner.warn { border-left-color:var(--moderate); }
+  ol.actions { margin:0; padding-left:22px; }
+  ol.actions li { margin-bottom:7px; }
+  .svt { font-weight:700; font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
+  .sev-critical { color:var(--critical); } .sev-high { color:var(--high); }
+  .sev-moderate { color:var(--moderate); } .sev-info { color:var(--info); }
+  .chip { font-weight:700; font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
+  .tablewrap { overflow-x:auto; }
+  table.ex { border-collapse:collapse; width:100%; font-size:12.5px; margin-top:6px; }
+  table.ex th, table.ex td { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+  table.ex thead th { background:#f0ede5; font-size:11px; letter-spacing:.07em; text-transform:uppercase; }
   code { font-family:ui-monospace, "SF Mono", Menlo, monospace; font-size:.85em; }
+  a { color:var(--teal-ink); }
+  .meta { color:var(--ink-faint); font-size:12px; }
+  .verif { margin-top:34px; font-size:13.5px; display:flex; gap:40px; flex-wrap:wrap; }
+  .verif .line { border-bottom:1px solid var(--ink); min-width:220px; display:inline-block; height:18px; }
+  .foot { font-size:11px; color:var(--ink-faint); margin-top:26px; line-height:1.5; }
+  @media print {
+    body { background:#fff; }
+    .sheet { box-shadow:none; margin:0; padding:0.4in 0.5in; max-width:none; }
+    table.ex tr { break-inside:avoid; }
+    h2 { break-after:avoid; }
+    a { color:var(--ink); text-decoration:none; }
+    a[href^="http"]::after { content:""; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>RxSweep formulary sweep report</h1>
-  <p class="meta">
-    {{ meta.csv_name }} · {{ meta.items_checked }} items checked · run {{ meta.run_ts }} ·
-    recalls window {{ meta.months_back }} months · AI model: {{ meta.model if meta.ai_available else "unavailable" }}
-  </p>
+<div class="sheet">
+  <div class="lh">
+    <div class="wordmark">Rx<span>Sweep</span></div>
+    <div class="cls">Formulary surveillance · not clinical advice</div>
+  </div>
+  <hr class="lhrule">
+  <p class="memotitle">Memorandum — Formulary Sweep Findings</p>
+  <table class="head">
+    <tr><td class="k">TO:</td><td>Pharmacy Operations / Medication Safety</td></tr>
+    <tr><td class="k">FROM:</td><td>RxSweep automated surveillance (pharmacist verification required)</td></tr>
+    <tr><td class="k">DATE:</td><td>{{ meta.run_ts }}</td></tr>
+    <tr><td class="k">RE:</td><td>{{ meta.csv_name }} — {{ meta.items_checked }} items vs FDA recalls ({{ meta.months_back }} mo), shortages, NDC directory</td></tr>
+  </table>
+
+  <div>
+    <span class="stamp">{{ counts.get("critical", 0) }} critical</span>
+    <span class="stamp warn">{{ findings|length }} findings</span>
+    <span class="stamp plain">AI: {{ meta.model if meta.ai_available else "off" }}</span>
+  </div>
 
   <div class="banner">
     Informational tool. A pharmacist verifies every finding before action.
-    Not clinical advice. Every claim links to its FDA source record below.
+    Not clinical advice. Every claim links to its FDA source record.
   </div>
 
   {% if not meta.ai_available %}
@@ -88,37 +93,32 @@
   </div>
   {% endif %}
 
-  <p class="meta">
-    Data source notice (openFDA): "Do not rely on openFDA to make decisions regarding
-    medical care. While we make every effort to ensure that data is accurate, you
-    should assume all results are unvalidated."
-    <a href="https://open.fda.gov/terms/">Terms</a> ·
-    <a href="https://open.fda.gov/license/">License</a>
-  </p>
+  <h2>Purpose</h2>
+  <p>This memorandum reports the results of an automated sweep of the referenced formulary
+  against FDA public data. All findings cite their FDA source records and require pharmacist
+  verification before action.</p>
 
-  <div class="tiles">
-    {% for tier in ["critical","high","moderate","info"] %}
-    <div class="tile {{ tier }}">
-      <div class="n">{{ counts.get(tier, 0) }}</div>
-      <div class="lbl">{{ tier }}</div>
-    </div>
+  {% if queue %}
+  <h2>Actions required</h2>
+  <ol class="actions">
+    {% for q in queue %}
+    <li>{{ q.text }} <span class="svt sev-{{ q.severity }}">{{ q.tag }}</span> [{{ q.citation }}]</li>
     {% endfor %}
-  </div>
-
-  {% if summary %}
-  <div class="summary">
-    <span class="ai-tag">AI-drafted summary: cited, pharmacist verifies</span>
-    {% for para in summary.split("\n\n") %}<p>{{ para }}</p>{% endfor %}
-  </div>
+  </ol>
   {% endif %}
 
-  <h2>Findings ({{ findings|length }})</h2>
+  {% if summary %}
+  <h2>Summary (AI-drafted, cited; pharmacist verifies)</h2>
+  {% for para in summary.split("\n\n") %}<p>{{ para }}</p>{% endfor %}
+  {% endif %}
+
+  <h2>Exhibit A — Findings register ({{ findings|length }})</h2>
   {% if findings %}
   <div class="tablewrap">
-    <table>
+    <table class="ex">
       <thead><tr>
         <th>#</th><th>Severity</th><th>Item</th><th>NDC</th><th>Source</th>
-        <th>Match</th><th>Why it's flagged</th><th>FDA record</th>
+        <th>Match</th><th>Basis</th><th>FDA record</th>
       </tr></thead>
       <tbody>
       {% for f in findings %}
@@ -129,11 +129,8 @@
           <td><code>{{ f.item_ndc or "—" }}</code></td>
           <td>{{ f.source }}</td>
           <td>
-            {% if f.label == "ai_matched" %}
-              <span class="chip lbl-chip needs-verify">AI-matched: needs verification</span>
-            {% else %}
-              <span class="chip lbl-chip">{{ f.label }}</span>
-            {% endif %}
+            {% if f.label == "ai_matched" %}<span class="chip sev-moderate">AI-matched: needs verification</span>
+            {% else %}{{ f.label }}{% endif %}
           </td>
           <td>{{ f.severity_rationale }}{% if f.ai_rationale %}<br><span class="meta">AI: {{ f.ai_rationale }}</span>{% endif %}</td>
           <td>{% if f.source_url %}<a href="{{ f.source_url }}">source [{{ f.citation }}]</a>{% else %}—{% endif %}</td>
@@ -143,14 +140,14 @@
     </table>
   </div>
   {% else %}
-  <p>No findings. No recalls, shortages, or NDC-status issues matched your formulary.</p>
+  <p>No findings. No recalls, shortages, or NDC-status issues matched this formulary.</p>
   {% endif %}
 
   {% if manual_review %}
-  <h2>Needs manual review ({{ manual_review|length }})</h2>
+  <h2>Exhibit B — Needs manual review ({{ manual_review|length }})</h2>
   <p class="meta">Fuzzy candidates that were not AI-adjudicated this run.</p>
   <div class="tablewrap">
-    <table>
+    <table class="ex">
       <thead><tr><th>Item</th><th>Source</th><th>Reason</th></tr></thead>
       <tbody>
       {% for c in manual_review %}
@@ -162,29 +159,36 @@
   </div>
   {% endif %}
 
+  <h2>Disclosures</h2>
   {% if quarantined %}
-  <h2>Quarantined rows ({{ quarantined|length }})</h2>
-  <p class="meta">Rows we could not fully process. Shown, never silently dropped.</p>
+  <p class="meta">Quarantined rows ({{ quarantined|length }}). Rows we could not fully process. Shown, never silently dropped.</p>
   <div class="tablewrap">
-    <table>
+    <table class="ex">
       <thead><tr><th>CSV line</th><th>Reason</th></tr></thead>
-      <tbody>
-      {% for q in quarantined %}<tr><td>{{ q.row }}</td><td>{{ q.reason }}</td></tr>{% endfor %}
-      </tbody>
+      <tbody>{% for q in quarantined %}<tr><td>{{ q.row }}</td><td>{{ q.reason }}</td></tr>{% endfor %}</tbody>
     </table>
   </div>
   {% endif %}
-
   {% if unchecked %}
-  <h2>Unchecked items ({{ unchecked|length }})</h2>
-  <p class="meta">These items could not be checked against one or more sources this run. Treat them as unknown, not clear.</p>
+  <p class="meta">Unchecked items ({{ unchecked|length }}). These items could not be checked against one or more sources this run. Treat them as unknown, not clear.</p>
   <ul>{% for u in unchecked %}<li>{{ u }}</li>{% endfor %}</ul>
+  {% else %}
+  <p class="meta">Unchecked items: none. All three FDA sources were reachable this run.</p>
   {% endif %}
+  <p class="meta">Full audit trail: <code>{{ meta.audit_path }}</code>. Exports: findings.csv · findings.xlsx · findings.md.</p>
+
+  <div class="verif">
+    <span>Verified by: <span class="line"></span> PharmD</span>
+    <span>Date: <span class="line" style="min-width:120px"></span></span>
+  </div>
 
   <p class="foot">
-    Generated by <a href="https://github.com/Travis-Clement-Dev/RxSweep">RxSweep</a>.
-    Audit trail: <code>{{ meta.audit_path }}</code> · Governance: SYSTEM_CARD.md ·
-    DATA_PROVENANCE.md · GOVERNANCE.md · Severity rubric human-authored (Travis Clement, PharmD).
+    Data source notice (openFDA): "Do not rely on openFDA to make decisions regarding medical
+    care. While we make every effort to ensure that data is accurate, you should assume all
+    results are unvalidated." <a href="https://open.fda.gov/terms/">Terms</a> ·
+    <a href="https://open.fda.gov/license/">License</a>. Severity rubric human-authored
+    (Travis Clement, PharmD). Generated by
+    <a href="https://github.com/Travis-Clement-Dev/RxSweep">RxSweep</a>.
   </p>
 </div>
 </body>

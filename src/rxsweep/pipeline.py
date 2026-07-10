@@ -127,9 +127,8 @@ def run_sweep(
     tiers: dict[str, int] = {}
     for f in findings:
         tiers[f.severity] = tiers.get(f.severity, 0) + 1
-    audit.event(kind="run_end", findings=len(findings), tiers=tiers)
 
-    return SweepResult(
+    result = SweepResult(
         run_id=run_id,
         run_dir=run_dir,
         findings=findings,
@@ -141,3 +140,10 @@ def run_sweep(
         tiers=tiers,
         report_path=report_path,
     )
+
+    from rxsweep.exports import write_exports  # deferred: exports imports SweepResult
+
+    export_paths = write_exports(result, run_dir)
+    audit.event(kind="exports", files=sorted(p.name for p in export_paths.values()))
+    audit.event(kind="run_end", findings=len(findings), tiers=tiers)
+    return result

@@ -22,7 +22,8 @@ def check(
     load_dotenv()
     result = run_sweep(csv_path, out, months_back=months_back, use_ai=not no_ai)
 
-    typer.echo(f"Report:  {result.report_path}")
+    typer.echo(f"Memo:    {result.report_path}  (print to PDF from the browser)")
+    typer.echo(f"Exports: {result.run_dir / 'findings.csv'} · findings.xlsx · findings.md")
     typer.echo(f"Audit:   {result.meta['audit_path']}")
     typer.echo(
         "Findings: "

@@ -141,6 +141,27 @@ def create_app(runs_root: Path = Path("runs")) -> FastAPI:
             path = state.result.report_path
         return FileResponse(path, media_type="text/html")
 
+    _EXPORTS = {
+        "csv": ("findings.csv", "text/csv"),
+        "xlsx": (
+            "findings.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ),
+        "md": ("findings.md", "text/markdown"),
+    }
+
+    @app.get("/api/sweeps/{sweep_id}/export/{fmt}")
+    async def sweep_export(sweep_id: str, fmt: str) -> FileResponse:
+        if fmt not in _EXPORTS:
+            raise HTTPException(status_code=404, detail=f"unknown export format {fmt!r}")
+        state = _get(sweep_id)
+        with state.lock:
+            if state.status != "done" or state.result is None:
+                raise HTTPException(status_code=409, detail="sweep not finished")
+            run_dir = state.result.run_dir
+        name, media = _EXPORTS[fmt]
+        return FileResponse(run_dir / name, media_type=media, filename=name)
+
     @app.post("/api/sweeps/{sweep_id}/chat")
     async def sweep_chat(sweep_id: str, req: ChatRequest) -> dict:
         state = _get(sweep_id)

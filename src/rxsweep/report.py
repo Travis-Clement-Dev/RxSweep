@@ -32,6 +32,36 @@ def source_url(finding: Finding) -> str | None:
     return None
 
 
+_QUEUE_VERBS = {
+    "recall": "Verify lots for {item}{ndc} against the recall record; quarantine affected stock.",
+    "shortage": "Confirm supply plan for {item}{ndc}; active shortage match.",
+    "ndc": "Review NDC status for {item}{ndc}; listing discontinued or missing.",
+}
+
+
+def action_queue(findings: list[Finding], cap: int = 7) -> list[dict]:
+    """Verb-led actions from the highest-severity findings (memo + UI hero)."""
+    queue: list[dict] = []
+    for f in findings:
+        if f.severity == "critical" or (f.severity == "high" and f.label == "exact_ndc"):
+            ndc = f" ({f.item_ndc})" if f.item_ndc else ""
+            rec_class = f.record.get("classification")
+            tag = rec_class if f.source == "recall" and rec_class else (
+                "Active shortage" if f.source == "shortage" else "NDC status"
+            )
+            queue.append(
+                {
+                    "text": _QUEUE_VERBS[f.source].format(item=f.item_name, ndc=ndc),
+                    "severity": f.severity,
+                    "tag": tag,
+                    "citation": f.citation,
+                }
+            )
+        if len(queue) >= cap:
+            break
+    return queue
+
+
 def render_report(
     findings: list[Finding],
     quarantined: list[QuarantinedRow],
@@ -48,6 +78,7 @@ def render_report(
     return template.render(
         findings=rows,
         counts=counts,
+        queue=action_queue(findings),
         quarantined=quarantined,
         manual_review=manual_review,
         unchecked=unchecked,

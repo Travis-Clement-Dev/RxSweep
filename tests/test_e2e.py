@@ -80,4 +80,4 @@ def test_demo_command(tmp_path, monkeypatch):
     _mock_openfda()
     result = runner.invoke(app, ["demo", "--out", str(tmp_path), "--no-ai"])
     assert result.exit_code == 0, result.output
-    assert "Report:" in result.output
+    assert "Memo:" in result.output and "findings.xlsx" in result.output
