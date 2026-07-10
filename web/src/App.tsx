@@ -13,49 +13,64 @@ export default function App() {
   const [phase, setPhase] = useState<Phase>({ name: "upload" });
 
   return (
-    <div className="mx-auto max-w-[1180px] px-5 pb-16 pt-8">
-      <header className="mb-6 flex items-baseline justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="display text-2xl font-bold m-0">RxSweep</h1>
-          <p className="meta m-0">
-            Sweep a formulary against FDA recalls, shortages, and discontinued NDCs.
-          </p>
+    <>
+      <header className="band">
+        <div className="inner">
+          <span className="brand">RxSweep</span>
+          <span className="tag">Formulary surveillance · FDA public data · pharmacist verifies</span>
         </div>
-        {phase.name === "dashboard" && (
-          <button className="btn btn-quiet" onClick={() => setPhase({ name: "upload" })}>
-            New sweep
-          </button>
-        )}
       </header>
 
-      <div className="banner mb-6" role="note">
-        Informational tool. A pharmacist verifies every finding before action. Not
-        clinical advice.
+      <div className="shell">
+        {phase.name === "dashboard" ? (
+          <p className="docket">
+            Sweep {phase.result.run_id} · {phase.result.meta.csv_name} ·{" "}
+            {phase.result.meta.items_checked} items · recall window{" "}
+            {phase.result.meta.months_back} months · AI:{" "}
+            {phase.result.meta.ai_available ? phase.result.meta.model : "off"}
+          </p>
+        ) : (
+          <p className="docket">Sweep a formulary against FDA recalls, shortages, and discontinued NDCs.</p>
+        )}
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <h1 className="h-doc">
+            {phase.name === "dashboard" ? "Formulary Sweep Findings" : "New Formulary Sweep"}
+          </h1>
+          {phase.name === "dashboard" && (
+            <button className="btn btn-quiet" onClick={() => setPhase({ name: "upload" })}>
+              New sweep
+            </button>
+          )}
+        </div>
+        <hr className="rule" />
+        <hr className="rule thin" />
+
+        <div className="noticebar" role="note">
+          Informational tool. A pharmacist verifies every finding before action. Not clinical
+          advice. openFDA: "assume all results are unvalidated."{" "}
+          <a href="https://open.fda.gov/terms/">Terms</a>
+        </div>
+
+        {phase.name === "upload" && (
+          <Upload onStarted={(sweepId) => setPhase({ name: "progress", sweepId })} />
+        )}
+        {phase.name === "progress" && (
+          <Progress
+            sweepId={phase.sweepId}
+            onDone={(result) => setPhase({ name: "dashboard", sweepId: phase.sweepId, result })}
+            onReset={() => setPhase({ name: "upload" })}
+          />
+        )}
+        {phase.name === "dashboard" && (
+          <Dashboard sweepId={phase.sweepId} result={phase.result} />
+        )}
+
+        <footer className="faint mt-14 border-t pt-4 text-[12px]" style={{ borderColor: "var(--line-soft)" }}>
+          Severity rubric human-authored (Travis Clement, PharmD) · Every AI prompt and reply is
+          audit-logged verbatim ·{" "}
+          <a href="https://github.com/Travis-Clement-Dev/RxSweep">RxSweep on GitHub</a>
+        </footer>
       </div>
-
-      {phase.name === "upload" && (
-        <Upload onStarted={(sweepId) => setPhase({ name: "progress", sweepId })} />
-      )}
-      {phase.name === "progress" && (
-        <Progress
-          sweepId={phase.sweepId}
-          onDone={(result) => setPhase({ name: "dashboard", sweepId: phase.sweepId, result })}
-          onReset={() => setPhase({ name: "upload" })}
-        />
-      )}
-      {phase.name === "dashboard" && (
-        <Dashboard sweepId={phase.sweepId} result={phase.result} />
-      )}
-
-      <footer className="faint mt-14 border-t pt-4 text-[0.8rem]" style={{ borderColor: "var(--line)" }}>
-        Data source notice (openFDA): "Do not rely on openFDA to make decisions
-        regarding medical care. While we make every effort to ensure that data is
-        accurate, you should assume all results are unvalidated."{" "}
-        <a href="https://open.fda.gov/terms/">Terms</a> ·{" "}
-        <a href="https://open.fda.gov/license/">License</a> · Severity rubric
-        human-authored (Travis Clement, PharmD) ·{" "}
-        <a href="https://github.com/Travis-Clement-Dev/RxSweep">RxSweep on GitHub</a>
-      </footer>
-    </div>
+    </>
   );
 }

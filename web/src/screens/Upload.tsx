@@ -41,7 +41,7 @@ export default function Upload({ onStarted }: { onStarted: (sweepId: string) => 
         }}
         aria-label="Choose or drop a formulary CSV file"
       >
-        <div className="display text-lg font-semibold">
+        <div className="text-lg font-bold">
           {file ? file.name : "Drop your formulary CSV here"}
         </div>
         <p className="meta mt-2 mb-0">
@@ -58,7 +58,7 @@ export default function Upload({ onStarted }: { onStarted: (sweepId: string) => 
         />
       </button>
 
-      <div className="card p-5 flex flex-col gap-4">
+      <div className="panel flex flex-col gap-4">
         <h2 className="m-0 text-base font-semibold">Sweep options</h2>
         <label className="flex items-center justify-between gap-3 text-sm">
           Recall lookback (months)

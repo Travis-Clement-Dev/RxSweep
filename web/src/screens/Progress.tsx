@@ -36,7 +36,7 @@ export default function Progress({
 
   if (progress?.status === "error") {
     return (
-      <section className="card p-8 text-center" role="alert">
+      <section className="panel text-center" role="alert">
         <h2 className="m-0">This file could not be swept</h2>
         <p className="meta">{progress.error}</p>
         <button className="btn" onClick={onReset}>
@@ -47,9 +47,9 @@ export default function Progress({
   }
 
   return (
-    <section className="card flex flex-col items-center gap-6 p-10" aria-live="polite">
+    <section className="panel flex flex-col items-center gap-6 p-10" aria-live="polite">
       <div className="sweep" aria-hidden="true" />
-      <h2 className="display m-0 text-lg font-semibold capitalize">
+      <h2 className="m-0 text-lg font-bold capitalize">
         {progress?.phase ?? "starting"}
       </h2>
       <div className="flex gap-8 text-center">
@@ -59,7 +59,7 @@ export default function Progress({
           ["AI calls", progress?.ai_calls ?? 0],
         ].map(([label, n]) => (
           <div key={label as string}>
-            <div className="display text-2xl font-bold tabular-nums">{n}</div>
+            <div className="text-2xl font-extrabold tabular-nums">{n}</div>
             <div className="lbl faint text-[0.72rem] uppercase tracking-wider">{label}</div>
           </div>
         ))}

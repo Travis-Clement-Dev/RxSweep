@@ -18,19 +18,12 @@ export default function FindingDrawer({
   return (
     <Dialog.Root open={finding !== null} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay
-          className="fixed inset-0"
-          style={{ background: "rgba(20, 30, 26, 0.45)" }}
-        />
-        <Dialog.Content
-          className="fixed right-0 top-0 h-full w-full max-w-[480px] overflow-y-auto p-6"
-          style={{ background: "var(--card)", borderLeft: "1px solid var(--line)", boxShadow: "var(--shadow)" }}
-          aria-describedby={undefined}
-        >
+        <Dialog.Overlay className="overlay" />
+        <Dialog.Content className="drawer" aria-describedby={undefined}>
           {finding && (
             <>
               <div className="flex items-start justify-between gap-3">
-                <Dialog.Title className="display m-0 text-lg font-semibold">
+                <Dialog.Title className="m-0 text-lg font-extrabold">
                   [{finding.citation}] {finding.item_name}
                 </Dialog.Title>
                 <Dialog.Close className="btn btn-quiet" aria-label="Close details">
@@ -39,42 +32,41 @@ export default function FindingDrawer({
               </div>
               <p className="meta mt-1">
                 Formulary row {finding.item_row}
-                {finding.item_ndc ? ` · NDC ${finding.item_ndc}` : ""}
+                {finding.item_ndc ? <> · NDC <code>{finding.item_ndc}</code></> : ""}
               </p>
 
-              <div className="mb-4 flex gap-2 flex-wrap">
-                <span className={`chip sev-${finding.severity}`}>{finding.severity}</span>
-                <span className="chip chip-label">{finding.source}</span>
-                <span className={`chip ${finding.label === "ai_matched" ? "chip-verify" : "chip-label"}`}>
-                  {finding.label === "ai_matched" ? "AI-matched: needs verification" : finding.label}
-                </span>
-              </div>
+              <p className="mb-0 mt-2">
+                <span className={`svt ${finding.severity}`}>{finding.severity}</span>
+                <span className="mx-2 faint">·</span>
+                <span className="chip chip-label">{finding.source}</span>{" "}
+                {finding.label === "ai_matched" ? (
+                  <span className="chip chip-verify">AI-matched: needs verification</span>
+                ) : (
+                  <span className="chip chip-label">{finding.label === "exact_ndc" ? "exact NDC" : "name match"}</span>
+                )}
+              </p>
 
-              <h3 className="mb-1 mt-4 text-sm font-semibold">Why it's flagged</h3>
-              <p className="mt-0 text-[0.92rem]">{finding.severity_rationale}</p>
+              <h3>Why it's flagged</h3>
+              <p className="mt-0 text-[13px]">{finding.severity_rationale}</p>
 
               {finding.ai_rationale && (
                 <>
-                  <h3 className="mb-1 mt-4 text-sm font-semibold">AI match reasoning</h3>
-                  <p className="mt-0 text-[0.92rem]">{finding.ai_rationale}</p>
-                  <p className="meta mt-1 text-[0.8rem]">
+                  <h3>AI match reasoning</h3>
+                  <p className="mt-0 text-[13px]">{finding.ai_rationale}</p>
+                  <p className="meta mt-1 text-[11.5px]">
                     Verify this reasoning against the FDA record before acting.
                   </p>
                 </>
               )}
 
-              <h3 className="mb-1 mt-4 text-sm font-semibold">FDA record</h3>
-              <dl className="m-0 grid grid-cols-[minmax(120px,auto)_1fr] gap-x-4 gap-y-1 text-[0.85rem]">
+              <h3>FDA record</h3>
+              <dl>
                 {(RECORD_FIELDS[finding.source] ?? []).map((key) => {
                   const value = finding.record[key];
                   if (value === undefined || value === null || value === "") return null;
                   return [
-                    <dt key={`${key}-t`} className="faint">
-                      {key.replaceAll("_", " ")}
-                    </dt>,
-                    <dd key={`${key}-d`} className="m-0">
-                      {String(value)}
-                    </dd>,
+                    <dt key={`${key}-t`}>{key.replaceAll("_", " ")}</dt>,
+                    <dd key={`${key}-d`}>{String(value)}</dd>,
                   ];
                 })}
               </dl>

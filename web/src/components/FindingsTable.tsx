@@ -1,4 +1,8 @@
+import { useMemo, useState } from "react";
 import type { Finding } from "../api";
+
+const SEV_ORDER: Record<string, number> = { critical: 0, high: 1, moderate: 2, info: 3 };
+type SortKey = "severity" | "item" | "source" | "citation";
 
 export default function FindingsTable({
   findings,
@@ -9,28 +13,53 @@ export default function FindingsTable({
   flashRow: number | null;
   onSelect: (f: Finding) => void;
 }) {
+  const [sort, setSort] = useState<SortKey>("severity");
+
+  const sorted = useMemo(() => {
+    const rows = [...findings];
+    rows.sort((a, b) => {
+      if (sort === "severity")
+        return SEV_ORDER[a.severity] - SEV_ORDER[b.severity] || a.citation - b.citation;
+      if (sort === "item") return a.item_name.localeCompare(b.item_name);
+      if (sort === "source") return a.source.localeCompare(b.source) || a.citation - b.citation;
+      return a.citation - b.citation;
+    });
+    return rows;
+  }, [findings, sort]);
+
   if (findings.length === 0) {
     return (
-      <div className="card p-5">
+      <div className="panel">
         <p className="m-0">No findings match the current filter.</p>
       </div>
     );
   }
+
+  const TH = ({ k, children }: { k: SortKey; children: string }) => (
+    <th aria-sort={sort === k ? "ascending" : "none"}>
+      <button onClick={() => setSort(k)}>
+        {children}
+        {sort === k ? " ↓" : ""}
+      </button>
+    </th>
+  );
+
   return (
-    <div className="card overflow-x-auto">
+    <div className="worklist">
       <table className="tbl">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Severity</th>
-            <th>Item</th>
-            <th>Source</th>
+            <TH k="citation"># </TH>
+            <TH k="severity">Severity</TH>
+            <TH k="item">Item</TH>
+            <th>NDC</th>
+            <TH k="source">Source</TH>
             <th>Match</th>
-            <th>Why it's flagged</th>
+            <th>Basis</th>
           </tr>
         </thead>
         <tbody>
-          {findings.map((f) => (
+          {sorted.map((f) => (
             <tr
               key={f.citation}
               id={`finding-${f.citation}`}
@@ -45,21 +74,22 @@ export default function FindingsTable({
               }}
               aria-label={`Open details for ${f.item_name}`}
             >
-              <td>[{f.citation}]</td>
+              <td className="mono">[{f.citation}]</td>
               <td>
-                <span className={`chip sev-${f.severity}`}>{f.severity}</span>
+                <span className={`svdot ${f.severity}`} aria-hidden="true"></span>
+                <span className={`svt ${f.severity}`}>{f.severity}</span>
               </td>
-              <td>
-                {f.item_name}{" "}
-                <span className="meta">{f.item_ndc ? f.item_ndc : ""}</span>
-              </td>
+              <td>{f.item_name}</td>
+              <td className="ndc">{f.item_ndc ?? "—"}</td>
               <td>{f.source}</td>
               <td>
-                <span className={`chip ${f.label === "ai_matched" ? "chip-verify" : "chip-label"}`}>
-                  {f.label === "ai_matched" ? "AI-matched: needs verification" : f.label}
-                </span>
+                {f.label === "ai_matched" ? (
+                  <span className="chip chip-verify">AI-matched: verify</span>
+                ) : (
+                  <span className="chip chip-label">{f.label === "exact_ndc" ? "exact NDC" : "name"}</span>
+                )}
               </td>
-              <td>{f.severity_rationale}</td>
+              <td className="why">{f.severity_rationale}</td>
             </tr>
           ))}
         </tbody>

@@ -1,12 +1,13 @@
 import { useState } from "react";
 import type { Finding, SweepResultData } from "../api";
-import Tiles from "../components/Tiles";
+import ActionQueue from "../components/ActionQueue";
 import FindingsTable from "../components/FindingsTable";
 import FindingDrawer from "../components/FindingDrawer";
 import ChatPanel from "../components/ChatPanel";
 
-const TABS = ["Findings", "Manual review", "Quarantined", "Unchecked"] as const;
-type Tab = (typeof TABS)[number];
+const TIERS = ["critical", "high", "moderate", "info"] as const;
+const REGISTERS = ["Findings", "Manual review", "Quarantined", "Unchecked"] as const;
+type Register = (typeof REGISTERS)[number];
 
 export default function Dashboard({
   sweepId,
@@ -17,7 +18,7 @@ export default function Dashboard({
 }) {
   const [severityFilter, setSeverityFilter] = useState<string | null>(null);
   const [selected, setSelected] = useState<Finding | null>(null);
-  const [tab, setTab] = useState<Tab>("Findings");
+  const [register, setRegister] = useState<Register>("Findings");
   const [flashRow, setFlashRow] = useState<number | null>(null);
 
   const filtered = severityFilter
@@ -25,10 +26,9 @@ export default function Dashboard({
     : result.findings;
 
   function citeJump(citation: number) {
-    setTab("Findings");
+    setRegister("Findings");
     setSeverityFilter(null);
     setFlashRow(citation);
-    // wait for React to commit the tab/filter reset before scrolling
     setTimeout(
       () =>
         document
@@ -39,7 +39,7 @@ export default function Dashboard({
     setTimeout(() => setFlashRow(null), 1800);
   }
 
-  const counts: Record<Tab, number> = {
+  const counts: Record<Register, number> = {
     Findings: result.findings.length,
     "Manual review": result.manual_review.length,
     Quarantined: result.quarantined.length,
@@ -47,113 +47,144 @@ export default function Dashboard({
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
-      <div>
-        <p className="meta mt-0">
-          {result.meta.csv_name} · {result.meta.items_checked} items checked · recalls
-          window {result.meta.months_back} months · AI:{" "}
-          {result.meta.ai_available ? result.meta.model : "off"} ·{" "}
-          <a href={`/api/sweeps/${sweepId}/report`}>download report</a>
-        </p>
+    <div className="layout">
+      <nav className="rail" aria-label="Run, filters, and exports">
+        <h3>Run</h3>
+        <div className="kv"><span>File</span><b>{result.meta.csv_name}</b></div>
+        <div className="kv"><span>Items</span><b>{result.meta.items_checked}</b></div>
+        <div className="kv"><span>Window</span><b>{result.meta.months_back} mo</b></div>
+        <div className="kv"><span>AI</span><b>{result.meta.ai_available ? result.meta.model.replace("claude-", "") : "off"}</b></div>
 
-        <Tiles
-          tiers={result.tiers}
-          active={severityFilter}
-          onToggle={(t) => setSeverityFilter(severityFilter === t ? null : t)}
-        />
-
-        {result.summary && (
-          <div className="card mb-5 p-5">
-            <span className="chip chip-label mb-2">
-              AI-drafted summary: cited, pharmacist verifies
+        <h3>Severity</h3>
+        <button
+          className="filter"
+          aria-pressed={severityFilter === null && register === "Findings"}
+          onClick={() => {
+            setRegister("Findings");
+            setSeverityFilter(null);
+          }}
+        >
+          <span>All findings</span>
+          <span className="n">{counts.Findings}</span>
+        </button>
+        {TIERS.map((tier) => (
+          <button
+            key={tier}
+            className="filter"
+            aria-pressed={severityFilter === tier}
+            onClick={() => {
+              setRegister("Findings");
+              setSeverityFilter(severityFilter === tier ? null : tier);
+            }}
+          >
+            <span>
+              <span className={`svdot ${tier}`} aria-hidden="true"></span>
+              {tier[0].toUpperCase() + tier.slice(1)}
             </span>
-            {result.summary.split("\n\n").map((para, i) => (
-              <p key={i} className="mb-0 mt-2 text-[0.92rem]">
-                {para}
-              </p>
-            ))}
-          </div>
+            <span className="n">{result.tiers[tier] ?? 0}</span>
+          </button>
+        ))}
+
+        <h3>Registers</h3>
+        {REGISTERS.slice(1).map((r) => (
+          <button key={r} className="filter" aria-pressed={register === r} onClick={() => setRegister(r)}>
+            <span>{r}</span>
+            <span className="n">{counts[r]}</span>
+          </button>
+        ))}
+
+        <h3>Export</h3>
+        <a className="link" href={`/api/sweeps/${sweepId}/export/csv`}>findings.csv</a>
+        <a className="link" href={`/api/sweeps/${sweepId}/export/xlsx`}>findings.xlsx</a>
+        <a className="link" href={`/api/sweeps/${sweepId}/export/md`}>findings.md · for your AI</a>
+        <a className="link" href={`/api/sweeps/${sweepId}/report`} target="_blank" rel="noreferrer">
+          memo · print to PDF
+        </a>
+        <span className="link faint mono text-[11px]">audit.jsonl in run folder</span>
+      </nav>
+
+      <main>
+        {register === "Findings" && (
+          <>
+            <ActionQueue findings={result.findings} onOpen={setSelected} />
+            <h2 className="sect">
+              Findings register ({filtered.length}
+              {severityFilter ? ` · ${severityFilter}` : ""})
+            </h2>
+            <FindingsTable findings={filtered} flashRow={flashRow} onSelect={setSelected} />
+          </>
         )}
 
-        <div role="tablist" className="mb-3 flex gap-2 flex-wrap">
-          {TABS.map((t) => (
-            <button
-              key={t}
-              role="tab"
-              aria-selected={tab === t}
-              className={`chip ${tab === t ? "chip-label" : ""}`}
-              style={tab !== t ? { background: "var(--card)", border: "1px solid var(--line)", color: "var(--ink-soft)" } : {}}
-              onClick={() => setTab(t)}
-            >
-              {t} ({counts[t]})
-            </button>
-          ))}
-        </div>
+        {register === "Manual review" && (
+          <>
+            <h2 className="sect">Needs manual review ({counts["Manual review"]})</h2>
+            <div className="worklist">
+              <table className="tbl">
+                <thead><tr><th>Item</th><th>Source</th><th>Reason</th></tr></thead>
+                <tbody>
+                  {result.manual_review.map((c, i) => (
+                    <tr key={i} style={{ cursor: "default" }}>
+                      <td>{c.item.name} <span className="meta">(row {c.item.row})</span></td>
+                      <td>{c.source}</td>
+                      <td className="why">{c.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
 
-        {tab === "Findings" && (
-          <FindingsTable findings={filtered} flashRow={flashRow} onSelect={setSelected} />
+        {register === "Quarantined" && (
+          <>
+            <h2 className="sect">Quarantined rows ({counts.Quarantined})</h2>
+            <p className="meta">Rows we could not fully process. Shown, never silently dropped.</p>
+            <div className="worklist">
+              <table className="tbl">
+                <thead><tr><th>CSV line</th><th>Reason</th></tr></thead>
+                <tbody>
+                  {result.quarantined.map((q, i) => (
+                    <tr key={i} style={{ cursor: "default" }}>
+                      <td className="mono">{q.row}</td>
+                      <td>{q.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
-        {tab === "Manual review" && (
-          <div className="card overflow-x-auto">
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Source</th>
-                  <th>Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.manual_review.map((c, i) => (
-                  <tr key={i} style={{ cursor: "default" }}>
-                    <td>
-                      {c.item.name} <span className="meta">(row {c.item.row})</span>
-                    </td>
-                    <td>{c.source}</td>
-                    <td>{c.reason}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {tab === "Quarantined" && (
-          <div className="card overflow-x-auto">
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>CSV line</th>
-                  <th>Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.quarantined.map((q, i) => (
-                  <tr key={i} style={{ cursor: "default" }}>
-                    <td>{q.row}</td>
-                    <td>{q.reason}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {tab === "Unchecked" && (
-          <div className="card p-5">
-            <p className="meta mt-0">
-              These items could not be checked against one or more sources this run.
-              Treat them as unknown, not clear.
-            </p>
-            <ul className="mb-0">
-              {result.unchecked.map((u, i) => (
-                <li key={i}>{u}</li>
-              ))}
-            </ul>
-            {result.unchecked.length === 0 && <p className="mb-0">All sources were reachable.</p>}
-          </div>
-        )}
-      </div>
 
-      <ChatPanel sweepId={sweepId} aiAvailable={result.meta.ai_available} onCite={citeJump} />
+        {register === "Unchecked" && (
+          <>
+            <h2 className="sect">Unchecked items ({counts.Unchecked})</h2>
+            <div className="panel">
+              {counts.Unchecked === 0 ? (
+                <p className="m-0">All three FDA sources were reachable this run.</p>
+              ) : (
+                <>
+                  <p className="meta mt-0">
+                    These items could not be checked against one or more sources this run. Treat
+                    them as unknown, not clear.
+                  </p>
+                  <ul className="mb-0">
+                    {result.unchecked.map((u, i) => (
+                      <li key={i}>{u}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          </>
+        )}
+      </main>
+
+      <ChatPanel
+        sweepId={sweepId}
+        aiAvailable={result.meta.ai_available}
+        summary={result.summary}
+        onCite={citeJump}
+      />
 
       <FindingDrawer finding={selected} onClose={() => setSelected(null)} />
     </div>

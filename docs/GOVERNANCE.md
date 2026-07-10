@@ -24,6 +24,16 @@ describes — each control names its implementing file.*
 | **MEASURE** | Per-run audit trail of every external call and every model input/output; automated test suite concentrated on the highest-risk code (NDC normalization, matching); verdicts carry model-reported confidence | `runs/<ts>/audit.jsonl`; `tests/` |
 | **MANAGE** | Graceful degradation paths that disclose rather than hide (AI unavailable → manual-review list; FDA source down → unchecked-items list; malformed rows → quarantine section); ambiguity downgrade prevents false certainty | `cli.py`, `triage.py`, `ingest.py`, `matching.py` |
 
+## Export artifacts (written per run, same story in every format)
+
+| File | Audience |
+|---|---|
+| `findings.csv` | Spreadsheet workflows |
+| `findings.xlsx` | Circulation (severity-tinted, filterable) |
+| `findings.md` | The user's own AI assistant; citations and the openFDA disclaimer travel with the data |
+| `report.html` | Committees: institutional memo format with a pharmacist verification line; print to PDF |
+| `audit.jsonl` | Compliance file |
+
 ## Audit log schema
 
 One JSON object per line in `runs/<timestamp>/audit.jsonl`. Every record carries
