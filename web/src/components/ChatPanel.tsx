@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Button, Input, TextField } from "react-aria-components";
 import { sendChat, type AiUsage } from "../api";
 
 interface Message {
@@ -145,16 +146,18 @@ export default function ChatPanel({
           void ask(input);
         }}
       >
-        <input
+        <TextField
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about these findings"
+          onChange={setInput}
           aria-label="Question about this sweep"
-          disabled={!aiAvailable}
-        />
-        <button className="btn" disabled={busy || !aiAvailable || !input.trim()}>
+          isDisabled={!aiAvailable}
+          className="flex-1 min-w-0"
+        >
+          <Input placeholder="Ask about these findings" className="w-full" />
+        </TextField>
+        <Button type="submit" className="btn" isDisabled={busy || !aiAvailable || !input.trim()}>
           Ask
-        </button>
+        </Button>
       </form>
 
       <p

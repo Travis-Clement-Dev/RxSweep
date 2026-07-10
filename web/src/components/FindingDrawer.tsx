@@ -1,6 +1,8 @@
-import * as Dialog from "@radix-ui/react-dialog";
+import { Button, Dialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 import { sourceUrl, type Finding } from "../api";
 
+// React Aria Modal + Dialog: focus trap, restore, Esc dismiss.
+// https://react-aria.adobe.com/Modal · /Dialog
 const RECORD_FIELDS: Record<string, string[]> = {
   recall: ["recall_number", "classification", "status", "product_description", "reason_for_recall", "code_info", "recalling_firm", "distribution_pattern", "report_date"],
   shortage: ["generic_name", "status", "package_count", "therapeutic_category"],
@@ -16,19 +18,23 @@ export default function FindingDrawer({
 }) {
   const url = finding ? sourceUrl(finding) : null;
   return (
-    <Dialog.Root open={finding !== null} onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="overlay" />
-        <Dialog.Content className="drawer" aria-describedby={undefined}>
+    <ModalOverlay
+      className="overlay"
+      isOpen={finding !== null}
+      onOpenChange={(open) => !open && onClose()}
+      isDismissable
+    >
+      <Modal className="drawer">
+        <Dialog aria-label={finding ? `Finding ${finding.citation}: ${finding.item_name}` : "Finding details"}>
           {finding && (
             <>
               <div className="flex items-start justify-between gap-3">
-                <Dialog.Title className="m-0 text-lg font-extrabold">
+                <Heading slot="title" className="m-0 text-lg font-extrabold">
                   [{finding.citation}] {finding.item_name}
-                </Dialog.Title>
-                <Dialog.Close className="btn btn-quiet" aria-label="Close details">
+                </Heading>
+                <Button className="btn btn-quiet" onPress={onClose} aria-label="Close details">
                   Close
-                </Dialog.Close>
+                </Button>
               </div>
               <p className="meta mt-1">
                 Formulary row {finding.item_row}
@@ -42,7 +48,9 @@ export default function FindingDrawer({
                 {finding.label === "ai_matched" ? (
                   <span className="chip chip-verify">AI-matched: needs verification</span>
                 ) : (
-                  <span className="chip chip-label">{finding.label === "exact_ndc" ? "exact NDC" : "name match"}</span>
+                  <span className="chip chip-label">
+                    {finding.label === "exact_ndc" ? "exact NDC" : "name match"}
+                  </span>
                 )}
               </p>
 
@@ -80,8 +88,8 @@ export default function FindingDrawer({
               )}
             </>
           )}
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </Dialog>
+      </Modal>
+    </ModalOverlay>
   );
 }

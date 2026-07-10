@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ToggleButton } from "react-aria-components";
 import type { Finding, SweepResultData } from "../api";
 import ActionQueue from "../components/ActionQueue";
 import FindingsTable from "../components/FindingsTable";
@@ -56,23 +57,23 @@ export default function Dashboard({
         <div className="kv"><span>AI</span><b>{result.meta.ai_available ? result.meta.model.replace("claude-", "") : "off"}</b></div>
 
         <h3>Severity</h3>
-        <button
+        <ToggleButton
           className="filter"
-          aria-pressed={severityFilter === null && register === "Findings"}
-          onClick={() => {
+          isSelected={severityFilter === null && register === "Findings"}
+          onChange={() => {
             setRegister("Findings");
             setSeverityFilter(null);
           }}
         >
           <span>All findings</span>
           <span className="n">{counts.Findings}</span>
-        </button>
+        </ToggleButton>
         {TIERS.map((tier) => (
-          <button
+          <ToggleButton
             key={tier}
             className="filter"
-            aria-pressed={severityFilter === tier}
-            onClick={() => {
+            isSelected={severityFilter === tier}
+            onChange={() => {
               setRegister("Findings");
               setSeverityFilter(severityFilter === tier ? null : tier);
             }}
@@ -82,15 +83,15 @@ export default function Dashboard({
               {tier[0].toUpperCase() + tier.slice(1)}
             </span>
             <span className="n">{result.tiers[tier] ?? 0}</span>
-          </button>
+          </ToggleButton>
         ))}
 
         <h3>Registers</h3>
         {REGISTERS.slice(1).map((r) => (
-          <button key={r} className="filter" aria-pressed={register === r} onClick={() => setRegister(r)}>
+          <ToggleButton key={r} className="filter" isSelected={register === r} onChange={() => setRegister(r)}>
             <span>{r}</span>
             <span className="n">{counts[r]}</span>
-          </button>
+          </ToggleButton>
         ))}
 
         <h3>Export</h3>

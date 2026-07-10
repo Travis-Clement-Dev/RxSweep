@@ -1,8 +1,18 @@
 import { useMemo, useState } from "react";
+import {
+  Cell,
+  Column,
+  Row,
+  Table,
+  TableBody,
+  TableHeader,
+  type SortDescriptor,
+} from "react-aria-components";
 import type { Finding } from "../api";
 
+// React Aria Table: native accessible column sorting + keyboard grid
+// navigation. https://react-aria.adobe.com/Table
 const SEV_ORDER: Record<string, number> = { critical: 0, high: 1, moderate: 2, info: 3 };
-type SortKey = "severity" | "item" | "source" | "citation";
 
 export default function FindingsTable({
   findings,
@@ -13,16 +23,23 @@ export default function FindingsTable({
   flashRow: number | null;
   onSelect: (f: Finding) => void;
 }) {
-  const [sort, setSort] = useState<SortKey>("severity");
+  const [sort, setSort] = useState<SortDescriptor>({
+    column: "severity",
+    direction: "ascending",
+  });
 
   const sorted = useMemo(() => {
     const rows = [...findings];
+    const dir = sort.direction === "descending" ? -1 : 1;
     rows.sort((a, b) => {
-      if (sort === "severity")
-        return SEV_ORDER[a.severity] - SEV_ORDER[b.severity] || a.citation - b.citation;
-      if (sort === "item") return a.item_name.localeCompare(b.item_name);
-      if (sort === "source") return a.source.localeCompare(b.source) || a.citation - b.citation;
-      return a.citation - b.citation;
+      let cmp = 0;
+      if (sort.column === "severity")
+        cmp = SEV_ORDER[a.severity] - SEV_ORDER[b.severity] || a.citation - b.citation;
+      else if (sort.column === "item") cmp = a.item_name.localeCompare(b.item_name);
+      else if (sort.column === "source")
+        cmp = a.source.localeCompare(b.source) || a.citation - b.citation;
+      else cmp = a.citation - b.citation;
+      return cmp * dir;
     });
     return rows;
   }, [findings, sort]);
@@ -35,65 +52,55 @@ export default function FindingsTable({
     );
   }
 
-  const TH = ({ k, children }: { k: SortKey; children: string }) => (
-    <th aria-sort={sort === k ? "ascending" : "none"}>
-      <button onClick={() => setSort(k)}>
-        {children}
-        {sort === k ? " ↓" : ""}
-      </button>
-    </th>
-  );
-
   return (
     <div className="worklist">
-      <table className="tbl">
-        <thead>
-          <tr>
-            <TH k="citation"># </TH>
-            <TH k="severity">Severity</TH>
-            <TH k="item">Item</TH>
-            <th>NDC</th>
-            <TH k="source">Source</TH>
-            <th>Match</th>
-            <th>Basis</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((f) => (
-            <tr
-              key={f.citation}
-              id={`finding-${f.citation}`}
+      <Table
+        aria-label="Findings register"
+        className="tbl"
+        sortDescriptor={sort}
+        onSortChange={setSort}
+      >
+        <TableHeader>
+          <Column id="citation" allowsSorting>#</Column>
+          <Column id="severity" allowsSorting>Severity</Column>
+          <Column id="item" allowsSorting isRowHeader>Item</Column>
+          <Column>NDC</Column>
+          <Column id="source" allowsSorting>Source</Column>
+          <Column>Match</Column>
+          <Column>Basis</Column>
+        </TableHeader>
+        <TableBody items={sorted}>
+          {(f: Finding) => (
+            <Row
+              id={f.citation}
               className={flashRow === f.citation ? "flash" : ""}
-              tabIndex={0}
-              onClick={() => onSelect(f)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onSelect(f);
-                }
-              }}
+              onAction={() => onSelect(f)}
               aria-label={`Open details for ${f.item_name}`}
             >
-              <td className="mono">[{f.citation}]</td>
-              <td>
+              <Cell>
+                <span id={`finding-${f.citation}`} className="mono">[{f.citation}]</span>
+              </Cell>
+              <Cell>
                 <span className={`svdot ${f.severity}`} aria-hidden="true"></span>
                 <span className={`svt ${f.severity}`}>{f.severity}</span>
-              </td>
-              <td>{f.item_name}</td>
-              <td className="ndc">{f.item_ndc ?? "—"}</td>
-              <td>{f.source}</td>
-              <td>
+              </Cell>
+              <Cell>{f.item_name}</Cell>
+              <Cell><span className="ndc">{f.item_ndc ?? "—"}</span></Cell>
+              <Cell>{f.source}</Cell>
+              <Cell>
                 {f.label === "ai_matched" ? (
                   <span className="chip chip-verify">AI-matched: verify</span>
                 ) : (
-                  <span className="chip chip-label">{f.label === "exact_ndc" ? "exact NDC" : "name"}</span>
+                  <span className="chip chip-label">
+                    {f.label === "exact_ndc" ? "exact NDC" : "name"}
+                  </span>
                 )}
-              </td>
-              <td className="why">{f.severity_rationale}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </Cell>
+              <Cell><span className="why">{f.severity_rationale}</span></Cell>
+            </Row>
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }

@@ -6,14 +6,14 @@
    never decoration. The memo export (comp C) shares this family. */
 :root {
   --paper: #ffffff;
-  --ground: #f2f3f1;
+  --ground: #f3f4f4;
   --ink: #1b1b1b;
-  --ink-soft: #4b5550;
-  --ink-faint: #6d746f;
+  --ink-soft: #565c65;
+  --ink-faint: #71767a;
   --line: #a9aeb1;
-  --line-soft: #dde1de;
+  --line-soft: #dfe1e2;
   --card: #ffffff;
-  --band: #14201c;
+  --band: #1b1b1b;
   --band-ink: #ffffff;
   --accent: #0e7c6b;
   --accent-ink: #0a5a4e;
@@ -31,19 +31,19 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #17211d;
-    --ground: #101815;
-    --ink: #e2eae6;
-    --ink-soft: #a8b8b0;
-    --ink-faint: #7e938c;
-    --line: #3a4a43;
-    --line-soft: #24322c;
-    --card: #17211d;
-    --band: #0c1512;
-    --band-ink: #f2f7f5;
+    --paper: #1e2022;
+    --ground: #16181a;
+    --ink: #e6e7e8;
+    --ink-soft: #a9adb1;
+    --ink-faint: #7d8286;
+    --line: #3d4145;
+    --line-soft: #2a2d30;
+    --card: #1e2022;
+    --band: #101214;
+    --band-ink: #f2f3f3;
     --accent: #34b39c;
-    --accent-ink: #6fd3bf;
-    --accent-soft: #16332c;
+    --accent-ink: #7fd6c4;
+    --accent-soft: #14302a;
     --critical: #db8377;
     --high: #db8377;
     --moderate: #d9a94f;
@@ -52,8 +52,8 @@
     --high-soft: #3a211d;
     --moderate-soft: #372c15;
     --info-soft: #1c3227;
-    --focus-row: #1e332c;
-    --btn-ink: #0c1512;
+    --focus-row: #1d2c28;
+    --btn-ink: #101214;
   }
 }
 
@@ -123,7 +123,7 @@ code, .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size:
                 background: none; border: none; border-left: 3px solid transparent;
                 font: inherit; color: var(--ink); cursor: pointer; text-align: left; }
 .rail .filter:hover { background: var(--accent-soft); }
-.rail .filter[aria-pressed="true"] { background: var(--paper); border-left-color: var(--accent); font-weight: 700; }
+.rail .filter[aria-pressed="true"], .rail .filter[data-selected] { background: var(--paper); border-left-color: var(--accent); font-weight: 700; }
 .rail .filter .n { font-variant-numeric: tabular-nums; }
 .rail .link { display: block; padding: 3px 0; }
 
@@ -150,11 +150,14 @@ code, .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size:
                        cursor: pointer; padding: 0; letter-spacing: inherit; text-transform: inherit; }
 .tbl tbody tr { cursor: pointer; }
 .tbl tbody tr:hover { background: var(--accent-soft); }
-.tbl tbody tr:focus-visible { outline: none; background: var(--focus-row); box-shadow: inset 3px 0 0 var(--accent); }
+.tbl tbody tr:focus-visible, .tbl tbody tr[data-focus-visible] { outline: none; background: var(--focus-row); box-shadow: inset 3px 0 0 var(--accent); }
+.tbl thead th[aria-sort="ascending"]::after { content: " \2193"; }
+.tbl thead th[aria-sort="descending"]::after { content: " \2191"; }
+.ask .flex-1 input { width: 100%; border: 1px solid var(--line); background: var(--paper); color: var(--ink); padding: 8px 9px; font: inherit; box-sizing: border-box; }
 .tbl tbody tr.flash { animation: row-flash 1.6s ease-out 1; }
 @keyframes row-flash { 0% { background: var(--accent-soft); } 100% { background: transparent; } }
-.tbl td.ndc { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px; white-space: nowrap; }
-.tbl td.why { max-width: 340px; color: var(--ink-soft); }
+.tbl td.ndc, .tbl .ndc { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px; white-space: nowrap; }
+.tbl td.why, .tbl .why { display:block;  max-width: 340px; color: var(--ink-soft); }
 
 /* ---- chat ---- */
 .chatdock { background: var(--paper); border: 1px solid var(--line-soft); padding: 14px;
