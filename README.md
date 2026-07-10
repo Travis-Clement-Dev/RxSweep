@@ -1,28 +1,83 @@
 # RxSweep
 
-Sweep your entire formulary against FDA recalls, drug shortages, and discontinued NDCs in one
-command — with every AI decision cited, logged, and verifiable.
+A recall notice lands on a Monday morning, and somewhere in your health system a pharmacist begins the same ritual: open the FDA email, open the formulary extract, and scan one against the other line by line. Three thousand items, three moving federal datasets, human eyeballs. Most weeks the ritual finds nothing, which is exactly what makes the one week it should have found something so dangerous.
 
-**Status: core + web app complete** — engine, CLI, cited HTML report, local web app
-(upload → live progress → triage dashboard → verify drawer → grounded chat), and
-governance pack ([SYSTEM_CARD](docs/SYSTEM_CARD.md) ·
-[DATA_PROVENANCE](docs/DATA_PROVENANCE.md) · [GOVERNANCE](docs/GOVERNANCE.md)),
-verified end to end against live FDA data. The design lives in
-[docs/DESIGN.md](docs/DESIGN.md). This README will be rewritten before the v1
-announcement.
+RxSweep automates that reconciliation without automating away the judgment. You feed it the formulary CSV you already have, it sweeps every line against FDA recall enforcement reports, the drug shortage database, and the NDC directory, and it returns a severity-ranked worklist where every finding links back to the FDA record that produced it. The first live run took about a minute, cost around two cents of AI, and surfaced a Class I recall on 0.9% sodium chloride that had been sitting in the sample formulary the whole time (B. Braun, particulate matter, 22 enforcement records).
+
+The tool does the sweeping so the pharmacist can do the verifying. That division of labor is the entire design.
+
+*Status: v0.2, working and verified against live FDA data. 80 automated tests. CLI, local web app, four-format export suite.*
+
+## Try it
 
 ```bash
-# try it now (no AI key needed for deterministic mode)
 git clone https://github.com/Travis-Clement-Dev/RxSweep.git && cd RxSweep
-uv run rxsweep demo --no-ai
-
-# the web app (frontend ships prebuilt; no Node needed)
-uv run rxsweep serve   # then open http://127.0.0.1:8555
-
-# with AI triage + chat: put ANTHROPIC_API_KEY=sk-ant-... in .env first
-uv run rxsweep demo
+uv run rxsweep demo --no-ai        # deterministic sweep, no API key needed
+uv run rxsweep serve               # the web app, at 127.0.0.1:8555
 ```
 
-Contributors changing the frontend: `cd web && npm install && npm run dev`
-(dev server proxies `/api` to `rxsweep serve`); `npm run build` writes the
-static bundle into the package.
+Add `ANTHROPIC_API_KEY=sk-ant-...` to a `.env` file and drop the `--no-ai` flag, and the AI triage turns on: your key, your cost meter, every call logged. You need [`uv`](https://docs.astral.sh/uv/) and nothing else; the web frontend ships prebuilt inside the package.
+
+## What a sweep hands you
+
+The web app opens on a drop zone, and from the moment your CSV lands you can watch the sweep work: items read, FDA requests, AI calls, all counting live because the progress display reads the same event stream as the audit log. When the sweep finishes you get a **Required Actions** queue, verb-led and severity-ordered, so the first thing on screen is what to do rather than what the software produced.
+
+Below the queue sits the findings register, sortable by column, with every row opening a drawer that puts the AI's match reasoning next to the FDA record and one click from the primary source. A docked assistant answers questions grounded only in that run's findings, cites its claims by finding number, and jumps you to the row when you click a citation. "Brief me for the huddle" surfaces the run's summary without spending another token.
+
+When you're done, take the work with you. Every run writes:
+
+- `findings.csv` for your spreadsheet workflow
+- `findings.xlsx`, severity-tinted and filterable, for circulation
+- `findings.md` for your own AI assistant, citations and disclaimer included
+- `report.html`, an institutional memorandum with a pharmacist verification line, formatted to print cleanly to PDF
+- `audit.jsonl`, the complete trail for your compliance file
+
+The CLI (`rxsweep check your_formulary.csv`) produces the same artifacts without the browser.
+
+## How this is governed
+
+Most tools in this space treat governance as the disclaimer at the bottom of the page. RxSweep inverts that: the governance requirements came first, and the architecture had to earn them.
+
+Start with where the AI is allowed to work. Claude gets exactly three jobs: judging the fuzzy matches deterministic code can't resolve, drafting the cited brief, and answering questions grounded in a single run's findings. Exact NDC matches never touch a model, and everything the model does touch is written verbatim into `runs/<timestamp>/audit.jsonl` alongside its token counts and cost, so any claim in any report can be traced back to the exact exchange that produced it.
+
+The judgment calls stay human, and the repo says whose. The severity rubric that decides whether a Class II recall outranks an active shortage is clinical reasoning, not code, so a pharmacist authored it and [the system card](docs/SYSTEM_CARD.md) names him. Changing that table takes re-approval, not a quiet commit.
+
+And when something breaks, the tool discloses instead of degrading silently. An unreachable FDA source becomes a visible unchecked-items register rather than a mysteriously shorter report, malformed CSV rows quarantine in the open, and openFDA's own disclaimer prints verbatim on every artifact, because propagating your upstream's terms is what governance looks like in practice.
+
+The full trail sits in four documents: [SYSTEM_CARD](docs/SYSTEM_CARD.md) for what the AI does and where it fails, [DATA_PROVENANCE](docs/DATA_PROVENANCE.md) for every source and its limits, [GOVERNANCE](docs/GOVERNANCE.md) for the NIST AI RMF mapping, and [DECISIONS.md](docs/DECISIONS.md) for why each call was made, dated, with the options that lost.
+
+## How it works
+
+The pipeline is deterministic until it can't be. Your CSV is parsed with column auto-detection, bad rows are quarantined in the open, and every NDC is normalized across the three hyphenation patterns FDA actually publishes (4-4-2, 5-3-2, 5-4-1). A 10-digit NDC without hyphens is genuinely ambiguous, so RxSweep surfaces all three possible readings and refuses to call any of them an exact match, because false certainty in a safety tool is worse than honest doubt.
+
+Recalls and shortages are bulk-downloaded once per run and matched locally, which keeps a 3,000-item formulary from becoming 9,000 API calls. Shortage records arrive package-level from FDA, so they're aggregated per drug before matching, and recall NDCs are harvested from the free-text `code_info` field when the structured fields come back empty, which they often do. Only the residue that deterministic matching can't settle goes to the model, in batches, with a prompt that instructs conservatism.
+
+Findings then flow through the human-authored severity rubric into the queue, the register, and the exports. One audit-event stream feeds the JSONL log, the live progress counters, and the cost meter, so what you watch and what gets recorded can never disagree.
+
+## Costs, plainly
+
+The default model is `claude-haiku-4-5`, and a full sweep of the 40-item sample runs about two cents; each chat question adds a fraction of a cent. The cost figure in the UI comes from a dated pricing table in [`pricing.py`](src/rxsweep/pricing.py), and when the model isn't in that table the meter shows tokens only, because a governance tool should never guess a dollar amount. Set `RXSWEEP_MODEL` to use a different model on your key.
+
+## Honest edges
+
+Name-level matches are candidates, not verdicts. Recall text describing "Lidocaine HCl injection" will flag your lidocaine even when the lots never touched your wholesaler, which is why every name match carries a verification label and a source link instead of a conclusion.
+
+The data has lag built in. FDA enforcement reports publish on FDA's schedule, shortage records are manufacturer self-reported, and openFDA paginates out at 26,000 records (RxSweep discloses in the audit log if a fetch ever truncates). There is no drug-interaction checking, because NLM retired the public API for it in 2024, and there is no clinical decision support anywhere in this tool by design.
+
+## Development
+
+```bash
+uv run pytest              # 80 tests, recorded fixtures, no live calls
+uv run pytest -m live      # optional live smoke against openFDA
+cd web && npm run dev      # frontend dev loop, proxies /api to :8555
+```
+
+The engine lives in `src/rxsweep/` (ingest, matching, sources, triage, pipeline), the web app in `web/` with its built bundle shipped inside the package, and the design system in `design/styleguide/`. Read [JOURNAL.md](docs/JOURNAL.md) for the lessons the build left behind, including the macOS quirk that silently breaks Python virtualenvs.
+
+## Related
+
+RxSweep answers "what across my whole formulary is affected right now?" Its sibling, [rx-shortage-mcp](https://github.com/Travis-Clement-Dev/rx-shortage-mcp), answers the question that comes next: "this drug is short, what else could work, and is the alternative short too?" They share data sources, lessons, and an author.
+
+## License
+
+MIT. Built by [Travis Clement](https://github.com/Travis-Clement-Dev), PharmD.
