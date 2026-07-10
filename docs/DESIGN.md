@@ -9,9 +9,9 @@
 
 | | |
 |---|---|
-| **Phase** | Spec — approved brief, pre-scaffold |
-| **Next** | Implementation plan → Day 1 build (engine + CLI + report + governance pack) |
-| **Stack** | Python ≥3.12, `uv`-managed, `src/` layout; Typer CLI; httpx; Anthropic SDK; Day 2: Vite + shadcn/ui (custom theme) static bundle served by FastAPI |
+| **Phase** | Core + web app complete (**v0.1.0**, 2026-07-09) — engine, CLI, cited report, governance pack, `rxsweep serve` web app; verified against live FDA data |
+| **Next** | Phase 3 (PR): regulatory-instrument UX, action-queue worklist, export suite (CSV/XLSX/Markdown/print-PDF memo) |
+| **Stack** | Python ≥3.12, `uv`-managed, `src/` layout; Typer CLI; httpx; Anthropic SDK; FastAPI + uvicorn backend; React 19 + Vite + Tailwind v4 frontend (prebuilt bundle ships inside the wheel) |
 
 ## Context (why this exists)
 
@@ -33,8 +33,13 @@ formulary is affected?" (batch reconciliation). Complementary, cross-linked.
 ## Architecture
 
 Hard boundary between **deterministic code** and **AI**. Exact matching never touches the model;
-Claude is invoked only where rules can't reach (messy recall free-text ↔ line items, summary
-drafting), and every AI decision is logged and cited. That boundary *is* the governance story.
+Claude is invoked only where rules can't reach — three bounded jobs: fuzzy-candidate
+adjudication, cited summary drafting, and run-grounded chat (web app). Every AI decision is
+logged and cited. That boundary *is* the governance story.
+
+As built, one audit-event stream feeds two consumers: the JSONL audit log and the web app's
+live progress display (`pipeline.py` taps `AuditLog.event`) — governance and UX observe
+identical events by construction.
 
 ```
 formulary.csv
@@ -111,9 +116,18 @@ chat grounded only in this run's findings).
 
 - Day 1 HTML report = Triage/Verify/Act in static form; Day 2 web app makes them interactive.
 - One token system across both (calm clinical teal identity; severity semantics green/amber/red
-  kept separate from brand accent; custom shadcn theme — no default-look components).
+  kept separate from brand accent; hand-rolled components on custom tokens).
 - WCAG 2.1 AA (HHS requirement): contrast, keyboard nav, screen-reader semantics.
 - Web build ships as static assets **inside the Python package** — peers never need Node.
+
+**Phase 3 direction (supersedes the original shadcn-flavored wording above):** local
+validation judged the v0.1.0 dashboard "competent generic." The redesign is information-design
+led — a **regulatory instrument**: worklist/action-queue as the hero (verb-led, severity-ordered),
+USWDS-inspired document language, AI narrative relocated from the dashboard to its native
+registers (on-demand "Brief me" in chat; formal memo in exports), and an export suite
+(CSV / XLSX / Markdown-for-AI / print-PDF memo). Fallback if custom comps miss the bar:
+HeroUI component layer themed with the same tokens. Product writing stays in the FDA
+regulatory register (no em dashes, no markdown in generated text).
 
 ## Governance pack (first-class deliverables)
 
@@ -140,14 +154,16 @@ retired that API in 2024). No hosted service — local only, BYO keys. No PHI, e
   audit log complete. Day 2: drive the web app in a browser (upload → dashboard → detail →
   chat grounding) + keyboard-only pass before calling it done.
 
-## Weekend plan
+## Build history (as executed)
 
-- **Day 1 (shippable by end of day):** scaffold → sources → matching → triage → CLI → HTML
-  report → governance pack. Reuses proven patterns from rx-shortage-mcp (openFDA client, test
-  structure, uv packaging).
-- **Day 2:** Vite + shadcn custom-theme app (upload/run/triage/verify/chat) → static bundle into
-  package → README + screenshots → publish public.
-- **Post-build writing workstream:** revise writing-style skill (fuse high-agency stance with
+- **Day 1 (2026-07-09, complete):** scaffold → sources → matching → triage → CLI → HTML
+  report → governance pack. Live-data corrections (shortage aggregation, name normalization,
+  candidate tightening) and an independent code-review pass (XSS, degradation, outage
+  semantics, column priority) landed the same day. See `docs/JOURNAL.md`.
+- **Day 2 (2026-07-09, complete):** pipeline extraction → FastAPI backend with live progress →
+  grounded chat → React/Vite web app → static bundle into the wheel → browser-verified live.
+- **Phase 3 (in progress, PR):** regulatory-instrument UX + export suite; see Status.
+- **Writing workstream (pending):** revise writing-style skill (fuse high-agency stance with
   the humanistic craft rules in rx-shortage-mcp's `WRITING-STYLE.md`) → voice samples for
   approval → announcement post naming each governance artifact, cross-linking rx-shortage-mcp.
 
