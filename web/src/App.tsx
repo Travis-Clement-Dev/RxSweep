@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { SweepResultData } from "./api";
 import Upload from "./screens/Upload";
 import Progress from "./screens/Progress";
 import Dashboard from "./screens/Dashboard";
+import Memo from "./screens/Memo";
 import Logomark from "./components/Logomark";
 
 type Phase =
   | { name: "upload" }
   | { name: "progress"; sweepId: string }
-  | { name: "dashboard"; sweepId: string; result: SweepResultData };
+  | { name: "dashboard"; sweepId: string; result: SweepResultData; aiCalls: number }
+  | { name: "memo"; sweepId: string; result: SweepResultData; aiCalls: number };
 
 type Theme = "light" | "dark";
 
@@ -44,12 +46,28 @@ export default function App() {
     if (set === "light" || set === "dark") return set;
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
+  const [winW, setWinW] = useState(() => window.innerWidth);
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelWidth, setPanelWidth] = useState(340);
+
+  useEffect(() => {
+    const onResize = () => setWinW(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   function toggleTheme() {
     const next: Theme = theme === "light" ? "dark" : "light";
     document.documentElement.dataset.theme = next;
     localStorage.setItem("rxsweep-theme", next);
     setTheme(next);
   }
+
+  // Below 1100px the assistant panel overlays the canvas instead of reserving
+  // width; a masthead icon toggles it (contract round 9).
+  const overlay = winW < 1100;
+  const onWorkspace = phase.name === "dashboard" || phase.name === "memo";
+  const isMemo = phase.name === "memo";
 
   return (
     <>
@@ -63,6 +81,16 @@ export default function App() {
             </span>
           </span>
           <span className="right">
+            {phase.name === "dashboard" && overlay && (
+              <button
+                className="iconbtn"
+                onClick={() => setPanelOpen((o) => !o)}
+                aria-label="Toggle assistant panel"
+                title="Assistant"
+              >
+                <span className="glyph-chat" />
+              </button>
+            )}
             <button
               className="iconbtn"
               onClick={toggleTheme}
@@ -89,9 +117,11 @@ export default function App() {
           <div className="frame">
             <Progress
               sweepId={phase.sweepId}
-              onDone={(result) =>
-                setPhase({ name: "dashboard", sweepId: phase.sweepId, result })
-              }
+              onDone={(result, aiCalls) => {
+                setPhase({ name: "dashboard", sweepId: phase.sweepId, result, aiCalls });
+                // A run finishing on a narrow window keeps the overlay closed.
+                setPanelOpen(window.innerWidth >= 1100);
+              }}
               onReset={() => setPhase({ name: "upload" })}
             />
             <FrameFooter />
@@ -99,15 +129,45 @@ export default function App() {
         </div>
       )}
 
-      {phase.name === "dashboard" && (
-        <div className="shellpad split">
-          <div className="frame split">
-            <div className="canvas-body">
-              <Dashboard result={phase.result} onReset={() => setPhase({ name: "upload" })} />
+      {onWorkspace && (
+        <>
+          {/* The dashboard stays mounted (hidden) behind the memo so checked
+              actions, filters, and the assistant transcript survive the trip. */}
+          <div
+            className="shellpad split"
+            hidden={isMemo}
+            style={{ paddingRight: overlay ? 10 : (panelOpen ? panelWidth : 44) + 20 }}
+          >
+            <div className="frame split">
+              <div className="canvas-body">
+                <Dashboard
+                  sweepId={phase.sweepId}
+                  result={phase.result}
+                  aiCalls={phase.aiCalls}
+                  onReset={() => setPhase({ name: "upload" })}
+                  onOpenMemo={() => setPhase({ ...phase, name: "memo" })}
+                  overlay={overlay}
+                  panelOpen={panelOpen}
+                  onPanelOpenChange={setPanelOpen}
+                  panelWidth={panelWidth}
+                  onPanelWidthChange={setPanelWidth}
+                />
+              </div>
+              <FrameFooter />
             </div>
-            <FrameFooter />
           </div>
-        </div>
+          {isMemo && (
+            <div className="shellpad">
+              <div className="frame">
+                <Memo
+                  result={phase.result}
+                  onBack={() => setPhase({ ...phase, name: "dashboard" })}
+                />
+                <FrameFooter />
+              </div>
+            </div>
+          )}
+        </>
       )}
     </>
   );

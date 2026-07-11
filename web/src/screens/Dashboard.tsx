@@ -4,6 +4,7 @@ import type { Finding, SweepResultData } from "../api";
 import ActionQueue from "../components/ActionQueue";
 import FindingsTable from "../components/FindingsTable";
 import FindingDrawer from "../components/FindingDrawer";
+import AssistantPanel from "../components/AssistantPanel";
 
 const TIERS = ["critical", "high", "moderate", "info"] as const;
 type Tier = (typeof TIERS)[number];
@@ -44,15 +45,43 @@ function outageNotice(unchecked: string[]): { lead: string; body: string } {
 }
 
 export default function Dashboard({
+  sweepId,
   result,
+  aiCalls,
   onReset,
+  onOpenMemo,
+  overlay,
+  panelOpen,
+  onPanelOpenChange,
+  panelWidth,
+  onPanelWidthChange,
 }: {
+  sweepId: string;
   result: SweepResultData;
+  aiCalls: number;
   onReset: () => void;
+  onOpenMemo: () => void;
+  overlay: boolean;
+  panelOpen: boolean;
+  onPanelOpenChange: (open: boolean) => void;
+  panelWidth: number;
+  onPanelWidthChange: (w: number) => void;
 }) {
   const [sevFilter, setSevFilter] = useState<Tier | null>(null);
   const [selected, setSelected] = useState<Finding | null>(null);
-  const [flashRow] = useState<number | null>(null);
+  const [flashRow, setFlashRow] = useState<number | null>(null);
+
+  // Citation jump from the assistant transcript: clear the filter so the row
+  // exists, flash it, and scroll instantly (smooth scroll violates §8).
+  function citeJump(n: number) {
+    setSevFilter(null);
+    setFlashRow(n);
+    setTimeout(
+      () => document.getElementById(`finding-${n}`)?.scrollIntoView({ block: "center" }),
+      60,
+    );
+    setTimeout(() => setFlashRow((cur) => (cur === n ? null : cur)), 1900);
+  }
 
   const findings = result.findings;
   const filtered = sevFilter ? findings.filter((f) => f.severity === sevFilter) : findings;
@@ -219,6 +248,22 @@ export default function Dashboard({
       <div style={{ height: 26 }} />
 
       <FindingDrawer finding={selected} onClose={() => setSelected(null)} />
+
+      <AssistantPanel
+        sweepId={sweepId}
+        result={result}
+        aiCalls={aiCalls}
+        open={panelOpen}
+        width={panelWidth}
+        overlay={overlay}
+        onOpenChange={onPanelOpenChange}
+        onWidthChange={onPanelWidthChange}
+        onCite={citeJump}
+        onOpenMemo={() => {
+          setSelected(null);
+          onOpenMemo();
+        }}
+      />
     </div>
   );
 }

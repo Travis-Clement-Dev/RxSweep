@@ -20,7 +20,9 @@ export default function Progress({
   onReset,
 }: {
   sweepId: string;
-  onDone: (result: NonNullable<SweepProgress["result"]>) => void;
+  // ai_calls rides along: the result payload doesn't carry it, and the run
+  // record view reports it after the sweep finishes.
+  onDone: (result: NonNullable<SweepProgress["result"]>, aiCalls: number) => void;
   onReset: () => void;
 }) {
   const [progress, setProgress] = useState<SweepProgress | null>(null);
@@ -34,7 +36,7 @@ export default function Progress({
         setProgress(p);
         if (p.status === "done" && p.result) {
           clearInterval(timer);
-          onDone(p.result);
+          onDone(p.result, p.ai_calls);
         }
         if (p.status === "error") clearInterval(timer);
       } catch {
