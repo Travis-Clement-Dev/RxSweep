@@ -39,12 +39,14 @@ _QUEUE_VERBS = {
 }
 
 
-def action_queue(findings: list[Finding], cap: int = 7) -> list[dict]:
+def action_queue(findings: list[Finding]) -> list[dict]:
     """Verb-led actions from the findings a pharmacist must disposition.
 
-    Criticals plus exact-NDC highs plus AI-matched moderates, citation order,
-    capped. Wording is mirrored by the web queue (web/src/components/
-    ActionQueue.tsx) so the served memo and the app read the same.
+    Every critical, exact-NDC high, and AI-matched moderate, in citation
+    order. Uncapped (contract v1.3, D11): a worklist that hides
+    disposition-required findings contradicts worklist-first. Wording is
+    mirrored by the web queue (web/src/components/ActionQueue.tsx) so the
+    served memo and the app read the same.
     """
     queue: list[dict] = []
     for f in findings:
@@ -74,8 +76,6 @@ def action_queue(findings: list[Finding], cap: int = 7) -> list[dict]:
                     "citation": f.citation,
                 }
             )
-        if len(queue) >= cap:
-            break
     return queue
 
 

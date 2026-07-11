@@ -10,7 +10,9 @@ paperwork: if your change makes a doc wrong, the change is not done.
 - `design/design_handoff_federal_register/` is the **binding design spec**: the contract,
   the implementation README, the navy token drop-in, and the v5 HTML prototype as the
   acceptance reference. It **supersedes** `design/styleguide/` and `design/comps/`
-  (teal era). Recorded as D10 in docs/DECISIONS.md. When in doubt, the contract wins.
+  (teal era). Recorded as D10 in docs/DECISIONS.md. The dispositions addendum at
+  `design/design_handoff_dispositions/` (contract v1.3, v6 prototype) governs the
+  recorded-disposition workflow (D11). When in doubt, the contract wins.
 - UI copy register: FDA drug-safety-communication voice. Short declarative sentences.
   **No em dashes in UI copy.** The scope banner and the openFDA disclaimer travel with
   every surface and artifact.

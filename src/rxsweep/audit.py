@@ -16,7 +16,8 @@ class AuditLog:
         run_dir.mkdir(parents=True, exist_ok=True)
         self.path = run_dir / "audit.jsonl"
 
-    def event(self, kind: str, **fields) -> None:
+    def event(self, kind: str, **fields) -> dict:
         rec = {"ts": datetime.now(timezone.utc).isoformat(), "kind": kind, **fields}
         with open(self.path, "a") as f:
             f.write(json.dumps(rec, default=str) + "\n")
+        return rec

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ToggleButton } from "react-aria-components";
-import type { Finding, SweepResultData } from "../api";
-import ActionQueue from "../components/ActionQueue";
+import { reduceDispositions, type Disposition, type Finding, type SweepResultData } from "../api";
+import ActionQueue, { buildQueue } from "../components/ActionQueue";
 import FindingsTable from "../components/FindingsTable";
 import FindingDrawer from "../components/FindingDrawer";
 import AssistantPanel from "../components/AssistantPanel";
@@ -42,6 +42,10 @@ export default function Dashboard({
   sweepId,
   result,
   aiCalls,
+  dispositions,
+  onDisposition,
+  operator,
+  onOperatorChange,
   onReset,
   onOpenMemo,
   overlay,
@@ -53,6 +57,10 @@ export default function Dashboard({
   sweepId: string;
   result: SweepResultData;
   aiCalls: number;
+  dispositions: Disposition[];
+  onDisposition: (e: Disposition) => void;
+  operator: string;
+  onOperatorChange: (op: string) => void;
   onReset: () => void;
   onOpenMemo: () => void;
   overlay: boolean;
@@ -64,6 +72,7 @@ export default function Dashboard({
   const [sevFilter, setSevFilter] = useState<Tier | null>(null);
   const [selected, setSelected] = useState<Finding | null>(null);
   const [flashRow, setFlashRow] = useState<number | null>(null);
+  const reduced = useMemo(() => reduceDispositions(dispositions), [dispositions]);
 
   // Citation jump from the assistant transcript: clear the filter so the row
   // exists, flash it, and scroll instantly (smooth scroll violates §8).
@@ -156,7 +165,16 @@ export default function Dashboard({
       )}
 
       <div className="fadeup d3" style={{ padding: "22px 22px 0" }}>
-        <ActionQueue findings={findings} tiers={result.tiers} onOpen={setSelected} />
+        <ActionQueue
+          findings={findings}
+          tiers={result.tiers}
+          onOpen={setSelected}
+          sweepId={sweepId}
+          reduced={reduced}
+          operator={operator}
+          onOperatorChange={onOperatorChange}
+          onDisposition={onDisposition}
+        />
       </div>
 
       <div className="fadeup d4" style={{ padding: "26px 22px 0" }}>
@@ -185,7 +203,12 @@ export default function Dashboard({
           )}
         </div>
         {hasFindings ? (
-          <FindingsTable findings={filtered} flashRow={flashRow} onSelect={setSelected} />
+          <FindingsTable
+            findings={filtered}
+            flashRow={flashRow}
+            reduced={reduced}
+            onSelect={setSelected}
+          />
         ) : (
           <div className="statement roomy">
             <b>No findings.</b> {meta.items_checked} items were checked against FDA recalls,
@@ -213,9 +236,9 @@ export default function Dashboard({
           )}
         </div>
         <div className="card">
-          <div className="title">Quarantined ({result.quarantined.length})</div>
+          <div className="title">Excluded rows ({result.quarantined.length})</div>
           {result.quarantined.length === 0 ? (
-            <div className="row">No rows were quarantined during ingest.</div>
+            <div className="row">No rows were excluded during ingest.</div>
           ) : (
             result.quarantined.map((q, i) => (
               <div className="row" key={i}>
@@ -223,6 +246,9 @@ export default function Dashboard({
               </div>
             ))
           )}
+          <div className="closing">
+            Rows the sweep could not read are disclosed here; nothing is silently dropped.
+          </div>
         </div>
         <div className="card">
           <div className="title">Unchecked ({result.unchecked.length})</div>
@@ -241,12 +267,20 @@ export default function Dashboard({
       </div>
       <div style={{ height: 26 }} />
 
-      <FindingDrawer finding={selected} onClose={() => setSelected(null)} />
+      <FindingDrawer
+        finding={selected}
+        disposition={selected ? reduced.get(selected.citation) : undefined}
+        onClose={() => setSelected(null)}
+      />
 
       <AssistantPanel
         sweepId={sweepId}
         result={result}
         aiCalls={aiCalls}
+        reduced={reduced}
+        queueTotal={buildQueue(findings).length}
+        operator={operator}
+        onOperatorChange={onOperatorChange}
         open={panelOpen}
         width={panelWidth}
         overlay={overlay}

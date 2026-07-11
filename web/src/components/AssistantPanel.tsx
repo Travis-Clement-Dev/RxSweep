@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { sendChat, type SweepResultData } from "../api";
+import { sendChat, type Disposition, type SweepResultData } from "../api";
 import { fmtRunTs } from "../format";
 
 // Right-docked assistant panel (contract D6, shell rounds 6-7): a floating
@@ -47,6 +47,10 @@ export default function AssistantPanel({
   sweepId,
   result,
   aiCalls,
+  reduced,
+  queueTotal,
+  operator,
+  onOperatorChange,
   open,
   width,
   overlay,
@@ -58,6 +62,10 @@ export default function AssistantPanel({
   sweepId: string;
   result: SweepResultData;
   aiCalls: number;
+  reduced: Map<number, Disposition>;
+  queueTotal: number;
+  operator: string;
+  onOperatorChange: (op: string) => void;
   open: boolean;
   width: number;
   overlay: boolean;
@@ -346,6 +354,39 @@ export default function AssistantPanel({
                 ))}
                 <div className="note">
                   Billed to your own API key. Every prompt and completion is logged verbatim.
+                </div>
+                <div className="rh">Dispositions</div>
+                {(() => {
+                  const recorded = reduced.size;
+                  const dismissed = [...reduced.values()].filter(
+                    (d) => d.action === "dismissed",
+                  ).length;
+                  const kv: [string, string][] = [
+                    ["Recorded", `${recorded} of ${queueTotal}`],
+                    ["Open", String(Math.max(0, queueTotal - recorded))],
+                    ["Dismissed", String(dismissed)],
+                  ];
+                  return kv.map(([k, v]) => (
+                    <div className="kv" key={k}>
+                      <span>{k}</span>
+                      <span className="v">{v}</span>
+                    </div>
+                  ));
+                })()}
+                <div className="kv">
+                  <span>Operator</span>
+                  <input
+                    className="opinput"
+                    value={operator}
+                    maxLength={3}
+                    placeholder="not set"
+                    aria-label="Operator initials"
+                    onChange={(e) => onOperatorChange(e.target.value.toUpperCase())}
+                  />
+                </div>
+                <div className="note">
+                  Each disposition and reversal is appended to this run's audit log as its own
+                  event. Nothing is erased.
                 </div>
                 <div className="rh">Exports</div>
                 {exports.map((x) => (
