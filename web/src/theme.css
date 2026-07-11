@@ -207,6 +207,8 @@ code, .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, mono
             padding: 36px 26px; text-align: center; cursor: pointer;
             transition: border-color .15s ease, background .15s ease; animation: fadeup .25s ease both; }
 .dropzone.drag { border-color: var(--accent); background: var(--accent-soft); }
+.dropzone .zonehit { display: flex; flex-direction: column; align-items: center; background: none;
+                     border: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
 .dropzone .zt { font: 700 16px "Public Sans", sans-serif; color: var(--ink); }
 .dropzone .zs { font-size: 12.5px; line-height: 1.5; color: var(--ink-faint); margin-top: 7px; max-width: 46ch; }
 .samplelink { font: 600 12.5px "Public Sans", sans-serif; color: var(--accent-ink); cursor: pointer;
