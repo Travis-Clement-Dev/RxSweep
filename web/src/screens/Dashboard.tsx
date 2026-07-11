@@ -24,17 +24,17 @@ function outageNotice(unchecked: string[]): { lead: string; body: string } {
       lead: `${name} unavailable.`,
       body:
         `The ${raw === "ndc directory" ? "NDC directory" : `${raw} source`} could not be ` +
-        `reached after retries. ${parsed[0][2]} items were not checked against it and are ` +
-        `listed under Unchecked. Treat them as unknown, not clear. Re-run the sweep to ` +
-        `complete coverage.`,
+        `reached after retries. ${parsed[0][2]} items were not checked against it. The ` +
+        `failure is recorded under Unchecked. Treat them as unknown, not clear. Re-run the ` +
+        `sweep to complete coverage.`,
     };
   }
   return {
     lead: "FDA sources unavailable.",
     body:
       "One or more FDA sources could not be reached after retries. Affected items were not " +
-      "checked and are listed under Unchecked. Treat them as unknown, not clear. Re-run the " +
-      "sweep to complete coverage.",
+      "checked; each failure is recorded under Unchecked. Treat them as unknown, not clear. " +
+      "Re-run the sweep to complete coverage.",
   };
 }
 
