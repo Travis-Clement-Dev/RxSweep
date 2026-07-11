@@ -11,7 +11,8 @@ The tool does the sweeping so the pharmacist can do the verifying. That division
 ## Try it
 
 ```bash
-git clone https://github.com/Travis-Clement-Dev/RxSweep.git && cd RxSweep
+git clone https://github.com/Travis-Clement-Dev/RxSweep.git
+cd RxSweep
 uv run rxsweep demo --no-ai        # deterministic sweep, no API key needed
 uv run rxsweep serve               # the web app, at 127.0.0.1:8555
 ```
@@ -65,6 +66,8 @@ The default model is `claude-haiku-4-5`, and a full sweep of the 40-item sample 
 Name-level matches are candidates, not verdicts. Recall text describing "Lidocaine HCl injection" will flag your lidocaine even when the lots never touched your wholesaler, which is why every name match carries a verification label and a source link instead of a conclusion.
 
 The data has lag built in. FDA enforcement reports publish on FDA's schedule, shortage records are manufacturer self-reported, and openFDA paginates out at 26,000 records (RxSweep discloses in the audit log if a fetch ever truncates). There is no drug-interaction checking, because NLM retired the public API for it in 2024, and there is no clinical decision support anywhere in this tool by design.
+
+The tool is built and verified on macOS. The toolchain is portable (uv runs the same on macOS, Linux, and Windows, and every file RxSweep reads or writes uses explicit UTF-8 so Windows' cp1252 default cannot corrupt a report), but nobody has run a sweep on Windows yet. If you do, open an issue with whatever breaks.
 
 ## Development
 

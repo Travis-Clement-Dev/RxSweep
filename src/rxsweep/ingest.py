@@ -64,7 +64,7 @@ _matching._ensure_models()
 def load_formulary(path: Path) -> FormularyLoad:
     items: list[FormularyItem] = []
     quarantined: list[QuarantinedRow] = []
-    with open(path, newline="") as f:
+    with open(path, newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         cols = _detect(list(reader.fieldnames or []))
         for lineno, raw in enumerate(reader, start=2):

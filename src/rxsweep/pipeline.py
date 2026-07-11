@@ -141,8 +141,11 @@ def run_sweep(
         ),
     )
     report_path = run_dir / "report.html"
+    # Explicit encoding everywhere we touch disk: Windows defaults to cp1252,
+    # and live FDA text contains characters that are not in it.
     report_path.write_text(
-        render_report(findings, fl.quarantined, manual_review, unchecked, summary, meta)
+        render_report(findings, fl.quarantined, manual_review, unchecked, summary, meta),
+        encoding="utf-8",
     )
 
     tiers: dict[str, int] = {}

@@ -54,7 +54,7 @@ def _rows(findings: list[Finding]) -> list[dict]:
 
 
 def write_csv(result: SweepResult, path: Path) -> Path:
-    with open(path, "w", newline="") as fh:
+    with open(path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=_COLUMNS)
         writer.writeheader()
         writer.writerows(_rows(result.findings))
@@ -143,7 +143,7 @@ def write_markdown(result: SweepResult, path: Path) -> Path:
         f"> {DISCLAIMER}",
         "",
     ]
-    path.write_text("\n".join(lines))
+    path.write_text("\n".join(lines), encoding="utf-8")
     return path
 
 

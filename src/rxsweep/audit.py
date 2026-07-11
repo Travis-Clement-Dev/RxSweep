@@ -18,6 +18,6 @@ class AuditLog:
 
     def event(self, kind: str, **fields) -> dict:
         rec = {"ts": datetime.now(timezone.utc).isoformat(), "kind": kind, **fields}
-        with open(self.path, "a") as f:
+        with open(self.path, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, default=str) + "\n")
         return rec
