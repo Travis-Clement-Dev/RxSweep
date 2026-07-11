@@ -116,6 +116,8 @@ a { color: var(--accent-ink); }
 code, .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.85em; }
 .faint { color: var(--ink-faint); }
 .meta { color: var(--ink-soft); font-size: 12.5px; }
+/* Keep hidden-but-mounted shells hidden even where a class sets display. */
+[hidden] { display: none !important; }
 
 /* ---- motion (contract §8; all gated behind prefers-reduced-motion) ---- */
 @keyframes fadeup { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }

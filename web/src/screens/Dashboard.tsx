@@ -13,9 +13,11 @@ type Register = (typeof REGISTERS)[number];
 export default function Dashboard({
   sweepId,
   result,
+  onReset,
 }: {
   sweepId: string;
   result: SweepResultData;
+  onReset: () => void;
 }) {
   const [severityFilter, setSeverityFilter] = useState<string | null>(null);
   const [selected, setSelected] = useState<Finding | null>(null);
@@ -48,6 +50,30 @@ export default function Dashboard({
   };
 
   return (
+    <div style={{ maxWidth: 1604, margin: "0 auto" }}>
+      <div className="fadeup" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 14, padding: "20px 22px 0" }}>
+        <div>
+          <h1 className="h-doc">Formulary Sweep Findings</h1>
+          <p className="h-sub" style={{ fontSize: 13 }}>
+            Sweep a formulary against FDA recalls, drug shortages, and discontinued NDCs.
+          </p>
+        </div>
+        <button className="btn-quiet" onClick={onReset}>
+          New sweep
+        </button>
+      </div>
+      <div style={{ padding: "0 22px" }}>
+        <hr className="rule grow" style={{ marginTop: 13 }} />
+        <hr className="rule thin" />
+      </div>
+      <div className="scopebar fadeup d1" role="note" style={{ margin: "16px 22px 0" }}>
+        <b>Scope.</b>
+        <span>
+          Informational tool. A pharmacist verifies every finding before action. Not clinical
+          advice. openFDA: assume all results are unvalidated.
+        </span>
+      </div>
+
     <div className="layout">
       <nav className="rail" aria-label="Run, filters, and exports">
         <h3>Run</h3>
@@ -189,6 +215,7 @@ export default function Dashboard({
       />
 
       <FindingDrawer finding={selected} onClose={() => setSelected(null)} />
+    </div>
     </div>
   );
 }

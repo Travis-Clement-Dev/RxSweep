@@ -3,76 +3,116 @@ import type { SweepResultData } from "./api";
 import Upload from "./screens/Upload";
 import Progress from "./screens/Progress";
 import Dashboard from "./screens/Dashboard";
+import Logomark from "./components/Logomark";
 
 type Phase =
   | { name: "upload" }
   | { name: "progress"; sweepId: string }
   | { name: "dashboard"; sweepId: string; result: SweepResultData };
 
+type Theme = "light" | "dark";
+
+// The openFDA strip travels with every frame (contract: the disclaimer
+// accompanies every artifact).
+function FrameFooter() {
+  return (
+    <div className="framefoot" data-noprint="">
+      <div className="inner">
+        openFDA: do not rely on these data to make decisions regarding medical care; assume
+        all results are unvalidated.{" "}
+        <a href="https://open.fda.gov/terms/" target="_blank" rel="noreferrer">
+          Terms
+        </a>{" "}
+        ·{" "}
+        <a href="https://open.fda.gov/license/" target="_blank" rel="noreferrer">
+          License
+        </a>{" "}
+        · Severity rubric human-authored (Travis Clement, PharmD) ·{" "}
+        <a href="https://github.com/Travis-Clement-Dev/RxSweep" target="_blank" rel="noreferrer">
+          RxSweep on GitHub
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [phase, setPhase] = useState<Phase>({ name: "upload" });
+  // index.html applies the stored theme before first paint; read it back here.
+  const [theme, setTheme] = useState<Theme>(() => {
+    const set = document.documentElement.dataset.theme;
+    if (set === "light" || set === "dark") return set;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+  function toggleTheme() {
+    const next: Theme = theme === "light" ? "dark" : "light";
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem("rxsweep-theme", next);
+    setTheme(next);
+  }
 
   return (
     <>
-      <header className="band">
+      <header className="band" data-noprint="">
         <div className="inner">
-          <span className="brand">RxSweep</span>
-          <span className="tag">Formulary surveillance · FDA public data · pharmacist verifies</span>
+          <span className="left">
+            <Logomark width={15} height={14} fill="#7fa0cf" />
+            <span className="brand">RxSweep</span>
+            <span className="tag">
+              Formulary surveillance · FDA public data · pharmacist verifies
+            </span>
+          </span>
+          <span className="right">
+            <button
+              className="iconbtn"
+              onClick={toggleTheme}
+              aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
+              title={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
+            >
+              {theme === "light" ? "☾" : "☀"}
+            </button>
+          </span>
         </div>
       </header>
 
-      <div className="shell">
-        {phase.name === "dashboard" ? (
-          <p className="docket">
-            Sweep {phase.result.run_id} · {phase.result.meta.csv_name} ·{" "}
-            {phase.result.meta.items_checked} items · recall window{" "}
-            {phase.result.meta.months_back} months · AI:{" "}
-            {phase.result.meta.ai_available ? phase.result.meta.model : "off"}
-            {phase.result.meta.ai_usage?.est_cost_usd != null &&
-              ` · AI cost ~$${phase.result.meta.ai_usage.est_cost_usd.toFixed(4)}`}
-          </p>
-        ) : (
-          <p className="docket">Sweep a formulary against FDA recalls, shortages, and discontinued NDCs.</p>
-        )}
-        <div className="flex items-baseline justify-between gap-4 flex-wrap">
-          <h1 className="h-doc">
-            {phase.name === "dashboard" ? "Formulary Sweep Findings" : "New Formulary Sweep"}
-          </h1>
-          {phase.name === "dashboard" && (
-            <button className="btn btn-quiet" onClick={() => setPhase({ name: "upload" })}>
-              New sweep
-            </button>
-          )}
+      {phase.name === "upload" && (
+        <div className="shellpad">
+          <div className="frame">
+            <Upload onStarted={(sweepId) => setPhase({ name: "progress", sweepId })} />
+            <FrameFooter />
+          </div>
         </div>
-        <hr className="rule" />
-        <hr className="rule thin" />
+      )}
 
-        <div className="noticebar" role="note">
-          Informational tool. A pharmacist verifies every finding before action. Not clinical
-          advice. openFDA: "assume all results are unvalidated."{" "}
-          <a href="https://open.fda.gov/terms/">Terms</a>
+      {phase.name === "progress" && (
+        <div className="shellpad">
+          <div className="frame">
+            <Progress
+              sweepId={phase.sweepId}
+              onDone={(result) =>
+                setPhase({ name: "dashboard", sweepId: phase.sweepId, result })
+              }
+              onReset={() => setPhase({ name: "upload" })}
+            />
+            <FrameFooter />
+          </div>
         </div>
+      )}
 
-        {phase.name === "upload" && (
-          <Upload onStarted={(sweepId) => setPhase({ name: "progress", sweepId })} />
-        )}
-        {phase.name === "progress" && (
-          <Progress
-            sweepId={phase.sweepId}
-            onDone={(result) => setPhase({ name: "dashboard", sweepId: phase.sweepId, result })}
-            onReset={() => setPhase({ name: "upload" })}
-          />
-        )}
-        {phase.name === "dashboard" && (
-          <Dashboard sweepId={phase.sweepId} result={phase.result} />
-        )}
-
-        <footer className="faint mt-14 border-t pt-4 text-[12px]" style={{ borderColor: "var(--line-soft)" }}>
-          Severity rubric human-authored (Travis Clement, PharmD) · Every AI prompt and reply is
-          audit-logged verbatim ·{" "}
-          <a href="https://github.com/Travis-Clement-Dev/RxSweep">RxSweep on GitHub</a>
-        </footer>
-      </div>
+      {phase.name === "dashboard" && (
+        <div className="shellpad split">
+          <div className="frame split">
+            <div className="canvas-body">
+              <Dashboard
+                sweepId={phase.sweepId}
+                result={phase.result}
+                onReset={() => setPhase({ name: "upload" })}
+              />
+            </div>
+            <FrameFooter />
+          </div>
+        </div>
+      )}
     </>
   );
 }
