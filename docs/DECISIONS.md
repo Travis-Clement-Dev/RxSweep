@@ -127,6 +127,27 @@ lives in [`JOURNAL.md`](./JOURNAL.md); this file is the *why* of the choices.
   semantic color discipline; the accent carries identity, the surfaces carry work.
 - **Status:** Final for the exploration; applies to the React Aria port tokens.
 
+## D10 — "Federal Register" design contract adopted; teal retired for navy (2026-07-11)
+
+- **Context:** The Claude Design UX exploration (design/claude-design-brief.md) ran
+  ten review rounds with Travis and produced a binding design contract, committed at
+  `design/design_handoff_federal_register/` with the v5 HTML prototype as the
+  acceptance reference.
+- **Options:** Keep the teal styleguide direction (D9) with layout changes only;
+  adopt the contract wholesale; cherry-pick components.
+- **Decision:** Adopt the contract wholesale. It supersedes `design/styleguide/` and
+  `design/comps/`: the accent family is navy (one blue, three depths, ~218° hue),
+  the shell is nested floating cards on a frame, the assistant docks right with a
+  run-record view, and the memo becomes an in-app letter sheet. D9's research-backed
+  neutral-surface discipline carries forward unchanged; only the accent hue and
+  shell language are superseded.
+- **Rationale:** The contract came out of Travis's own review rounds (decision log
+  D1-D10 plus amendments 5-10 inside the contract) and encodes the same evidence
+  standards as D9; carrying two competing design authorities in-repo invites drift.
+- **Status:** Implemented on `explore/react-aria-styleguide` (web/ restyle, commits
+  722631d..8737e59); awaiting design-QA by the design agent and Travis's merge
+  decision.
+
 ---
 
 *Template for new entries: date, Context, Options, Decision, Rationale, Status.*

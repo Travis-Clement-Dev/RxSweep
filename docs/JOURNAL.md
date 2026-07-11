@@ -93,3 +93,19 @@ drawer during testing). Local validation by Travis: engine and governance strong
 **2026-07-09 — v0.1.0 checkpoint.** Docs trued up, this journal created, tag cut. Phase 3
 (regulatory-instrument UX + action queue + export suite) proceeds on a branch via PR — design
 comps gate first, HeroUI as the agreed fallback if the custom direction misses.
+
+**2026-07-11 — Federal Register implementation.** The Claude Design exploration closed:
+handoff package committed under design/design_handoff_federal_register/ (binding contract,
+implementation README, navy token drop-in, v5 prototype as acceptance reference; the
+package's kickoff prompt was reconstructed from the design workspace after the download
+omitted it). Implemented on the explore branch in per-screen commits: token migration with
+a manual theme toggle, masthead band + floating-card shell, document-receipt upload,
+radar run screen on real server phases, dashboard canvas (run-meta strip, outage notice,
+verb-led required actions, fixed-grid register, disclosure cards), finding-record drawer,
+right-docked assistant panel with run record and seam resize (ChatPanel retired), letter
+memo view with print CSS. Browser-verified live in both themes including metered chat,
+zero-cost briefing, AI-off degradation, and the sub-1100px overlay. Register column
+sorting was deliberately dropped per the contract; the required-actions queue extends the
+report.py rule with AI-matched moderates. The 2026-07-10 audit's row-flash finding recurred
+in the rewritten table and was fixed by declaring the flash state in the RAC collection's
+dependencies. DECISIONS.md gains D10 recording the contract adoption.
