@@ -103,11 +103,7 @@ export default function App() {
         <div className="shellpad split">
           <div className="frame split">
             <div className="canvas-body">
-              <Dashboard
-                sweepId={phase.sweepId}
-                result={phase.result}
-                onReset={() => setPhase({ name: "upload" })}
-              />
+              <Dashboard result={phase.result} onReset={() => setPhase({ name: "upload" })} />
             </div>
             <FrameFooter />
           </div>

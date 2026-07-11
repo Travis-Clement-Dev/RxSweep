@@ -1,18 +1,24 @@
-import { useMemo, useState } from "react";
-import {
-  Cell,
-  Column,
-  Row,
-  Table,
-  TableBody,
-  TableHeader,
-  type SortDescriptor,
-} from "react-aria-components";
+import { Cell, Column, Row, Table, TableBody, TableHeader } from "react-aria-components";
 import type { Finding } from "../api";
 
-// React Aria Table: native accessible column sorting + keyboard grid
-// navigation. https://react-aria.adobe.com/Table
-const SEV_ORDER: Record<string, number> = { critical: 0, high: 1, moderate: 2, info: 3 };
+// React Aria Table for keyboard grid navigation and row actions; rendered as
+// the contract's bordered document register (fixed column grid, ground header
+// row, typographic severity, bordered match tags). The register keeps
+// citation order so [n] references read top to bottom; contract v1.1 dropped
+// the old sortable columns.
+// https://react-aria.adobe.com/Table
+
+const SRC_LABEL: Record<Finding["source"], string> = {
+  recall: "Recall",
+  shortage: "Shortage",
+  ndc: "NDC status",
+};
+
+const MATCH: Record<Finding["label"], { label: string; cls: string }> = {
+  exact_ndc: { label: "Exact NDC", cls: "exact" },
+  name_match: { label: "Name match", cls: "name" },
+  ai_matched: { label: "AI: verify", cls: "ai" },
+};
 
 export default function FindingsTable({
   findings,
@@ -23,53 +29,19 @@ export default function FindingsTable({
   flashRow: number | null;
   onSelect: (f: Finding) => void;
 }) {
-  const [sort, setSort] = useState<SortDescriptor>({
-    column: "severity",
-    direction: "ascending",
-  });
-
-  const sorted = useMemo(() => {
-    const rows = [...findings];
-    const dir = sort.direction === "descending" ? -1 : 1;
-    rows.sort((a, b) => {
-      let cmp = 0;
-      if (sort.column === "severity")
-        cmp = SEV_ORDER[a.severity] - SEV_ORDER[b.severity] || a.citation - b.citation;
-      else if (sort.column === "item") cmp = a.item_name.localeCompare(b.item_name);
-      else if (sort.column === "source")
-        cmp = a.source.localeCompare(b.source) || a.citation - b.citation;
-      else cmp = a.citation - b.citation;
-      return cmp * dir;
-    });
-    return rows;
-  }, [findings, sort]);
-
-  if (findings.length === 0) {
-    return (
-      <div className="panel">
-        <p className="m-0">No findings match the current filter.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="worklist">
-      <Table
-        aria-label="Findings register"
-        className="tbl"
-        sortDescriptor={sort}
-        onSortChange={setSort}
-      >
+    <div className="register">
+      <Table aria-label="Findings register">
         <TableHeader>
-          <Column id="citation" allowsSorting>#</Column>
-          <Column id="severity" allowsSorting>Severity</Column>
-          <Column id="item" allowsSorting isRowHeader>Item</Column>
+          <Column>#</Column>
+          <Column>Severity</Column>
+          <Column isRowHeader>Item</Column>
           <Column>NDC</Column>
-          <Column id="source" allowsSorting>Source</Column>
-          <Column>Match</Column>
+          <Column>Source</Column>
+          <Column className="center">Match</Column>
           <Column>Basis</Column>
         </TableHeader>
-        <TableBody items={sorted}>
+        <TableBody items={findings}>
           {(f: Finding) => (
             <Row
               id={f.citation}
@@ -77,26 +49,20 @@ export default function FindingsTable({
               onAction={() => onSelect(f)}
               aria-label={`Open details for ${f.item_name}`}
             >
-              <Cell>
-                <span id={`finding-${f.citation}`} className="mono">[{f.citation}]</span>
+              <Cell className="cite">
+                <span id={`finding-${f.citation}`}>[{f.citation}]</span>
               </Cell>
-              <Cell>
-                <span className={`svdot ${f.severity}`} aria-hidden="true"></span>
+              <Cell className="sevcell">
+                <span className={`svdot ${f.severity}`} aria-hidden="true" />
                 <span className={`svt ${f.severity}`}>{f.severity}</span>
               </Cell>
-              <Cell>{f.item_name}</Cell>
-              <Cell><span className="ndc">{f.item_ndc ?? "—"}</span></Cell>
-              <Cell>{f.source}</Cell>
-              <Cell>
-                {f.label === "ai_matched" ? (
-                  <span className="chip chip-verify">AI-matched: verify</span>
-                ) : (
-                  <span className="chip chip-label">
-                    {f.label === "exact_ndc" ? "exact NDC" : "name"}
-                  </span>
-                )}
+              <Cell className="item">{f.item_name}</Cell>
+              <Cell className="ndc">{f.item_ndc ?? ""}</Cell>
+              <Cell className="src">{SRC_LABEL[f.source]}</Cell>
+              <Cell className="center">
+                <span className={`matchtag ${MATCH[f.label].cls}`}>{MATCH[f.label].label}</span>
               </Cell>
-              <Cell><span className="why">{f.severity_rationale}</span></Cell>
+              <Cell className="basis">{f.severity_rationale}</Cell>
             </Row>
           )}
         </TableBody>

@@ -281,12 +281,17 @@ code, .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, mono
                 white-space: nowrap; background: none; border: none; padding: 0; }
 .qrow .sevtag { font: 800 11px/1.3 "Public Sans", sans-serif; letter-spacing: .09em; text-transform: uppercase;
                 padding-left: 9px; white-space: nowrap; border-left: 3px solid currentColor; }
+.qrow .sevtag.critical { color: var(--critical); }
+.qrow .sevtag.moderate { color: var(--moderate); }
 .qrow .actcol { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .qrow .actbtn { font: 600 11.5px "Public Sans", sans-serif; color: var(--btn-ink); background: var(--accent);
                 border: none; padding: 6px 11px; cursor: pointer; white-space: nowrap; }
 .qrow .qstatus { display: inline-flex; align-items: center; gap: 5px; font: 400 10.5px "Public Sans", sans-serif;
                  color: var(--ink-faint); white-space: nowrap; }
 .qrow .qstatus .dot { width: 6px; height: 6px; display: inline-block; }
+.qrow .qstatus .dot.critical { background: var(--critical); }
+.qrow .qstatus .dot.moderate { background: var(--moderate); }
+.qrow .qstatus .dot.faint { background: var(--ink-faint); }
 .statement { border: 1px solid var(--line); padding: 14px 16px; font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); }
 .statement b { font-weight: 700; color: var(--ink); }
 
@@ -297,22 +302,30 @@ code, .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, mono
              padding: 7px 11px; cursor: pointer; }
 .regfilter .dot { width: 7px; height: 7px; display: inline-block; }
 .regfilter[aria-pressed="true"] { color: var(--btn-ink); background: var(--accent); border-color: var(--accent); }
+.regfilter .dot.critical, .regfilter .dot.high { background: var(--critical); }
+.regfilter .dot.moderate { background: var(--moderate); }
+.regfilter .dot.info { background: var(--info); }
+/* React Aria Table rendered as the contract's fixed-grid document register:
+   each tr is its own grid so the columns hold across header and body. */
 .register { border: 1px solid var(--line); overflow-x: auto; }
-.register .minw { min-width: 820px; }
-.regrow { display: grid; grid-template-columns: 52px 96px minmax(0, 1.5fr) 120px 92px 128px minmax(0, 1.9fr); }
-.regrow.head { background: var(--ground); border-bottom: 1px solid var(--line); }
-.regrow.head > div { font: 800 10.5px "Public Sans", sans-serif; letter-spacing: .06em;
-                     text-transform: uppercase; color: var(--ink-soft); padding: 8px 10px; }
-.regrow.body { border-bottom: 1px solid var(--line-soft); cursor: pointer; transition: background .7s ease; }
-.regrow.body:hover { background: var(--focus-row); }
-.regrow.body.flash { background: var(--focus-row); box-shadow: inset 3px 0 0 var(--accent); transition: none; }
-.regrow .cite { font: 500 12px "IBM Plex Mono", monospace; color: var(--ink-faint); padding: 9px 10px; }
-.regrow .sev { padding: 9px 10px; white-space: nowrap; }
-.regrow .item { font: 500 13px/1.35 "Public Sans", sans-serif; padding: 9px 10px; }
-.regrow .ndc { font: 400 11.5px "IBM Plex Mono", monospace; color: var(--ink-soft); padding: 9px 10px; }
-.regrow .src { font: 400 12.5px "Public Sans", sans-serif; color: var(--ink-soft); padding: 9px 10px; }
-.regrow .match { padding: 7px 10px; text-align: center; }
-.regrow .basis { font: 400 12px/1.4 "Public Sans", sans-serif; color: var(--ink-soft); padding: 9px 10px; }
+.register table { border-collapse: collapse; width: 100%; min-width: 820px; display: block; }
+.register thead, .register tbody { display: block; }
+.register tr { display: grid; grid-template-columns: 52px 96px minmax(0, 1.5fr) 120px 92px 128px minmax(0, 1.9fr); }
+.register thead tr { background: var(--ground); border-bottom: 1px solid var(--line); }
+.register th { font: 800 10.5px "Public Sans", sans-serif; letter-spacing: .06em;
+               text-transform: uppercase; color: var(--ink-soft); padding: 8px 10px; text-align: left; }
+.register tbody tr { border-bottom: 1px solid var(--line-soft); cursor: pointer; transition: background .7s ease; }
+.register tbody tr:hover { background: var(--focus-row); }
+.register tbody tr.flash { background: var(--focus-row); box-shadow: inset 3px 0 0 var(--accent); transition: none; }
+.register td { padding: 9px 10px; }
+.register td.cite { font: 500 12px "IBM Plex Mono", monospace; color: var(--ink-faint); }
+.register td.sevcell { white-space: nowrap; }
+.register td.item { font: 500 13px/1.35 "Public Sans", sans-serif; }
+.register td.ndc { font: 400 11.5px "IBM Plex Mono", monospace; color: var(--ink-soft); }
+.register td.src { font: 400 12.5px "Public Sans", sans-serif; color: var(--ink-soft); }
+.register th.center, .register td.center { text-align: center; }
+.register td.center { padding: 7px 10px; }
+.register td.basis { font: 400 12px/1.4 "Public Sans", sans-serif; color: var(--ink-soft); }
 .regnote { font-size: 12.5px; color: var(--ink-faint); margin: 8px 0 0; }
 
 /* ---- dashboard: disclosure cards ---- */

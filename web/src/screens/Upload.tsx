@@ -47,7 +47,7 @@ export default function Upload({ onStarted }: { onStarted: (sweepId: string) => 
     }
   }
 
-  async function useSample() {
+  async function attachSample() {
     try {
       const resp = await fetch("/sample_formulary.csv");
       if (!resp.ok) throw new Error(String(resp.status));
@@ -114,7 +114,7 @@ export default function Upload({ onStarted }: { onStarted: (sweepId: string) => 
               </Button>
             </FileTrigger>
             <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
-              <button className="samplelink" onClick={() => void useSample()}>
+              <button className="samplelink" onClick={() => void attachSample()}>
                 Use the bundled sample_formulary.csv
               </button>
               {error && (
