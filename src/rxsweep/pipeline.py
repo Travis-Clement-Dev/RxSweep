@@ -40,9 +40,10 @@ class _TappedAudit(AuditLog):
         super().__init__(run_dir)
         self._tap = tap or (lambda e: None)
 
-    def event(self, kind: str, **fields) -> None:
-        super().event(kind, **fields)
+    def event(self, kind: str, **fields) -> dict:
+        rec = super().event(kind, **fields)
         self._tap({"kind": kind, **fields})
+        return rec
 
 
 def run_sweep(

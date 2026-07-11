@@ -28,6 +28,27 @@ class ChatRequest(BaseModel):
     question: str
     history: list[dict] = []
 
+
+class DispositionRequest(BaseModel):
+    citation: int
+    action: str
+    operator: str
+    note: str | None = None
+
+
+# Contract v1.3 (D11): the pharmacist's disposition vocabulary. `verified` and
+# `dismissed` are the two outcomes of an AI-match verification; `reopened` is
+# the append-only undo.
+_DISPOSITION_ACTIONS = {
+    "quarantined",
+    "reviewed",
+    "escalated",
+    "confirmed",
+    "verified",
+    "dismissed",
+    "reopened",
+}
+
 STATIC_DIR = Path(__file__).parent / "static"
 
 
@@ -40,6 +61,9 @@ class _RunState:
     ai_calls: int = 0
     error: str | None = None
     result: SweepResult | None = None
+    # Disposition audit events in append order; the client reduces
+    # last-per-citation with `reopened` as the undo. Nothing is ever removed.
+    dispositions: list[dict] = field(default_factory=list)
     lock: threading.Lock = field(default_factory=threading.Lock)
 
     def progress(self) -> dict:
@@ -139,6 +163,7 @@ def create_app(runs_root: Path = Path("runs")) -> FastAPI:
             payload = state.progress()
             if state.status == "done" and state.result is not None:
                 payload["result"] = jsonable_encoder(state.result.model_dump())
+                payload["result"]["dispositions"] = list(state.dispositions)
         return payload
 
     @app.get("/api/sweeps/{sweep_id}/report")
@@ -171,6 +196,38 @@ def create_app(runs_root: Path = Path("runs")) -> FastAPI:
             run_dir = state.result.run_dir
         name, media = _EXPORTS[fmt]
         return FileResponse(run_dir / name, media_type=media, filename=name)
+
+    @app.post("/api/sweeps/{sweep_id}/dispositions", status_code=201)
+    async def record_disposition(sweep_id: str, req: DispositionRequest) -> dict:
+        state = _get(sweep_id)
+        if req.action not in _DISPOSITION_ACTIONS:
+            raise HTTPException(status_code=422, detail=f"unknown action {req.action!r}")
+        operator = req.operator.strip().upper()
+        if not 2 <= len(operator) <= 3:
+            raise HTTPException(
+                status_code=422, detail="operator initials must be 2 to 3 characters"
+            )
+        note = (req.note or "").strip() or None
+        if req.action == "dismissed" and note is None:
+            raise HTTPException(status_code=422, detail="a dismissal requires a one-line reason")
+        with state.lock:
+            if state.status != "done" or state.result is None:
+                raise HTTPException(status_code=409, detail="sweep not finished")
+            if all(f.citation != req.citation for f in state.result.findings):
+                raise HTTPException(
+                    status_code=404, detail=f"unknown citation {req.citation}"
+                )
+            # Appended verbatim to the run's audit trail; the stored event is
+            # the API's return value so the client shows exactly what was signed.
+            event = AuditLog(state.result.run_dir).event(
+                kind="disposition",
+                citation=req.citation,
+                action=req.action,
+                operator=operator,
+                note=note,
+            )
+            state.dispositions.append(event)
+        return event
 
     @app.post("/api/sweeps/{sweep_id}/chat")
     async def sweep_chat(sweep_id: str, req: ChatRequest) -> dict:
