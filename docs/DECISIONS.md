@@ -108,6 +108,69 @@ lives in [`JOURNAL.md`](./JOURNAL.md); this file is the *why* of the choices.
   disappoints (documented fallback).
 - **Status:** Decided; exploration in progress on `explore/react-aria-styleguide`.
 
+## D9 — Palette refined against primary-source research (2026-07-10)
+
+- **Context:** Travis challenged the green-cast neutral surfaces in style guide v1:
+  what does the evidence say this audience expects?
+- **Research (primary sources):** USWDS ("start in black and white"; color as
+  progressive enhancement, never sole carrier of meaning); NHS service manual
+  (grey ground rather than white for glare/dyslexia reasons, white reserved for
+  emphasis surfaces, strictly semantic color roles, green as the NHS's own action
+  color); VA.gov design system (USWDS primitives only, one trust color predominant).
+- **Decision:** Surfaces become true neutrals in both themes (no brand-tinted
+  backgrounds; no reference system tints theirs). Light ground = NHS-style grey
+  with white panels. Teal stays as the single sparse accent: blue-green trust
+  family, demonstrated at home in healthcare by the NHS, and deliberately distinct
+  from the blue EHRs the audience uses all day. Severity semantics unchanged
+  (red urgent / amber caution / green normal).
+- **Rationale:** Professional design for this audience is neutral-dominant with
+  semantic color discipline; the accent carries identity, the surfaces carry work.
+- **Status:** Final for the exploration; applies to the React Aria port tokens.
+
+## D10 — "Federal Register" design contract adopted; teal retired for navy (2026-07-11)
+
+- **Context:** The Claude Design UX exploration (design/claude-design-brief.md) ran
+  ten review rounds with Travis and produced a binding design contract, committed at
+  `design/design_handoff_federal_register/` with the v5 HTML prototype as the
+  acceptance reference.
+- **Options:** Keep the teal styleguide direction (D9) with layout changes only;
+  adopt the contract wholesale; cherry-pick components.
+- **Decision:** Adopt the contract wholesale. It supersedes `design/styleguide/` and
+  `design/comps/`: the accent family is navy (one blue, three depths, ~218° hue),
+  the shell is nested floating cards on a frame, the assistant docks right with a
+  run-record view, and the memo becomes an in-app letter sheet. D9's research-backed
+  neutral-surface discipline carries forward unchanged; only the accent hue and
+  shell language are superseded.
+- **Rationale:** The contract came out of Travis's own review rounds (decision log
+  D1-D10 plus amendments 5-10 inside the contract) and encodes the same evidence
+  standards as D9; carrying two competing design authorities in-repo invites drift.
+- **Status:** Implemented on `explore/react-aria-styleguide` (web/ restyle, commits
+  722631d..8737e59); awaiting design-QA by the design agent and Travis's merge
+  decision.
+
+---
+
+## D11 — Round-13 disposition contract adopted (2026-07-11)
+
+- **Context:** Travis's hands-on review of the implemented app found the verb
+  buttons opened the drawer but recorded nothing: the one event RxSweep never
+  logged was the pharmacist's own verification, and the ingest card's
+  "Quarantined" collided with the Quarantine action.
+- **Options:** Keep disposition external to the tool (status quo, defensible via
+  the scope banner); local-only persistence; a recorded, audit-logged workflow.
+- **Decision:** Contract v1.3 (design rounds 11-13) adopted wholesale: the verb
+  button records the disposition as an append-only `disposition` event in the
+  run's audit.jsonl (operator initials + server time; reversals via `reopened`,
+  nothing erased); AI matches resolve to verified or dismissed-with-reason; the
+  queue cap is retired (a worklist that hides disposition-required findings
+  contradicts D5); the ingest card renames to "Excluded rows" (display only).
+  No auth and no identity chrome, per the standing contract.
+- **Rationale:** Recall-response documentation (action, actor, time) is the
+  compliance artifact this audience is measured on; recording it turns the
+  governance story from aspiration into record. Initials-on-the-record mirrors
+  pharmacy log convention without becoming user identity.
+- **Status:** Implemented on `feat/dispositions`; design re-check before merge.
+
 ---
 
 *Template for new entries: date, Context, Options, Decision, Rationale, Status.*

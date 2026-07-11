@@ -1,193 +1,297 @@
-import { useState } from "react";
-import type { Finding, SweepResultData } from "../api";
-import ActionQueue from "../components/ActionQueue";
+import { useMemo, useState } from "react";
+import { ToggleButton } from "react-aria-components";
+import { reduceDispositions, type Disposition, type Finding, type SweepResultData } from "../api";
+import ActionQueue, { buildQueue } from "../components/ActionQueue";
 import FindingsTable from "../components/FindingsTable";
 import FindingDrawer from "../components/FindingDrawer";
-import ChatPanel from "../components/ChatPanel";
+import AssistantPanel from "../components/AssistantPanel";
+import { fmtRunTs } from "../format";
 
 const TIERS = ["critical", "high", "moderate", "info"] as const;
-const REGISTERS = ["Findings", "Manual review", "Quarantined", "Unchecked"] as const;
-type Register = (typeof REGISTERS)[number];
+type Tier = (typeof TIERS)[number];
+
+// unchecked strings arrive as one line per failed source:
+//   "ndc directory source unavailable: 42 items unchecked against ndc directory"
+// The notice names the source when one failed and generalizes otherwise.
+function outageNotice(unchecked: string[]): { lead: string; body: string } {
+  const parsed = unchecked
+    .map((u) => /^(.+?) source unavailable: (\d+) items? unchecked/.exec(u))
+    .filter((m): m is RegExpExecArray => m !== null);
+  if (parsed.length === 1) {
+    const raw = parsed[0][1];
+    const name = raw === "ndc directory" ? "NDC directory" : raw.charAt(0).toUpperCase() + raw.slice(1);
+    return {
+      lead: `${name} unavailable.`,
+      body:
+        `The ${raw === "ndc directory" ? "NDC directory" : `${raw} source`} could not be ` +
+        `reached after retries. ${parsed[0][2]} items were not checked against it. The ` +
+        `failure is recorded under Unchecked. Treat them as unknown, not clear. Re-run the ` +
+        `sweep to complete coverage.`,
+    };
+  }
+  return {
+    lead: "FDA sources unavailable.",
+    body:
+      "One or more FDA sources could not be reached after retries. Affected items were not " +
+      "checked; each failure is recorded under Unchecked. Treat them as unknown, not clear. " +
+      "Re-run the sweep to complete coverage.",
+  };
+}
 
 export default function Dashboard({
   sweepId,
   result,
+  aiCalls,
+  dispositions,
+  onDisposition,
+  operator,
+  onOperatorChange,
+  onReset,
+  onOpenMemo,
+  overlay,
+  panelOpen,
+  onPanelOpenChange,
+  panelWidth,
+  onPanelWidthChange,
 }: {
   sweepId: string;
   result: SweepResultData;
+  aiCalls: number;
+  dispositions: Disposition[];
+  onDisposition: (e: Disposition) => void;
+  operator: string;
+  onOperatorChange: (op: string) => void;
+  onReset: () => void;
+  onOpenMemo: () => void;
+  overlay: boolean;
+  panelOpen: boolean;
+  onPanelOpenChange: (open: boolean) => void;
+  panelWidth: number;
+  onPanelWidthChange: (w: number) => void;
 }) {
-  const [severityFilter, setSeverityFilter] = useState<string | null>(null);
+  const [sevFilter, setSevFilter] = useState<Tier | null>(null);
   const [selected, setSelected] = useState<Finding | null>(null);
-  const [register, setRegister] = useState<Register>("Findings");
   const [flashRow, setFlashRow] = useState<number | null>(null);
+  const reduced = useMemo(() => reduceDispositions(dispositions), [dispositions]);
 
-  const filtered = severityFilter
-    ? result.findings.filter((f) => f.severity === severityFilter)
-    : result.findings;
-
-  function citeJump(citation: number) {
-    setRegister("Findings");
-    setSeverityFilter(null);
-    setFlashRow(citation);
+  // Citation jump from the assistant transcript: clear the filter so the row
+  // exists, flash it, and scroll instantly (smooth scroll violates §8).
+  function citeJump(n: number) {
+    setSevFilter(null);
+    setFlashRow(n);
     setTimeout(
-      () =>
-        document
-          .getElementById(`finding-${citation}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      () => document.getElementById(`finding-${n}`)?.scrollIntoView({ block: "center" }),
       60,
     );
-    setTimeout(() => setFlashRow(null), 1800);
+    setTimeout(() => setFlashRow((cur) => (cur === n ? null : cur)), 1900);
   }
 
-  const counts: Record<Register, number> = {
-    Findings: result.findings.length,
-    "Manual review": result.manual_review.length,
-    Quarantined: result.quarantined.length,
-    Unchecked: result.unchecked.length,
-  };
+  const findings = result.findings;
+  const filtered = sevFilter ? findings.filter((f) => f.severity === sevFilter) : findings;
+  const hasFindings = findings.length > 0;
+  const meta = result.meta;
+
+  const filters: { key: Tier | null; label: string; count: number }[] = [
+    { key: null, label: "All findings", count: findings.length },
+    ...TIERS.map((t) => ({
+      key: t as Tier | null,
+      label: t.charAt(0).toUpperCase() + t.slice(1),
+      count: result.tiers[t] ?? 0,
+    })),
+  ];
+
+  const registerNote = !hasFindings
+    ? null
+    : sevFilter
+      ? `Filtered to ${sevFilter.charAt(0).toUpperCase() + sevFilter.slice(1)}. ${filtered.length} shown; clear the filter to see all.`
+      : `Showing ${findings.length} of ${findings.length}.`;
 
   return (
-    <div className="layout">
-      <nav className="rail" aria-label="Run, filters, and exports">
-        <h3>Run</h3>
-        <div className="kv"><span>File</span><b>{result.meta.csv_name}</b></div>
-        <div className="kv"><span>Items</span><b>{result.meta.items_checked}</b></div>
-        <div className="kv"><span>Window</span><b>{result.meta.months_back} mo</b></div>
-        <div className="kv"><span>AI</span><b>{result.meta.ai_available ? result.meta.model.replace("claude-", "") : "off"}</b></div>
-
-        <h3>Severity</h3>
-        <button
-          className="filter"
-          aria-pressed={severityFilter === null && register === "Findings"}
-          onClick={() => {
-            setRegister("Findings");
-            setSeverityFilter(null);
-          }}
-        >
-          <span>All findings</span>
-          <span className="n">{counts.Findings}</span>
+    <div style={{ maxWidth: 1604, margin: "0 auto" }}>
+      <div
+        className="fadeup"
+        style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 14, padding: "20px 22px 0" }}
+      >
+        <div>
+          <h1 className="h-doc">Formulary Sweep Findings</h1>
+          <p className="h-sub" style={{ fontSize: 13 }}>
+            Sweep a formulary against FDA recalls, drug shortages, and discontinued NDCs.
+          </p>
+        </div>
+        <button className="btn-quiet" onClick={onReset}>
+          New sweep
         </button>
-        {TIERS.map((tier) => (
-          <button
-            key={tier}
-            className="filter"
-            aria-pressed={severityFilter === tier}
-            onClick={() => {
-              setRegister("Findings");
-              setSeverityFilter(severityFilter === tier ? null : tier);
-            }}
-          >
-            <span>
-              <span className={`svdot ${tier}`} aria-hidden="true"></span>
-              {tier[0].toUpperCase() + tier.slice(1)}
-            </span>
-            <span className="n">{result.tiers[tier] ?? 0}</span>
-          </button>
-        ))}
+      </div>
+      <div style={{ padding: "0 22px" }}>
+        <hr className="rule grow" style={{ marginTop: 13 }} />
+        <hr className="rule thin" />
+      </div>
+      <div className="scopebar fadeup d1" role="note" style={{ margin: "16px 22px 0" }}>
+        <b>Scope.</b>
+        <span>
+          Informational tool. A pharmacist verifies every finding before action. Not clinical
+          advice. openFDA: assume all results are unvalidated.
+        </span>
+      </div>
 
-        <h3>Registers</h3>
-        {REGISTERS.slice(1).map((r) => (
-          <button key={r} className="filter" aria-pressed={register === r} onClick={() => setRegister(r)}>
-            <span>{r}</span>
-            <span className="n">{counts[r]}</span>
-          </button>
-        ))}
+      <div className="metastrip fadeup d2">
+        <div className="cell">
+          <div className="k">Formulary</div>
+          <div className="v">{meta.csv_name}</div>
+        </div>
+        <div className="cell">
+          <div className="k">Items checked</div>
+          <div className="v">{meta.items_checked}</div>
+        </div>
+        <div className="cell">
+          <div className="k">Recall window</div>
+          <div className="v">{meta.months_back} months</div>
+        </div>
+        <div className="cell">
+          <div className="k">AI model</div>
+          <div className="v">{meta.ai_available ? meta.model : "off"}</div>
+        </div>
+        <div className="cell">
+          <div className="k">Run</div>
+          <div className="v">{fmtRunTs(meta.run_ts)}</div>
+        </div>
+      </div>
 
-        <h3>Export</h3>
-        <a className="link" href={`/api/sweeps/${sweepId}/export/csv`}>findings.csv</a>
-        <a className="link" href={`/api/sweeps/${sweepId}/export/xlsx`}>findings.xlsx</a>
-        <a className="link" href={`/api/sweeps/${sweepId}/export/md`}>findings.md · for your AI</a>
-        <a className="link" href={`/api/sweeps/${sweepId}/report`} target="_blank" rel="noreferrer">
-          memo · print to PDF
-        </a>
-        <span className="link faint mono text-[11px]">audit.jsonl in run folder</span>
-      </nav>
+      {result.unchecked.length > 0 && (
+        <div className="noticebar warn" role="note" style={{ margin: "16px 22px 0" }}>
+          <b>{outageNotice(result.unchecked).lead}</b>
+          <span>{outageNotice(result.unchecked).body}</span>
+        </div>
+      )}
 
-      <main>
-        {register === "Findings" && (
-          <>
-            <ActionQueue findings={result.findings} onOpen={setSelected} />
-            <h2 className="sect">
-              Findings register ({filtered.length}
-              {severityFilter ? ` · ${severityFilter}` : ""})
-            </h2>
-            <FindingsTable findings={filtered} flashRow={flashRow} onSelect={setSelected} />
-          </>
-        )}
+      <div className="fadeup d3" style={{ padding: "22px 22px 0" }}>
+        <ActionQueue
+          findings={findings}
+          tiers={result.tiers}
+          onOpen={setSelected}
+          sweepId={sweepId}
+          reduced={reduced}
+          operator={operator}
+          onOperatorChange={onOperatorChange}
+          onDisposition={onDisposition}
+        />
+      </div>
 
-        {register === "Manual review" && (
-          <>
-            <h2 className="sect">Needs manual review ({counts["Manual review"]})</h2>
-            <div className="worklist">
-              <table className="tbl">
-                <thead><tr><th>Item</th><th>Source</th><th>Reason</th></tr></thead>
-                <tbody>
-                  {result.manual_review.map((c, i) => (
-                    <tr key={i} style={{ cursor: "default" }}>
-                      <td>{c.item.name} <span className="meta">(row {c.item.row})</span></td>
-                      <td>{c.source}</td>
-                      <td className="why">{c.reason}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <div className="fadeup d4" style={{ padding: "26px 22px 0" }}>
+        <div
+          style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 10, marginBottom: 10 }}
+        >
+          <h2 className="h-sect" style={{ margin: 0 }}>
+            Findings register <span className="n">({findings.length})</span>
+          </h2>
+          {hasFindings && (
+            <div className="regfilters">
+              {filters.map((fl) => (
+                <ToggleButton
+                  key={fl.label}
+                  className="regfilter"
+                  isSelected={sevFilter === fl.key}
+                  onChange={() =>
+                    setSevFilter(fl.key === null ? null : sevFilter === fl.key ? null : fl.key)
+                  }
+                >
+                  {fl.key !== null && <span className={`dot ${fl.key}`} />}
+                  {fl.label} · {fl.count}
+                </ToggleButton>
+              ))}
             </div>
-          </>
+          )}
+        </div>
+        {hasFindings ? (
+          <FindingsTable
+            findings={filtered}
+            flashRow={flashRow}
+            reduced={reduced}
+            onSelect={setSelected}
+          />
+        ) : (
+          <div className="statement roomy">
+            <b>No findings.</b> {meta.items_checked} items were checked against FDA recalls,
+            drug shortages, and the NDC directory over the trailing {meta.months_back} months.
+            A clean result is still a record: export the memo from the run record to file this
+            sweep.
+          </div>
         )}
+        {registerNote && <p className="regnote">{registerNote}</p>}
+      </div>
 
-        {register === "Quarantined" && (
-          <>
-            <h2 className="sect">Quarantined rows ({counts.Quarantined})</h2>
-            <p className="meta">Rows we could not fully process. Shown, never silently dropped.</p>
-            <div className="worklist">
-              <table className="tbl">
-                <thead><tr><th>CSV line</th><th>Reason</th></tr></thead>
-                <tbody>
-                  {result.quarantined.map((q, i) => (
-                    <tr key={i} style={{ cursor: "default" }}>
-                      <td className="mono">{q.row}</td>
-                      <td>{q.reason}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <div className="disclose fadeup d5" style={{ padding: "26px 22px 0" }}>
+        <div className="card">
+          <div className="title">Manual review ({result.manual_review.length})</div>
+          {result.manual_review.length === 0 ? (
+            <div className="row">No fuzzy candidates required manual adjudication this run.</div>
+          ) : (
+            result.manual_review.map((m, i) => (
+              <div className="row" key={i}>
+                <b>{m.item.name}</b> <span className="id">row {m.item.row}</span>
+                <br />
+                {m.reason}
+              </div>
+            ))
+          )}
+        </div>
+        <div className="card">
+          <div className="title">Excluded rows ({result.quarantined.length})</div>
+          {result.quarantined.length === 0 ? (
+            <div className="row">No rows were excluded during ingest.</div>
+          ) : (
+            result.quarantined.map((q, i) => (
+              <div className="row" key={i}>
+                <span className="id">line {q.row}</span> · {q.reason}
+              </div>
+            ))
+          )}
+          <div className="closing">
+            Rows the sweep could not read are disclosed here; nothing is silently dropped.
+          </div>
+        </div>
+        <div className="card">
+          <div className="title">Unchecked ({result.unchecked.length})</div>
+          {result.unchecked.length === 0 ? (
+            <div className="row">
+              All three FDA sources were reachable this run. No items were left unchecked.
             </div>
-          </>
-        )}
+          ) : (
+            result.unchecked.map((u, i) => (
+              <div className="row" key={i}>
+                {u}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      <div style={{ height: 26 }} />
 
-        {register === "Unchecked" && (
-          <>
-            <h2 className="sect">Unchecked items ({counts.Unchecked})</h2>
-            <div className="panel">
-              {counts.Unchecked === 0 ? (
-                <p className="m-0">All three FDA sources were reachable this run.</p>
-              ) : (
-                <>
-                  <p className="meta mt-0">
-                    These items could not be checked against one or more sources this run. Treat
-                    them as unknown, not clear.
-                  </p>
-                  <ul className="mb-0">
-                    {result.unchecked.map((u, i) => (
-                      <li key={i}>{u}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </div>
-          </>
-        )}
-      </main>
-
-      <ChatPanel
-        sweepId={sweepId}
-        aiAvailable={result.meta.ai_available}
-        summary={result.summary}
-        sweepUsage={result.meta.ai_usage ?? null}
-        onCite={citeJump}
+      <FindingDrawer
+        finding={selected}
+        disposition={selected ? reduced.get(selected.citation) : undefined}
+        onClose={() => setSelected(null)}
       />
 
-      <FindingDrawer finding={selected} onClose={() => setSelected(null)} />
+      <AssistantPanel
+        sweepId={sweepId}
+        result={result}
+        aiCalls={aiCalls}
+        reduced={reduced}
+        queueTotal={buildQueue(findings).length}
+        operator={operator}
+        onOperatorChange={onOperatorChange}
+        open={panelOpen}
+        width={panelWidth}
+        overlay={overlay}
+        onOpenChange={onPanelOpenChange}
+        onWidthChange={onPanelWidthChange}
+        onCite={citeJump}
+        onOpenMemo={() => {
+          setSelected(null);
+          onOpenMemo();
+        }}
+      />
     </div>
   );
 }

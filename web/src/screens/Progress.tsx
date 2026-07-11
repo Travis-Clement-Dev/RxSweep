@@ -1,5 +1,18 @@
 import { useEffect, useState } from "react";
+import { ProgressBar } from "react-aria-components";
 import { getSweep, type SweepProgress } from "../api";
+
+// The server reports a phase name, not a percentage; the track maps each
+// pipeline phase (webapp/server.py _PHASES, in order) to how far along the
+// run is. Counters carry the honest live numbers.
+const PHASE_PCT: Record<string, number> = {
+  starting: 5,
+  "reading formulary": 18,
+  "querying FDA sources": 45,
+  "matching items": 68,
+  "AI triage": 84,
+  finishing: 95,
+};
 
 export default function Progress({
   sweepId,
@@ -7,7 +20,9 @@ export default function Progress({
   onReset,
 }: {
   sweepId: string;
-  onDone: (result: NonNullable<SweepProgress["result"]>) => void;
+  // ai_calls rides along: the result payload doesn't carry it, and the run
+  // record view reports it after the sweep finishes.
+  onDone: (result: NonNullable<SweepProgress["result"]>, aiCalls: number) => void;
   onReset: () => void;
 }) {
   const [progress, setProgress] = useState<SweepProgress | null>(null);
@@ -21,7 +36,7 @@ export default function Progress({
         setProgress(p);
         if (p.status === "done" && p.result) {
           clearInterval(timer);
-          onDone(p.result);
+          onDone(p.result, p.ai_calls);
         }
         if (p.status === "error") clearInterval(timer);
       } catch {
@@ -36,37 +51,52 @@ export default function Progress({
 
   if (progress?.status === "error") {
     return (
-      <section className="panel text-center" role="alert">
-        <h2 className="m-0">This file could not be swept</h2>
-        <p className="meta">{progress.error}</p>
+      <div className="runwrap" role="alert">
+        <h2 className="runphase" style={{ margin: 0 }}>
+          This file could not be swept
+        </h2>
+        <p className="meta" style={{ margin: 0, maxWidth: "60ch", textAlign: "center" }}>
+          {progress.error}
+        </p>
         <button className="btn" onClick={onReset}>
           Try another file
         </button>
-      </section>
+      </div>
     );
   }
 
+  const phase = progress?.phase ?? "starting";
+  const pct = PHASE_PCT[phase] ?? 5;
+  const counters: [string, number][] = [
+    ["items read", progress?.items ?? 0],
+    ["FDA requests", progress?.fda_requests ?? 0],
+    ["AI calls", progress?.ai_calls ?? 0],
+  ];
+
   return (
-    <section className="panel flex flex-col items-center gap-6 p-10" aria-live="polite">
-      <div className="sweep" aria-hidden="true" />
-      <h2 className="m-0 text-lg font-bold capitalize">
-        {progress?.phase ?? "starting"}
-      </h2>
-      <div className="flex gap-8 text-center">
-        {[
-          ["items read", progress?.items ?? 0],
-          ["FDA requests", progress?.fda_requests ?? 0],
-          ["AI calls", progress?.ai_calls ?? 0],
-        ].map(([label, n]) => (
-          <div key={label as string}>
-            <div className="text-2xl font-extrabold tabular-nums">{n}</div>
-            <div className="lbl faint text-[0.72rem] uppercase tracking-wider">{label}</div>
+    <div className="runwrap" aria-live="polite">
+      <ProgressBar
+        value={pct}
+        aria-label={`Sweep in progress: ${phase}`}
+        className="flex flex-col items-center gap-6"
+      >
+        <div className="radar" aria-hidden="true" />
+      </ProgressBar>
+      <div className="runphase">{phase}</div>
+      <div className="runtrack" aria-hidden="true">
+        <div className="fill" style={{ width: `${pct}%` }} />
+      </div>
+      <div className="runcounts">
+        {counters.map(([label, n]) => (
+          <div key={label}>
+            <div className="v">{n.toLocaleString("en-US")}</div>
+            <div className="l">{label}</div>
           </div>
         ))}
       </div>
-      <p className="meta m-0">
-        Every request and AI call shown here is also in this run's audit log.
-      </p>
-    </section>
+      <div style={{ fontSize: 12, color: "var(--ink-faint)" }}>
+        Every request and AI call shown here is also written to this run's audit log.
+      </div>
+    </div>
   );
 }

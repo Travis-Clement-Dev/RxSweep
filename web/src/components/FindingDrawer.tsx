@@ -1,87 +1,137 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import { sourceUrl, type Finding } from "../api";
+import { Button, Dialog, Heading, Modal, ModalOverlay } from "react-aria-components";
+import { sourceUrl, type Disposition, type Finding } from "../api";
+import { fmtHM } from "../format";
+import { DISP_LABEL } from "./ActionQueue";
 
+// React Aria Modal + Dialog: focus trap, restore, Esc dismiss.
+// https://react-aria.adobe.com/Modal · /Dialog
 const RECORD_FIELDS: Record<string, string[]> = {
   recall: ["recall_number", "classification", "status", "product_description", "reason_for_recall", "code_info", "recalling_firm", "distribution_pattern", "report_date"],
   shortage: ["generic_name", "status", "package_count", "therapeutic_category"],
   ndc: ["product_ndc", "generic_name", "brand_name", "labeler_name", "marketing_category", "listing_expiration_date"],
 };
 
+const SRC_LABEL: Record<Finding["source"], string> = {
+  recall: "Recall",
+  shortage: "Shortage",
+  ndc: "NDC status",
+};
+
+const MATCH: Record<Finding["label"], { label: string; cls: string }> = {
+  exact_ndc: { label: "Exact NDC", cls: "exact" },
+  name_match: { label: "Name match", cls: "name" },
+  ai_matched: { label: "AI: verify", cls: "ai" },
+};
+
 export default function FindingDrawer({
   finding,
+  disposition,
   onClose,
 }: {
   finding: Finding | null;
+  disposition: Disposition | undefined;
   onClose: () => void;
 }) {
   const url = finding ? sourceUrl(finding) : null;
+  // The AI caution asks for verification; once the match is verified or
+  // dismissed, the ask is answered and the caution retires.
+  const cautionAnswered =
+    disposition !== undefined &&
+    (disposition.action === "verified" || disposition.action === "dismissed");
   return (
-    <Dialog.Root open={finding !== null} onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="overlay" />
-        <Dialog.Content className="drawer" aria-describedby={undefined}>
+    <ModalOverlay
+      className="overlay"
+      isOpen={finding !== null}
+      onOpenChange={(open) => !open && onClose()}
+      isDismissable
+    >
+      <Modal className="drawer">
+        <Dialog aria-label={finding ? `Finding ${finding.citation}: ${finding.item_name}` : "Finding details"}>
           {finding && (
-            <>
-              <div className="flex items-start justify-between gap-3">
-                <Dialog.Title className="m-0 text-lg font-extrabold">
-                  [{finding.citation}] {finding.item_name}
-                </Dialog.Title>
-                <Dialog.Close className="btn btn-quiet" aria-label="Close details">
+            <div className="pad">
+              <div className="head">
+                <span className="label">Finding record</span>
+                <Button className="btn-tint" onPress={onClose} aria-label="Close details">
                   Close
-                </Dialog.Close>
+                </Button>
               </div>
-              <p className="meta mt-1">
+              {/* Heading renders an h2, picking up the drawer's title style. */}
+              <Heading slot="title">
+                <span className="cite">[{finding.citation}]</span>
+                {finding.item_name}
+              </Heading>
+              <div className="docket">
                 Formulary row {finding.item_row}
-                {finding.item_ndc ? <> · NDC <code>{finding.item_ndc}</code></> : ""}
-              </p>
+                {finding.item_ndc ? ` · NDC ${finding.item_ndc}` : ""}
+              </div>
 
-              <p className="mb-0 mt-2">
-                <span className={`svt ${finding.severity}`}>{finding.severity}</span>
-                <span className="mx-2 faint">·</span>
-                <span className="chip chip-label">{finding.source}</span>{" "}
-                {finding.label === "ai_matched" ? (
-                  <span className="chip chip-verify">AI-matched: needs verification</span>
-                ) : (
-                  <span className="chip chip-label">{finding.label === "exact_ndc" ? "exact NDC" : "name match"}</span>
-                )}
-              </p>
+              <div className="sevline">
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <span className={`svdot ${finding.severity}`} aria-hidden="true" />
+                  <span className={`svt ${finding.severity}`} style={{ fontSize: 11.5, letterSpacing: ".08em" }}>
+                    {finding.severity}
+                  </span>
+                </span>
+                <span className="srcname">{SRC_LABEL[finding.source]}</span>
+                <span className={`matchtag ${MATCH[finding.label].cls}`}>
+                  {MATCH[finding.label].label}
+                </span>
+              </div>
+
+              {disposition && (
+                <div className="dispblock">
+                  <div className="k">Disposition</div>
+                  <div className="line">
+                    {DISP_LABEL[disposition.action]} · {disposition.operator} ·{" "}
+                    {fmtHM(disposition.ts)}
+                  </div>
+                  {disposition.note && <div className="reason">Reason: {disposition.note}</div>}
+                  <div className="note">
+                    Recorded in this run's audit log. Corrections append a reversal; nothing is
+                    erased.
+                  </div>
+                </div>
+              )}
 
               <h3>Why it's flagged</h3>
-              <p className="mt-0 text-[13px]">{finding.severity_rationale}</p>
+              <p className="prose">{finding.severity_rationale}</p>
 
               {finding.ai_rationale && (
                 <>
                   <h3>AI match reasoning</h3>
-                  <p className="mt-0 text-[13px]">{finding.ai_rationale}</p>
-                  <p className="meta mt-1 text-[11.5px]">
-                    Verify this reasoning against the FDA record before acting.
-                  </p>
+                  <p className="prose">{finding.ai_rationale}</p>
+                  {!cautionAnswered && (
+                    <div className="caution" role="note">
+                      AI-matched: needs verification. Confirm this reasoning against the FDA
+                      record below before acting.
+                    </div>
+                  )}
                 </>
               )}
 
               <h3>FDA record</h3>
-              <dl>
+              <div className="kvgrid">
                 {(RECORD_FIELDS[finding.source] ?? []).map((key) => {
                   const value = finding.record[key];
                   if (value === undefined || value === null || value === "") return null;
-                  return [
-                    <dt key={`${key}-t`}>{key.replaceAll("_", " ")}</dt>,
-                    <dd key={`${key}-d`}>{String(value)}</dd>,
-                  ];
+                  return (
+                    <div className="kvrow" key={key}>
+                      <div className="k">{key.replaceAll("_", " ")}</div>
+                      <div className="v">{String(value)}</div>
+                    </div>
+                  );
                 })}
-              </dl>
+              </div>
 
               {url && (
-                <p className="mt-5">
-                  <a className="btn btn-quiet" href={url} target="_blank" rel="noreferrer">
-                    Open FDA source record
-                  </a>
-                </p>
+                <a className="fdalink" href={url} target="_blank" rel="noreferrer">
+                  Open FDA source record ↗
+                </a>
               )}
-            </>
+            </div>
           )}
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </Dialog>
+      </Modal>
+    </ModalOverlay>
   );
 }

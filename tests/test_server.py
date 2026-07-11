@@ -59,6 +59,11 @@ def test_sweep_lifecycle(tmp_path, monkeypatch):
     report = client.get(f"/api/sweeps/{sweep_id}/report")
     assert report.status_code == 200 and "pharmacist verifies" in report.text
 
+    audit = client.get(f"/api/sweeps/{sweep_id}/export/audit")
+    assert audit.status_code == 200
+    assert "audit.jsonl" in audit.headers["content-disposition"]
+    assert '"kind": "run_start"' in audit.text.splitlines()[0].replace('"kind":"', '"kind": "')
+
 
 def test_unknown_sweep_404(tmp_path):
     client = TestClient(create_app(runs_root=tmp_path))
@@ -79,6 +84,120 @@ def test_bad_csv_surfaces_error_not_500(tmp_path, monkeypatch):
     payload = _wait_done(client, resp.json()["sweep_id"])
     assert payload["status"] == "error"
     assert "Could not detect" in payload["error"]
+
+
+def _finished_state(tmp_path):
+    """A done _RunState with citations 1 (recall) and 2 (AI-matched)."""
+    from rxsweep.pipeline import SweepResult
+    from rxsweep.triage import Finding
+
+    def finding(citation, **kw):
+        base = dict(
+            item_name="Cefazolin Sodium",
+            item_row=2,
+            item_ndc="0409-4058-01",
+            source="recall",
+            label="exact_ndc",
+            record={"recall_number": "D-0001-2026", "classification": "Class I"},
+            severity="critical",
+            severity_rationale="Class I recall",
+            citation=citation,
+        )
+        base.update(kw)
+        return Finding(**base)
+
+    run_dir = tmp_path / "run"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    from rxsweep.webapp.server import _RunState
+
+    state = _RunState()
+    state.status = "done"
+    state.result = SweepResult(
+        run_id="testrun",
+        run_dir=run_dir,
+        findings=[
+            finding(1),
+            finding(2, severity="moderate", label="ai_matched", item_name="Metformin HCl ER"),
+        ],
+        quarantined=[],
+        manual_review=[],
+        unchecked=[],
+        summary=None,
+        meta={},
+        tiers={"critical": 1, "moderate": 1},
+        report_path=run_dir / "report.html",
+    )
+    return state
+
+
+def test_disposition_lifecycle(tmp_path):
+    from rxsweep.webapp.server import create_app
+
+    app = create_app(runs_root=tmp_path)
+    client = TestClient(app)
+    app.state.runs["abc"] = _finished_state(tmp_path)
+
+    resp = client.post(
+        "/api/sweeps/abc/dispositions",
+        json={"citation": 1, "action": "quarantined", "operator": "tc"},
+    )
+    assert resp.status_code == 201
+    event = resp.json()
+    assert event["kind"] == "disposition"
+    assert event["action"] == "quarantined"
+    assert event["operator"] == "TC"  # normalized to uppercase
+    assert event["note"] is None and event["ts"]
+
+    # dismissal requires a note; reopened is the append-only undo
+    resp = client.post(
+        "/api/sweeps/abc/dispositions",
+        json={"citation": 2, "action": "dismissed", "operator": "TC", "note": "Different package size"},
+    )
+    assert resp.status_code == 201
+    resp = client.post(
+        "/api/sweeps/abc/dispositions",
+        json={"citation": 1, "action": "reopened", "operator": "TC"},
+    )
+    assert resp.status_code == 201
+
+    payload = client.get("/api/sweeps/abc").json()
+    events = payload["result"]["dispositions"]
+    assert [(e["citation"], e["action"]) for e in events] == [
+        (1, "quarantined"),
+        (2, "dismissed"),
+        (1, "reopened"),
+    ]
+
+    # every event lands verbatim in the run's audit trail
+    audit_lines = [
+        json.loads(line)
+        for line in (tmp_path / "run" / "audit.jsonl").read_text().splitlines()
+    ]
+    assert [e for e in audit_lines if e["kind"] == "disposition"] == events
+
+
+def test_disposition_validation(tmp_path):
+    from rxsweep.webapp.server import create_app
+
+    app = create_app(runs_root=tmp_path)
+    client = TestClient(app)
+    app.state.runs["abc"] = _finished_state(tmp_path)
+
+    post = lambda body: client.post("/api/sweeps/abc/dispositions", json=body)  # noqa: E731
+    assert post({"citation": 1, "action": "archived", "operator": "TC"}).status_code == 422
+    assert post({"citation": 1, "action": "quarantined", "operator": "T"}).status_code == 422
+    assert post({"citation": 2, "action": "dismissed", "operator": "TC"}).status_code == 422
+    assert post({"citation": 2, "action": "dismissed", "operator": "TC", "note": "  "}).status_code == 422
+    assert post({"citation": 99, "action": "quarantined", "operator": "TC"}).status_code == 404
+
+    from rxsweep.webapp.server import _RunState
+
+    app.state.runs["running"] = _RunState()
+    resp = client.post(
+        "/api/sweeps/running/dispositions",
+        json={"citation": 1, "action": "quarantined", "operator": "TC"},
+    )
+    assert resp.status_code == 409
 
 
 def test_report_before_done_409(tmp_path):

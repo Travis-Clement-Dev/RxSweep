@@ -24,12 +24,30 @@ export interface ManualReviewItem {
   reason: string;
 }
 
+// A disposition audit event, exactly as stored in the run's audit.jsonl.
+// Events accumulate append-only; reduceDispositions() derives current state.
+export interface Disposition {
+  ts: string;
+  citation: number;
+  action:
+    | "quarantined"
+    | "reviewed"
+    | "escalated"
+    | "confirmed"
+    | "verified"
+    | "dismissed"
+    | "reopened";
+  operator: string;
+  note: string | null;
+}
+
 export interface SweepResultData {
   run_id: string;
   findings: Finding[];
   quarantined: QuarantinedRow[];
   manual_review: ManualReviewItem[];
   unchecked: string[];
+  dispositions?: Disposition[];
   summary: string | null;
   meta: {
     csv_name: string;
@@ -80,6 +98,34 @@ export async function getSweep(sweepId: string): Promise<SweepProgress> {
   const resp = await fetch(`/api/sweeps/${sweepId}`);
   if (!resp.ok) throw new Error(`Sweep lookup failed (${resp.status})`);
   return resp.json();
+}
+
+export async function postDisposition(
+  sweepId: string,
+  body: { citation: number; action: Disposition["action"]; operator: string; note?: string },
+): Promise<Disposition> {
+  const resp = await fetch(`/api/sweeps/${sweepId}/dispositions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const detail = (await resp.json().catch(() => null))?.detail;
+    throw new Error(typeof detail === "string" ? detail : `Disposition failed (${resp.status})`);
+  }
+  return resp.json();
+}
+
+// Fold events in append order: the last event per citation wins, and
+// `reopened` returns the row to Open (no entry). Nothing is ever deleted
+// server-side; this is presentation only.
+export function reduceDispositions(events: Disposition[]): Map<number, Disposition> {
+  const current = new Map<number, Disposition>();
+  for (const e of events) {
+    if (e.action === "reopened") current.delete(e.citation);
+    else current.set(e.citation, e);
+  }
+  return current;
 }
 
 export async function sendChat(
