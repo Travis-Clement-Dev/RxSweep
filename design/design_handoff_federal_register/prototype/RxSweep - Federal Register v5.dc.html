@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root, :root[data-theme="light"]{
+  --paper:#ffffff; --ground:#f3f4f4; --ink:#1b1b1b; --ink-soft:#565c65; --ink-faint:#71767a;
+  --line:#a9aeb1; --line-soft:#dfe1e2; --band:#12203a; --band-ink:#ffffff;
+  --accent:#1e3f63; --accent-ink:#16324f; --accent-soft:#e7edf4;
+  --critical:#9a3a2e; --moderate:#8a5d0b; --info:#256b43;
+  --critical-soft:#f6e4e1; --moderate-soft:#f5ebd8; --info-soft:#e3f0e8;
+  --focus-row:#eaf0f6; --btn-ink:#ffffff; --field:#ffffff; --panel:#ffffff; --elev:#f6f7f8;
+}
+:root[data-theme="dark"]{
+  --paper:#131416; --ground:#0a0b0c; --ink:#ececef; --ink-soft:#a3a7ad; --ink-faint:#74787e;
+  --line:#34363b; --line-soft:#26282c; --band:#0e1626; --band-ink:#f2f4f6;
+  --accent:#6d9ae8; --accent-ink:#9bb9ee; --accent-soft:#13233d;
+  --critical:#f0705f; --moderate:#e8b04b; --info:#4cc38a;
+  --critical-soft:#401f19; --moderate-soft:#3a2d13; --info-soft:#123122;
+  --focus-row:#142337; --btn-ink:#0a0b0c; --field:#101113; --panel:#131416; --elev:#1b1d21;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:'Public Sans','Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-ink)}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@keyframes fadeup{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@keyframes radar{to{transform:rotate(360deg)}}
+@keyframes drawerin{from{transform:translateX(30px);opacity:.3}to{transform:none;opacity:1}}
+@keyframes underline{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+@page{size:letter;margin:0.5in}
+@media print{body{background:#ffffff !important}[data-noprint]{display:none !important}#app-frame{background:#ffffff !important;border-radius:0 !important;min-height:0 !important}#memo-well{background:#ffffff !important;padding:0 !important}#memo-sheet{box-shadow:none !important;margin:0 !important;max-width:none !important;padding:0.1in 0.15in !important}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--ground)">
+
+<div data-noprint="1" style="background:var(--band);color:var(--band-ink);border-bottom:4px solid var(--accent)">
+<div style="padding:9px 22px;display:flex;justify-content:space-between;align-items:center;gap:14px">
+<span style="display:flex;align-items:center;gap:10px;min-width:0">
+<svg width="15" height="14" viewBox="0 0 48 46" fill="#7fa0cf" style="display:block;flex:none"><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/></svg>
+<span style="font:800 15px/1 'Public Sans';letter-spacing:.02em">RxSweep</span>
+<span style="font:400 12px/1.3 'Public Sans';color:#aab2b8;border-left:1px solid rgba(255,255,255,.18);padding-left:10px">Formulary surveillance · FDA public data · pharmacist verifies</span>
+</span>
+<span style="display:flex;align-items:center;gap:12px;flex:none">
+<sc-if value="{{ showMastheadToggle }}" hint-placeholder-val="{{ false }}"><button onClick="{{ togglePanel }}" aria-label="Toggle assistant panel" title="Assistant" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(255,255,255,.28);cursor:pointer;color:var(--band-ink);padding:0"><span style="position:relative;width:13px;height:10px;border:1.5px solid currentColor;border-radius:2px;display:inline-block"><span style="position:absolute;left:2px;bottom:-5px;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:5px solid currentColor"></span></span></button></sc-if>
+<button onClick="{{ toggleTheme }}" aria-label="{{ themeAria }}" title="{{ themeAria }}" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--band-ink);background:transparent;border:1px solid rgba(255,255,255,.28);cursor:pointer;padding:0">{{ themeIcon }}</button>
+</span>
+</div>
+</div>
+
+<div style="padding:{{ shellPad }}">
+<div id="app-frame" style="margin:{{ frameMargin }};max-width:{{ frameMax }};background:var(--paper);border-radius:14px;overflow:hidden;min-height:{{ frameMinH }}">
+
+<sc-if value="{{ isUpload }}" hint-placeholder-val="{{ true }}">
+<div style="animation:fadeup .45s ease both">
+<div style="padding:22px 22px 0">
+<div style="font:800 26px/1.1 'Public Sans';letter-spacing:-.01em">Sweep a formulary</div>
+<div style="font:400 13.5px/1.55 'Public Sans';color:var(--ink-soft);margin-top:6px;max-width:70ch">Check every line item against FDA recalls, drug shortages, and discontinued NDCs. Every finding cites its FDA source record and is verified by a pharmacist.</div>
+<hr style="border:none;border-top:3px solid var(--ink);margin:14px 0 0"><hr style="border:none;border-top:1px solid var(--line);margin:3px 0 0">
+</div>
+<div style="display:flex;gap:9px;align-items:flex-start;background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 22px;margin:18px 22px 0;font:400 12.5px/1.5 'Public Sans';color:var(--ink-soft)"><span style="font-weight:700;color:var(--accent-ink);white-space:nowrap">Scope.</span><span>Informational tool. A pharmacist verifies every finding before action. Not clinical advice. openFDA: assume all results are unvalidated.</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 336px;gap:18px;align-items:start;padding:20px 22px 26px">
+<sc-if value="{{ noFile }}" hint-placeholder-val="{{ true }}">
+<label style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:306px;border:2px dashed {{ zoneBorder }};background:{{ zoneBg }};padding:36px 26px;text-align:center;cursor:pointer;transition:border-color .15s ease,background .15s ease;animation:fadeup .25s ease both" onDragOver="{{ onDragOver }}" onDragLeave="{{ onDragLeave }}" onDrop="{{ onDropFile }}">
+<svg width="34" height="33" viewBox="0 0 48 46" fill="var(--line)" style="display:block;margin:0 auto 14px"><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/></svg>
+<div style="font:700 16px 'Public Sans';color:var(--ink)">Drop your formulary CSV here</div>
+<div style="font:400 12.5px/1.5 'Public Sans';color:var(--ink-faint);margin-top:7px;max-width:46ch">or click to browse. Accepts a .csv with NDC and drug name columns; headers are detected automatically.</div>
+<input type="file" accept=".csv,text/csv" style="display:none" onChange="{{ onFile }}" />
+<div style="margin-top:16px;display:flex;flex-direction:column;gap:10px;align-items:center">
+<span onClick="{{ useSample }}" style="font:600 12.5px 'Public Sans';color:var(--accent-ink);cursor:pointer;text-decoration:underline">Use the bundled sample_formulary.csv</span>
+<sc-if value="{{ uploadError }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px/1.5 'Public Sans';color:var(--critical);background:var(--critical-soft);border-left:3px solid var(--critical);padding:9px 12px;text-align:left;max-width:420px">{{ uploadError }}</div></sc-if>
+</div>
+</label>
+</sc-if>
+<sc-if value="{{ hasFile }}" hint-placeholder-val="{{ false }}">
+<div onDragOver="{{ onDragOver }}" onDrop="{{ onDropFile }}" style="min-height:306px;border:1px solid var(--line);background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:26px;animation:fadeup .3s ease both">
+<div style="width:100%;max-width:520px;display:flex;align-items:center;gap:14px;border:1px solid var(--line-soft);background:var(--ground);padding:15px 18px">
+<svg width="22" height="21" viewBox="0 0 48 46" fill="var(--accent)" style="display:block;flex:none"><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/></svg>
+<div style="flex:1;min-width:0;text-align:left">
+<div style="font:700 14.5px 'Public Sans';color:var(--ink);overflow-wrap:anywhere">{{ fileName }}</div>
+<div style="font:400 11.5px 'IBM Plex Mono',monospace;color:var(--ink-faint);margin-top:4px">CSV · {{ fileSize }} KB · columns detected: ndc, drug_name</div>
+</div>
+<div style="display:flex;gap:8px;flex:none">
+<label style="font:600 12px 'Public Sans';color:var(--accent-ink);background:var(--paper);border:1px solid var(--line);padding:7px 12px;cursor:pointer">Replace<input type="file" accept=".csv,text/csv" style="display:none" onChange="{{ onFile }}" /></label>
+<button onClick="{{ removeFile }}" aria-label="Remove attached file" style="font:600 12px 'Public Sans';color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);padding:7px 12px;cursor:pointer" style-hover="color:var(--critical);border-color:var(--critical)">Remove</button>
+</div>
+</div>
+<div style="font:400 12px 'Public Sans';color:var(--ink-faint)">Ready to sweep. Review the options, then run.</div>
+</div>
+</sc-if>
+<div style="background:var(--paper);border:1px solid var(--line-soft);padding:20px;display:flex;flex-direction:column;gap:15px">
+<div style="font:800 12px/1 'Public Sans';letter-spacing:.12em;text-transform:uppercase">Sweep options</div>
+<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;font:500 13px 'Public Sans';color:var(--ink-soft)">Recall lookback (months)<input type="number" min="1" max="120" value="{{ monthsBack }}" onChange="{{ setMonths }}" style="width:72px;font:500 13px 'IBM Plex Mono',monospace;color:var(--ink);border:1px solid var(--line);padding:7px 9px;background:var(--field)" /></label>
+<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;font:500 13px 'Public Sans';color:var(--ink-soft)">AI triage of fuzzy matches<button onClick="{{ toggleAi }}" aria-pressed="{{ useAi }}" style="width:44px;height:24px;border:none;cursor:pointer;background:{{ aiToggleBg }};position:relative;transition:background .2s;flex:none"><span style="position:absolute;top:2px;left:{{ aiKnobLeft }};width:20px;height:20px;background:#fff;transition:left .2s"></span></button></label>
+<div style="font:400 11.5px/1.5 'Public Sans';color:var(--ink-faint);border-top:1px solid var(--line-soft);padding-top:12px">AI triage adjudicates only fuzzy matches, using your Anthropic API key from the server environment. Your key, your cost; every call is logged. Deterministic findings work without it.</div>
+<button onClick="{{ runSweep }}" disabled="{{ runDisabled }}" style="font:600 13.5px 'Public Sans';color:var(--btn-ink);background:{{ runBg }};border:none;padding:12px 16px;cursor:{{ runCursor }}">Run sweep</button>
+</div>
+</div>
+<div style="margin:0 22px 24px;padding-top:12px;border-top:1px solid var(--line-soft);display:flex;gap:16px;align-items:baseline;justify-content:center;flex-wrap:wrap;font:500 10.5px 'IBM Plex Mono',monospace;color:var(--ink-faint)">
+<span style="font:800 9.5px 'Public Sans';letter-spacing:.12em;text-transform:uppercase">Prototype scenarios · design review</span>
+<sc-for list="{{ samples }}" as="s" hint-placeholder-count="3"><span onClick="{{ s.onClick }}" style="color:var(--accent-ink);cursor:pointer;text-decoration:underline">{{ s.label }}</span></sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isProgress }}" hint-placeholder-val="{{ false }}">
+<div style="padding:56px 24px 60px;display:flex;flex-direction:column;align-items:center;gap:26px;animation:fadein .3s ease">
+<div style="width:130px;height:130px;border-radius:50%;border:1px solid var(--line);position:relative;overflow:hidden;background:radial-gradient(circle at center, transparent 57%, var(--accent-soft) 58% 60%, transparent 61%), radial-gradient(circle at center, transparent 34%, var(--accent-soft) 35% 37%, transparent 38%)" style-after="content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg, transparent 0 290deg, color-mix(in srgb, var(--accent) 30%, transparent) 350deg, var(--accent) 360deg);animation:radar 2s linear infinite"></div>
+<div style="font:800 18px 'Public Sans'">{{ progPhase }}</div>
+<div style="width:min(440px,80vw);height:4px;background:var(--line-soft)"><div style="height:100%;width:{{ progPct }}%;background:var(--accent);transition:width .18s linear"></div></div>
+<div style="display:flex;gap:46px;text-align:center">
+<div><div style="font:800 26px 'Public Sans';font-variant-numeric:tabular-nums">{{ pItemsFmt }}</div><div style="font:800 10px 'Public Sans';letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-top:5px">items read</div></div>
+<div><div style="font:800 26px 'Public Sans';font-variant-numeric:tabular-nums">{{ pFda }}</div><div style="font:800 10px 'Public Sans';letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-top:5px">FDA requests</div></div>
+<div><div style="font:800 26px 'Public Sans';font-variant-numeric:tabular-nums">{{ pAi }}</div><div style="font:800 10px 'Public Sans';letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-top:5px">AI calls</div></div>
+</div>
+<div style="font:400 12px 'Public Sans';color:var(--ink-faint)">Every request and AI call shown here is also written to this run's audit log.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:1604px;margin:0 auto">
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:14px;padding:20px 22px 0;animation:fadeup .4s ease both">
+<div>
+<div style="font:800 26px/1.1 'Public Sans';letter-spacing:-.01em">Formulary Sweep Findings</div>
+<div style="font:400 13px/1.5 'Public Sans';color:var(--ink-soft);margin-top:6px">Sweep a formulary against FDA recalls, drug shortages, and discontinued NDCs.</div>
+</div>
+<button onClick="{{ reset }}" style="font:600 13px 'Public Sans';color:var(--ink);background:var(--paper);border:1px solid var(--line);padding:9px 15px;cursor:pointer;white-space:nowrap">New sweep</button>
+</div>
+<div style="padding:0 22px"><hr style="border:none;border-top:3px solid var(--ink);margin:13px 0 0;transform-origin:left;animation:underline .5s ease both"><hr style="border:none;border-top:1px solid var(--line);margin:3px 0 0"></div>
+
+<div style="display:flex;gap:9px;align-items:flex-start;background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 22px;margin:16px 22px 0;font:400 12.5px/1.5 'Public Sans';color:var(--ink-soft);animation:fadeup .4s ease both;animation-delay:.05s"><span style="font-weight:700;color:var(--accent-ink);white-space:nowrap">Scope.</span><span>Informational tool. A pharmacist verifies every finding before action. Not clinical advice. openFDA: assume all results are unvalidated.</span></div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:1px;background:var(--line-soft);border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);margin-top:16px;animation:fadeup .4s ease both;animation-delay:.08s">
+<div style="background:var(--ground);padding:11px 20px"><div style="font:800 9.5px 'Public Sans';letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)">Formulary</div><div style="font:600 13.5px 'Public Sans';margin-top:3px">rxsweep_formulary.csv</div></div>
+<div style="background:var(--ground);padding:11px 20px"><div style="font:800 9.5px 'Public Sans';letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)">Items checked</div><div style="font:600 13.5px 'Public Sans';margin-top:3px;font-variant-numeric:tabular-nums">42</div></div>
+<div style="background:var(--ground);padding:11px 20px"><div style="font:800 9.5px 'Public Sans';letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)">Recall window</div><div style="font:600 13.5px 'Public Sans';margin-top:3px">24 months</div></div>
+<div style="background:var(--ground);padding:11px 20px"><div style="font:800 9.5px 'Public Sans';letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)">AI model</div><div style="font:600 13.5px 'Public Sans';margin-top:3px">claude-haiku-4-5</div></div>
+<div style="background:var(--ground);padding:11px 20px"><div style="font:800 9.5px 'Public Sans';letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)">Run</div><div style="font:600 13.5px 'Public Sans';margin-top:3px;font-variant-numeric:tabular-nums">2026-07-10 14:30</div></div>
+</div>
+
+<sc-if value="{{ outage }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:9px;align-items:flex-start;background:var(--moderate-soft);border-left:3px solid var(--moderate);padding:10px 22px;margin:16px 22px 0;font:400 12.5px/1.5 'Public Sans';color:var(--moderate)"><span style="font-weight:700;white-space:nowrap">NDC directory unavailable.</span><span>The NDC directory could not be reached after retries. 12 items were not checked against it and are listed under Unchecked. Treat them as unknown, not clear. Re-run the sweep to complete coverage.</span></div></sc-if>
+<div style="padding:22px 22px 0;animation:fadeup .45s ease both;animation-delay:.12s">
+<h2 style="font:800 15px/1.2 'Public Sans';letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px">Required actions <span style="color:var(--ink-faint);font-weight:700">{{ actionsHeadNote }}</span></h2>
+<ol style="margin:0;padding:0;list-style:none">
+<sc-for list="{{ requiredActions }}" as="a" hint-placeholder-count="7">
+<li style="display:grid;grid-template-columns:24px 20px minmax(0,1fr) auto auto;gap:11px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line-soft)">
+<span style="font:800 14px 'Public Sans'">{{ a.num }}.</span>
+<input type="checkbox" checked="{{ a.isChecked }}" onChange="{{ a.onToggle }}" aria-label="Mark action done" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer" />
+<span style="font:400 14px/1.5 'Public Sans';color:{{ a.textColor }};text-decoration:{{ a.strike }}"><strong style="font-weight:700">{{ a.lead }}</strong>{{ a.rest }} <a onClick="{{ a.onOpen }}" style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--accent-ink);cursor:pointer;white-space:nowrap">[{{ a.n }}] FDA record</a></span>
+<span style="font:800 11px/1.3 'Public Sans';letter-spacing:.09em;text-transform:uppercase;color:{{ a.sevColor }};border-left:3px solid {{ a.sevColor }};padding-left:9px;white-space:nowrap">{{ a.sevTag }}</span>
+<span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><button onClick="{{ a.onOpen }}" style="font:600 11.5px 'Public Sans';color:var(--btn-ink);background:var(--accent);border:none;padding:6px 11px;cursor:pointer;white-space:nowrap">{{ a.verb }}</button><span style="display:inline-flex;align-items:center;gap:5px;font:400 10.5px 'Public Sans';color:var(--ink-faint);white-space:nowrap"><span style="width:6px;height:6px;background:{{ a.stDot }};display:inline-block"></span>{{ a.status }}</span></span>
+</li>
+</sc-for>
+</ol>
+<sc-if value="{{ noActions }}" hint-placeholder-val="{{ false }}"><div style="border:1px solid var(--line);padding:14px 16px;font:400 13.5px/1.55 'Public Sans';color:var(--ink-soft)">No disposition is required. This sweep returned no findings.</div></sc-if>
+</div>
+
+<div style="padding:26px 22px 0;animation:fadeup .45s ease both;animation-delay:.16s">
+<div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+<h2 style="font:800 15px/1.2 'Public Sans';letter-spacing:.08em;text-transform:uppercase;margin:0">Findings register <span style="color:var(--ink-faint);font-weight:700">({{ registerCount }})</span></h2>
+<sc-if value="{{ hasFindings }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:7px;flex-wrap:wrap">
+<sc-for list="{{ filters }}" as="fl" hint-placeholder-count="5">
+<button onClick="{{ fl.onClick }}" aria-pressed="{{ fl.active }}" style="display:inline-flex;align-items:center;gap:6px;font:600 12px/1 'Public Sans';color:{{ fl.fg }};background:{{ fl.bg }};border:1px solid {{ fl.bd }};padding:7px 11px;cursor:pointer"><span style="width:7px;height:7px;background:{{ fl.dot }};display:{{ fl.dotShow }}"></span>{{ fl.label }} · {{ fl.count }}</button>
+</sc-for>
+</div></sc-if>
+</div>
+<sc-if value="{{ hasFindings }}" hint-placeholder-val="{{ true }}">
+<div style="border:1px solid var(--line);overflow-x:auto">
+<div style="min-width:820px">
+<div style="display:grid;grid-template-columns:52px 96px minmax(0,1.5fr) 120px 92px 128px minmax(0,1.9fr);background:var(--ground);border-bottom:1px solid var(--line)">
+<div style="font:800 10.5px 'Public Sans';letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);padding:8px 10px">#</div>
+<div style="font:800 10.5px 'Public Sans';letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);padding:8px 10px">Severity</div>
+<div style="font:800 10.5px 'Public Sans';letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);padding:8px 10px">Item</div>
+<div style="font:800 10.5px 'Public Sans';letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);padding:8px 10px">NDC</div>
+<div style="font:800 10.5px 'Public Sans';letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);padding:8px 10px">Source</div>
+<div style="font:800 10.5px 'Public Sans';letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);padding:8px 10px;text-align:center">Match</div>
+<div style="font:800 10.5px 'Public Sans';letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);padding:8px 10px">Basis</div>
+</div>
+<sc-for list="{{ findings }}" as="f" hint-placeholder-count="13">
+<div id="row-{{ f.n }}" onClick="{{ f.onOpen }}" style="display:grid;grid-template-columns:52px 96px minmax(0,1.5fr) 120px 92px 128px minmax(0,1.9fr);border-bottom:1px solid var(--line-soft);background:{{ f.rowBg }};box-shadow:{{ f.rowBar }};cursor:pointer;transition:{{ f.rowTrans }}" style-hover="background:var(--focus-row)">
+<div style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink-faint);padding:9px 10px">[{{ f.n }}]</div>
+<div style="padding:9px 10px;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;background:{{ f.sevColor }};margin-right:6px;vertical-align:middle"></span><span style="font:800 11px 'Public Sans';letter-spacing:.06em;text-transform:uppercase;color:{{ f.sevColor }};vertical-align:middle">{{ f.sevLabel }}</span></div>
+<div style="font:500 13px/1.35 'Public Sans';padding:9px 10px">{{ f.item }}</div>
+<div style="font:400 11.5px 'IBM Plex Mono',monospace;color:var(--ink-soft);padding:9px 10px">{{ f.ndc }}</div>
+<div style="font:400 12.5px 'Public Sans';color:var(--ink-soft);padding:9px 10px">{{ f.source }}</div>
+<div style="padding:7px 10px;text-align:center"><span style="display:inline-block;font:700 10px/1 'Public Sans';letter-spacing:.05em;text-transform:uppercase;color:{{ f.matchFg }};background:{{ f.matchBg }};border:1px solid {{ f.matchBd }};padding:4px 7px;white-space:nowrap">{{ f.matchLabel }}</span></div>
+<div style="font:400 12px/1.4 'Public Sans';color:var(--ink-soft);padding:9px 10px">{{ f.basis }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ noFindings }}" hint-placeholder-val="{{ false }}"><div style="border:1px solid var(--line);padding:18px 20px;font:400 13.5px/1.6 'Public Sans';color:var(--ink-soft)"><span style="font-weight:700;color:var(--ink)">No findings.</span> 42 items were checked against FDA recalls, drug shortages, and the NDC directory over the trailing 24 months. A clean result is still a record: export the memo from the run record to file this sweep.</div></sc-if>
+<p style="font:400 12.5px 'Public Sans';color:var(--ink-faint);margin:8px 0 0">{{ registerNote }}</p>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;padding:26px 22px 0;animation:fadeup .45s ease both;animation-delay:.2s">
+<div style="border:1px solid var(--line-soft);background:var(--ground);padding:14px 16px">
+<div style="font:800 11px 'Public Sans';letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:9px">Manual review ({{ manualCount }})</div>
+<sc-for list="{{ manualReview }}" as="m" hint-placeholder-count="3"><div style="font:400 12px/1.4 'Public Sans';color:var(--ink-soft);padding:6px 0;border-top:1px solid var(--line-soft)"><span style="color:var(--ink);font-weight:600">{{ m.name }}</span> <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint)">row {{ m.row }}</span><br>{{ m.reason }}</div></sc-for><sc-if value="{{ manualZero }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px/1.5 'Public Sans';color:var(--ink-soft);padding:6px 0;border-top:1px solid var(--line-soft)">No fuzzy candidates required manual adjudication this run.</div></sc-if>
+</div>
+<div style="border:1px solid var(--line-soft);background:var(--ground);padding:14px 16px">
+<div style="font:800 11px 'Public Sans';letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:9px">Quarantined ({{ quarCount }})</div>
+<sc-for list="{{ quarantined }}" as="q" hint-placeholder-count="2"><div style="font:400 12px/1.4 'Public Sans';color:var(--ink-soft);padding:6px 0;border-top:1px solid var(--line-soft)"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink)">line {{ q.row }}</span> · {{ q.reason }}</div></sc-for>
+</div>
+<div style="border:1px solid var(--line-soft);background:var(--ground);padding:14px 16px">
+<div style="font:800 11px 'Public Sans';letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:9px">Unchecked ({{ uncheckedCount }})</div>
+<sc-if value="{{ uncheckedZero }}" hint-placeholder-val="{{ true }}"><div style="font:400 12px/1.5 'Public Sans';color:var(--ink-soft);padding:6px 0;border-top:1px solid var(--line-soft)">All three FDA sources were reachable this run. No items were left unchecked.</div></sc-if>
+<sc-for list="{{ uncheckedList }}" as="u" hint-placeholder-count="0"><div style="font:400 12px/1.4 'Public Sans';color:var(--ink-soft);padding:6px 0;border-top:1px solid var(--line-soft)">{{ u }}</div></sc-for>
+</div>
+</div>
+<div style="height:26px"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMemo }}" hint-placeholder-val="{{ false }}">
+<div id="memo-well" style="background:var(--ground);padding:26px 22px 34px;animation:fadein .3s ease">
+<div data-noprint="1" style="max-width:816px;margin:0 auto 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+<button onClick="{{ backToDash }}" style="font:600 12.5px 'Public Sans';color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--accent);padding:8px 13px;cursor:pointer">← Back to findings</button>
+<span style="display:flex;gap:10px;align-items:center">
+<span style="font:400 11px 'Public Sans';color:var(--ink-faint)">Letter · portrait · prints to PDF</span>
+<button onClick="{{ printMemo }}" style="font:600 12.5px 'Public Sans';color:var(--btn-ink);background:var(--accent);border:none;padding:8px 14px;cursor:pointer">Print to PDF</button>
+</span>
+</div>
+<div id="memo-sheet" style="max-width:816px;margin:0 auto;background:#ffffff;color:#1b1b1b;padding:58px 66px;font-family:Georgia,'Times New Roman',serif;box-shadow:0 10px 34px rgba(18,32,58,.14)">
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px">
+<span style="display:flex;align-items:center;gap:9px"><svg width="16" height="15" viewBox="0 0 48 46" fill="#1e3f63" style="display:block"><path d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z"/></svg><span style="font:800 14px 'Public Sans';color:#12203a">RxSweep</span></span>
+<span style="font:800 9px 'Public Sans';letter-spacing:.14em;text-transform:uppercase;color:#71767a">Formulary surveillance · FDA public data</span>
+</div>
+<div style="font:700 21px Georgia,serif;letter-spacing:.04em;margin:24px 0 0">MEMORANDUM</div>
+<hr style="border:none;border-top:3px solid #1b1b1b;margin:10px 0 0"><hr style="border:none;border-top:1px solid #a9aeb1;margin:2px 0 0">
+<div style="display:grid;grid-template-columns:64px 1fr;gap:6px 14px;margin:16px 0 0;font-size:13.5px;line-height:1.5">
+<span style="font:800 10px 'Public Sans';letter-spacing:.08em;color:#565c65;padding-top:3px">TO</span><span>Pharmacy and Therapeutics Committee</span>
+<span style="font:800 10px 'Public Sans';letter-spacing:.08em;color:#565c65;padding-top:3px">FROM</span><span>Travis Clement, PharmD · RxSweep run 20260710T143000Z</span>
+<span style="font:800 10px 'Public Sans';letter-spacing:.08em;color:#565c65;padding-top:3px">DATE</span><span>July 10, 2026</span>
+<span style="font:800 10px 'Public Sans';letter-spacing:.08em;color:#565c65;padding-top:3px">RE</span><span>{{ memoRe }}</span>
+</div>
+<hr style="border:none;border-top:1px solid #a9aeb1;margin:14px 0 0">
+<p style="font:italic 400 12px/1.6 Georgia,serif;color:#565c65;margin:12px 0 0">Informational tool. A pharmacist verifies every finding before action. Not clinical advice. Source: openFDA; assume all results are unvalidated.</p>
+<div style="font:800 11px 'Public Sans';letter-spacing:.08em;text-transform:uppercase;color:#1b1b1b;margin:24px 0 8px">Summary</div>
+<sc-for list="{{ memoParas }}" as="para" hint-placeholder-count="2"><p style="font:400 13.5px/1.75 Georgia,serif;margin:0 0 10px">{{ para }}</p></sc-for>
+<div style="font:800 11px 'Public Sans';letter-spacing:.08em;text-transform:uppercase;color:#1b1b1b;margin:22px 0 8px">Required actions</div>
+<sc-if value="{{ noActions }}" hint-placeholder-val="{{ false }}"><p style="font:400 13.5px/1.7 Georgia,serif;margin:0">None. This sweep returned no findings.</p></sc-if>
+<ol style="margin:0;padding-left:20px;font:400 13.5px/1.75 Georgia,serif">
+<sc-for list="{{ memoActions }}" as="act" hint-placeholder-count="7"><li style="margin-bottom:6px">{{ act }}</li></sc-for>
+</ol>
+<div style="font:800 11px 'Public Sans';letter-spacing:.08em;text-transform:uppercase;color:#1b1b1b;margin:22px 0 8px">Findings ({{ registerCount }})</div>
+<sc-if value="{{ noFindings }}" hint-placeholder-val="{{ false }}"><p style="font:400 13.5px/1.7 Georgia,serif;margin:0">No findings in the 24-month window.</p></sc-if>
+<sc-for list="{{ memoFindings }}" as="f" hint-placeholder-count="13">
+<div style="display:grid;grid-template-columns:30px 78px minmax(0,1.35fr) 96px 76px minmax(0,1.5fr);gap:0 10px;border-bottom:1px solid #dfe1e2;padding:6px 0;font:400 11.5px/1.5 Georgia,serif">
+<span style="color:#71767a">[{{ f.n }}]</span>
+<span style="font:700 9.5px/1.8 'Public Sans';letter-spacing:.05em;text-transform:uppercase;color:{{ f.memoSevColor }}">{{ f.sevLabel }}</span>
+<span>{{ f.item }}</span>
+<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#565c65">{{ f.ndc }}</span>
+<span>{{ f.source }}</span>
+<span style="color:#565c65">{{ f.basis }}</span>
+</div>
+</sc-for>
+<hr style="border:none;border-top:1px solid #a9aeb1;margin:26px 0 0">
+<p style="font:400 10.5px/1.6 Georgia,serif;color:#71767a;margin:10px 0 0">openFDA: do not rely on these data to make decisions regarding medical care; assume all results are unvalidated. Severity rubric human-authored (Travis Clement, PharmD). Full audit trail: <span style="font-family:'IBM Plex Mono',monospace;font-size:10px">runs/20260710T143000Z/audit.jsonl</span></p>
+</div>
+</div>
+</sc-if>
+
+<div data-noprint="1" style="border-top:1px solid var(--line-soft);background:var(--paper)"><div style="max-width:1604px;margin:0 auto;padding:13px 22px;font:400 11px/1.6 'Public Sans';color:var(--ink-faint)">openFDA: do not rely on these data to make decisions regarding medical care; assume all results are unvalidated. <a href="https://open.fda.gov/terms/" target="_blank" rel="noreferrer">Terms</a> · <a href="https://open.fda.gov/license/" target="_blank" rel="noreferrer">License</a> · Severity rubric human-authored (Travis Clement, PharmD) · <a href="https://github.com/Travis-Clement-Dev/RxSweep" target="_blank" rel="noreferrer">RxSweep on GitHub</a></div></div>
+
+</div>
+</div>
+
+<sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ false }}">
+<sc-if value="{{ seamShow }}" hint-placeholder-val="{{ true }}"><div onMouseDown="{{ seamDown }}" role="separator" aria-orientation="vertical" aria-label="Resize assistant panel" style="position:fixed;top:54px;bottom:10px;right:{{ seamRight }};width:10px;z-index:31;cursor:col-resize;display:flex;align-items:center;justify-content:center;opacity:.6" style-hover="opacity:1"><span style="width:4px;height:38px;border-radius:999px;background:var(--line)"></span></div></sc-if>
+<sc-if value="{{ overlayBackdrop }}" hint-placeholder-val="{{ false }}"><div onClick="{{ togglePanel }}" style="position:fixed;inset:0;background:rgba(10,14,18,.45);z-index:33;animation:fadein .2s ease"></div></sc-if>
+<sc-if value="{{ panelVisible }}" hint-placeholder-val="{{ true }}">
+<div style="position:fixed;top:54px;right:10px;bottom:10px;width:{{ panelW }};background:var(--panel);border-radius:14px;z-index:{{ panelZ }};display:flex;flex-direction:column;transition:{{ panelTrans }};overflow:hidden;box-shadow:{{ panelShadow }}">
+
+<sc-if value="{{ panelOpen }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--band);color:var(--band-ink);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;flex:none">
+<span style="font:800 11.5px/1 'Public Sans';letter-spacing:.1em;text-transform:uppercase;white-space:nowrap">{{ panelTitle }}</span>
+<span style="display:flex;align-items:center;gap:6px">
+<button onClick="{{ setChatMode }}" aria-label="Assistant" title="Assistant" aria-pressed="{{ isChatMode }}" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;cursor:pointer;color:var(--band-ink);box-shadow:{{ chatIconBar }};opacity:{{ chatIconOp }};padding:0"><span style="position:relative;width:14px;height:11px;border:1.5px solid currentColor;border-radius:2px;display:inline-block"><span style="position:absolute;left:2px;bottom:-5px;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:5px solid currentColor"></span></span></button>
+<button onClick="{{ setRecordMode }}" aria-label="Run record" title="Run record" aria-pressed="{{ isRecordMode }}" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;cursor:pointer;color:var(--band-ink);font-size:15px;box-shadow:{{ gearIconBar }};opacity:{{ gearIconOp }};padding:0">⚙</button>
+<span style="width:1px;height:16px;background:rgba(255,255,255,.22)"></span>
+<button onClick="{{ togglePanel }}" aria-label="Collapse panel" title="Collapse panel" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;cursor:pointer;color:var(--band-ink);font:600 15px 'Public Sans';padding:0">›</button>
+</span>
+</div>
+
+<sc-if value="{{ isChatMode }}" hint-placeholder-val="{{ true }}">
+<div style="padding:10px 14px;border-bottom:1px solid var(--line-soft);font:400 11.5px/1.5 'Public Sans';color:var(--ink-soft);flex:none">Answers come only from this run's findings, with citations. A pharmacist verifies.</div>
+<sc-if value="{{ aiOff }}" hint-placeholder-val="{{ false }}"><div style="margin:12px 14px 0;font:400 12px/1.55 'Public Sans';color:var(--moderate);background:var(--moderate-soft);border-left:3px solid var(--moderate);padding:10px 12px;flex:none">AI was off for this sweep. The assistant needs an Anthropic API key on the server. Findings, the register, and exports remain fully usable.</div></sc-if>
+<div data-clog="1" style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-height:0">
+<sc-if value="{{ showChips }}" hint-placeholder-val="{{ true }}">
+<button onClick="{{ briefMe }}" style="text-align:left;font:700 12.5px/1.4 'Public Sans';color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--accent);padding:10px 12px;cursor:pointer">Prepare the executive briefing</button>
+<sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="4">
+<button onClick="{{ s.onClick }}" style="text-align:left;font:500 12px/1.4 'Public Sans';color:var(--ink-soft);background:var(--paper);border:1px solid var(--line-soft);padding:9px 12px;cursor:pointer" style-hover="border-color:var(--accent);color:var(--accent-ink)">{{ s.label }}</button>
+</sc-for>
+</sc-if>
+<sc-for list="{{ messagesView }}" as="m" hint-placeholder-count="0">
+<div style="align-self:{{ m.align }};max-width:94%">
+<div style="background:{{ m.bg }};color:{{ m.fg }};border:1px solid {{ m.border }};padding:9px 11px;font:400 12.5px/1.55 'Public Sans'"><sc-for list="{{ m.parts }}" as="p"><sc-if value="{{ p.isText }}"><span>{{ p.text }}</span></sc-if><sc-if value="{{ p.isCite }}"><button onClick="{{ p.onClick }}" style="font:600 11px 'IBM Plex Mono',monospace;color:var(--accent-ink);background:none;border:none;cursor:pointer;padding:0 1px">[{{ p.n }}]</button></sc-if></sc-for></div>
+<sc-if value="{{ m.hasMeter }}" hint-placeholder-val="{{ false }}"><div style="font:400 10px/1.5 'IBM Plex Mono',monospace;color:var(--ink-faint);margin-top:4px">{{ m.meterText }}<sc-if value="{{ m.billed }}"><br>Billed to your own API key. Logged in audit.jsonl.</sc-if></div></sc-if>
+</div>
+</sc-for>
+</div>
+<form onSubmit="{{ onSubmit }}" style="flex:none;margin:6px 14px 16px;background:var(--elev);border:1px solid var(--line-soft);border-radius:3px">
+<input value="{{ chatInput }}" onChange="{{ onInput }}" disabled="{{ aiOff }}" placeholder="{{ askPlaceholder }}" aria-label="Ask about these findings" style="display:block;width:100%;font:400 13px/1.5 'Public Sans';color:var(--ink);border:none;padding:14px 14px 6px;background:transparent" />
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 8px 8px 14px">
+<span style="font:400 10px 'IBM Plex Mono',monospace;color:var(--ink-faint);white-space:nowrap">claude-haiku-4-5</span>
+<button disabled="{{ aiOff }}" style="font:600 12px 'Public Sans';color:var(--btn-ink);background:{{ askBg }};border:none;border-radius:2px;padding:7px 14px;cursor:{{ askCursor }}">Ask</button>
+</div>
+</form>
+</sc-if>
+
+<sc-if value="{{ isRecordMode }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;overflow-y:auto;padding:14px;min-height:0">
+<div style="font:800 10.5px 'Public Sans';letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px">Run</div>
+<sc-for list="{{ runKv }}" as="r" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:baseline;font:400 11.5px 'Public Sans';color:var(--ink-soft);padding:5px 0;border-bottom:1px solid var(--line-soft)"><span style="white-space:nowrap">{{ r.k }}</span><span style="font:600 11.5px 'IBM Plex Mono',monospace;color:var(--ink);text-align:right;overflow-wrap:anywhere">{{ r.v }}</span></div></sc-for>
+<div style="font:800 10.5px 'Public Sans';letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin:18px 0 8px">Model usage</div>
+<sc-for list="{{ modelKv }}" as="r" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:baseline;font:400 11.5px 'Public Sans';color:var(--ink-soft);padding:5px 0;border-bottom:1px solid var(--line-soft)"><span style="white-space:nowrap">{{ r.k }}</span><span style="font:600 11.5px 'IBM Plex Mono',monospace;color:var(--ink);text-align:right;overflow-wrap:anywhere">{{ r.v }}</span></div></sc-for>
+<div style="font:400 10.5px/1.5 'Public Sans';color:var(--ink-faint);margin-top:6px">Billed to your own API key. Every prompt and completion is logged verbatim.</div>
+<div style="font:800 10.5px 'Public Sans';letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin:18px 0 8px">Exports</div>
+<sc-for list="{{ exportsList }}" as="x" hint-placeholder-count="5">
+<div style="padding:7px 0;border-bottom:1px solid var(--line-soft)"><a onClick="{{ x.onClick }}" style="font:600 12px 'IBM Plex Mono',monospace;color:var(--accent-ink);text-decoration:underline;cursor:pointer">{{ x.file }}</a><div style="font:400 11px/1.45 'Public Sans';color:var(--ink-faint);margin-top:2px">{{ x.desc }}</div></div>
+</sc-for>
+<sc-if value="{{ exportMsg }}" hint-placeholder-val="{{ false }}"><div style="font:500 11px 'IBM Plex Mono',monospace;color:var(--accent-ink);background:var(--accent-soft);padding:7px 10px;margin-top:10px">{{ exportMsg }}</div></sc-if>
+<div style="font:400 10.5px/1.55 'Public Sans';color:var(--ink-faint);margin-top:14px">Full audit trail for this run: <span style="font-family:'IBM Plex Mono',monospace">runs/20260710T143000Z/audit.jsonl</span></div>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ panelClosed }}" hint-placeholder-val="{{ false }}">
+<div style="background:var(--band);height:46px;display:flex;align-items:center;justify-content:center;flex:none">
+<button onClick="{{ togglePanel }}" aria-label="Expand panel" title="Expand panel" style="width:28px;height:28px;background:transparent;border:none;cursor:pointer;color:var(--band-ink);font:600 15px 'Public Sans';padding:0">‹</button>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:14px">
+<button onClick="{{ openChatMode }}" aria-label="Assistant" title="Assistant" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;cursor:pointer;color:var(--ink-soft);padding:0"><span style="position:relative;width:14px;height:11px;border:1.5px solid currentColor;border-radius:2px;display:inline-block"><span style="position:absolute;left:2px;bottom:-5px;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:5px solid currentColor"></span></span></button>
+<button onClick="{{ openRecordMode }}" aria-label="Run record" title="Run record" style="width:28px;height:28px;background:transparent;border:none;cursor:pointer;color:var(--ink-soft);font-size:15px;padding:0">⚙</button>
+</div>
+</sc-if>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ drawerOpen }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ closeDrawer }}" style="position:fixed;inset:0;background:rgba(10,14,18,.5);z-index:40;animation:fadein .2s ease"></div>
+<div style="position:fixed;top:0;right:0;height:100vh;width:476px;max-width:94vw;background:var(--paper);border-left:1px solid var(--line);z-index:41;overflow-y:auto;animation:drawerin .24s ease both">
+<div style="padding:22px 24px 30px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:3px solid var(--ink);padding-bottom:12px">
+<span style="font:800 11px 'Public Sans';letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)">Finding record</span>
+<button onClick="{{ closeDrawer }}" style="font:600 12px 'Public Sans';color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--accent);padding:7px 12px;cursor:pointer">Close</button>
+</div>
+<h2 style="font:800 19px/1.3 'Public Sans';margin:14px 0 4px"><span style="font:500 13px 'IBM Plex Mono',monospace;color:var(--ink-faint);margin-right:6px">[{{ sel.n }}]</span>{{ sel.item }}</h2>
+<div style="font:400 12px 'IBM Plex Mono',monospace;color:var(--ink-soft)">Formulary row {{ sel.row }} · NDC {{ sel.ndc }}</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:15px 0 4px">
+<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;background:{{ sel.sevColor }};display:inline-block"></span><span style="font:800 11.5px 'Public Sans';letter-spacing:.08em;text-transform:uppercase;color:{{ sel.sevColor }}">{{ sel.sevLabel }}</span></span>
+<span style="font:600 12px 'Public Sans';color:var(--ink-soft)">{{ sel.source }}</span>
+<span style="display:inline-block;font:700 10px/1 'Public Sans';letter-spacing:.05em;text-transform:uppercase;color:{{ sel.matchFg }};background:{{ sel.matchBg }};border:1px solid {{ sel.matchBd }};padding:4px 7px">{{ sel.matchLabel }}</span>
+</div>
+<h3 style="font:800 11px 'Public Sans';letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin:20px 0 6px">Why it's flagged</h3>
+<p style="font:400 13.5px/1.55 'Public Sans';margin:0">{{ sel.basis }}</p>
+<sc-if value="{{ sel.hasAi }}" hint-placeholder-val="{{ false }}">
+<h3 style="font:800 11px 'Public Sans';letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin:20px 0 6px">AI match reasoning</h3>
+<p style="font:400 13.5px/1.55 'Public Sans';margin:0">{{ sel.aiRationale }}</p>
+<div style="font:400 11.5px/1.45 'Public Sans';color:var(--moderate);background:var(--moderate-soft);border-left:3px solid var(--moderate);padding:9px 12px;margin-top:10px">AI-matched: needs verification. Confirm this reasoning against the FDA record before acting.</div>
+</sc-if>
+<h3 style="font:800 11px 'Public Sans';letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin:20px 0 8px">FDA record</h3>
+<div style="border:1px solid var(--line)">
+<sc-for list="{{ sel.recordRows }}" as="r" hint-placeholder-count="6"><div style="display:grid;grid-template-columns:136px 1fr;border-bottom:1px solid var(--line-soft)"><div style="font:400 11px 'IBM Plex Mono',monospace;color:var(--ink-faint);padding:7px 10px;background:var(--ground)">{{ r.k }}</div><div style="font:400 12.5px/1.4 'Public Sans';padding:7px 10px">{{ r.v }}</div></div></sc-for>
+</div>
+<a href="{{ sel.fdaUrl }}" target="_blank" rel="noreferrer" style="display:inline-block;font:600 13px 'Public Sans';color:var(--btn-ink);background:var(--accent);padding:11px 16px;margin-top:18px;text-decoration:none">Open FDA source record ↗</a>
+</div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    phase: 'upload', theme: 'light', fileName: null, fileSize: null, monthsBack: 24, useAi: true, ranAi: true,
+    progPhase: 'Reading formulary', pItems: 0, pFda: 0, pAi: 0, progPct: 0,
+    sevFilter: null, selected: null, checked: {}, flash: null,
+    messages: [], chatInput: '', panelOpen: true, panelMode: 'chat', exportMsg: null, panelWidth: 340, dragging: false, scenario: 'findings', uploadError: null, winW: 1400, dragOver: false,
+  };
+
+  componentDidMount() { document.documentElement.dataset.theme = this.state.theme; this._onResize = () => this.setState({ winW: window.innerWidth }); window.addEventListener('resize', this._onResize); this._onResize(); }
+  componentWillUnmount() { clearInterval(this._t); clearTimeout(this._x); window.removeEventListener('resize', this._onResize); }
+
+  splitCites(str) {
+    const parts = []; const re = /\[(\d+)\]/g; let last = 0, m;
+    while ((m = re.exec(str))) {
+      if (m.index > last) parts.push({ isText: true, text: str.slice(last, m.index) });
+      const n = Number(m[1]);
+      parts.push({ isCite: true, n, onClick: () => this.clickCite(n) });
+      last = m.index + m[0].length;
+    }
+    if (last < str.length) parts.push({ isText: true, text: str.slice(last) });
+    return parts;
+  }
+
+  data() {
+    if (this._data) return this._data;
+    const SEV = {
+      critical: { c: 'var(--critical)', label: 'Critical' }, high: { c: 'var(--critical)', label: 'High' },
+      moderate: { c: 'var(--moderate)', label: 'Moderate' }, info: { c: 'var(--info)', label: 'Info' },
+    };
+    const MATCH = {
+      exact_ndc: { label: 'Exact NDC', fg: 'var(--accent-ink)', bg: 'var(--accent-soft)', bd: 'var(--accent)' },
+      name_match: { label: 'Name match', fg: 'var(--ink-soft)', bg: 'transparent', bd: 'var(--line-soft)' },
+      ai_matched: { label: 'AI: verify', fg: 'var(--moderate)', bg: 'var(--moderate-soft)', bd: 'var(--moderate)' },
+    };
+    const SRC = { recall: 'Recall', shortage: 'Shortage', ndc: 'NDC status' };
+    const raw = [
+      { s: 'critical', item: 'Cefazolin Sodium for Injection 1 g', ndc: '25021-0101-10', src: 'recall', match: 'name_match', basis: 'Class I recall: reasonable probability of serious harm', rec: { recall_number: 'D-0142-2026', classification: 'Class I', status: 'Ongoing', product_description: 'Cefazolin Sodium for Injection USP, 1 g single-dose vials', reason_for_recall: 'Lack of sterility assurance identified during a site inspection', recalling_firm: 'Steriva Injectables LLC', report_date: '2026-06-24' } },
+      { s: 'critical', item: 'Sodium Chloride 0.9% Injection, 1,000 mL', ndc: '0338-0049-04', src: 'recall', match: 'name_match', basis: 'Class I recall (+21 more records)', rec: { recall_number: 'D-0155-2026', classification: 'Class I', status: 'Ongoing', product_description: 'Sodium Chloride 0.9% Injection, 1,000 mL flexible container', reason_for_recall: 'Presence of visible particulate matter', recalling_firm: 'B. Braun Medical Inc.', report_date: '2026-06-11' } },
+      { s: 'critical', item: 'Heparin Sodium 5,000 units/mL', ndc: '63323-0540-01', src: 'recall', match: 'exact_ndc', basis: 'Class I recall with exact NDC match to a stocked item', rec: { recall_number: 'D-0163-2026', classification: 'Class I', status: 'Ongoing', product_description: 'Heparin Sodium 5,000 USP units/mL, 1 mL vials', reason_for_recall: 'Potential contamination identified in reserve samples', recalling_firm: 'Fresenius Kabi USA', report_date: '2026-05-30' } },
+      { s: 'critical', item: 'Epinephrine 1 mg/mL Injection', ndc: '42023-0159-25', src: 'recall', match: 'name_match', basis: 'Class I recall (+16 more records)', rec: { recall_number: 'D-0170-2026', classification: 'Class I', status: 'Ongoing', product_description: 'Epinephrine Injection USP, 1 mg/mL, 1 mL ampoules', reason_for_recall: 'Impurity above specification; product also under active shortage', recalling_firm: 'Amphastar Pharmaceuticals', report_date: '2026-05-22' } },
+      { s: 'critical', item: 'Sterile Water for Injection, 10 mL', ndc: '0409-4887-17', src: 'recall', match: 'name_match', basis: 'Class I recall: reasonable probability of serious harm', rec: { recall_number: 'D-0181-2026', classification: 'Class I', status: 'Ongoing', product_description: 'Sterile Water for Injection USP, 10 mL vials', reason_for_recall: 'Container closure integrity failure', recalling_firm: 'Hospira (Pfizer)', report_date: '2026-05-09' } },
+      { s: 'high', item: 'Lorazepam Injection 2 mg/mL', ndc: '0641-6002-25', src: 'shortage', match: 'exact_ndc', basis: 'Active shortage on a stocked item', rec: { generic_name: 'Lorazepam Injection', status: 'Currently in shortage', package_count: '3 presentations affected', therapeutic_category: 'Benzodiazepine' } },
+      { s: 'high', item: 'Oxycodone HCl 5 mg tablet', ndc: '0406-0512-01', src: 'recall', match: 'exact_ndc', basis: 'Class II recall with exact NDC match to a stocked item', rec: { recall_number: 'D-0208-2026', classification: 'Class II', status: 'Ongoing', product_description: 'Oxycodone Hydrochloride Tablets USP, 5 mg, 100-count', reason_for_recall: 'Superpotent result at the 9-month stability station', recalling_firm: 'SpecGx LLC', report_date: '2026-04-28' } },
+      { s: 'high', item: 'Amoxicillin / Clavulanate K 875-125 mg', ndc: '65862-0567-01', src: 'recall', match: 'exact_ndc', basis: 'Class II recall with exact NDC match to a stocked item', rec: { recall_number: 'D-0214-2026', classification: 'Class II', status: 'Ongoing', product_description: 'Amoxicillin and Clavulanate Potassium Tablets, 875 mg/125 mg', reason_for_recall: 'Dissolution failure at the 12-month station', recalling_firm: 'Aurobindo Pharma USA', report_date: '2026-04-15' } },
+      { s: 'high', item: 'Dextrose 5% Injection, 1,000 mL', ndc: '0338-0017-04', src: 'shortage', match: 'name_match', basis: 'Active shortage on a stocked item (+2 more records)', rec: { generic_name: 'Dextrose 5% Injection', status: 'Currently in shortage', package_count: '3 presentations affected', therapeutic_category: 'Large-volume parenteral' } },
+      { s: 'high', item: 'Cefazolin Sodium for Injection 1 g', ndc: '25021-0101-10', src: 'shortage', match: 'name_match', basis: 'Active shortage on a stocked item', rec: { generic_name: 'Cefazolin Injection', status: 'Currently in shortage', package_count: '2 presentations affected', therapeutic_category: 'Cephalosporin antibiotic' } },
+      { s: 'moderate', item: 'Metformin HCl ER 500 mg tablet', ndc: '68382-0730-10', src: 'recall', match: 'ai_matched', basis: 'Class II recall, name-level match. Verify product identity.', ai: 'The item name and strength match the recalled product description, and the NDC labeler aligns with the recalling firm. Package size was not stated in the formulary row. (confidence: medium)', rec: { recall_number: 'D-0231-2026', classification: 'Class II', status: 'Ongoing', product_description: 'Metformin Hydrochloride Extended-Release Tablets USP, 500 mg, 100-count', reason_for_recall: 'Nitrosamine (NDMA) impurity above the acceptable daily intake limit', recalling_firm: 'Granite Pharmaceuticals LLC', report_date: '2026-04-02' } },
+      { s: 'moderate', item: 'Diltiazem HCl ER 120 mg capsule', ndc: '0591-0795-01', src: 'ndc', match: 'exact_ndc', basis: 'NDC listing expired or discontinued. Check reorder viability.', rec: { product_ndc: '0591-0795', generic_name: 'Diltiazem Hydrochloride', labeler_name: 'Actavis Pharma, Inc.', marketing_category: 'ANDA', listing_expiration_date: '2025-12-31' } },
+      { s: 'info', item: 'Ondansetron 4 mg/2 mL Injection', ndc: '0409-4755-01', src: 'shortage', match: 'name_match', basis: "Shortage record with status 'Resolved'", rec: { generic_name: 'Ondansetron Injection', status: 'Resolved', package_count: '1 presentation', therapeutic_category: 'Antiemetic' } },
+    ];
+    const rows = { critical: 128, high: 512, moderate: 803, info: 377 };
+    const findings = raw.map((f, i) => {
+      const s = SEV[f.s], m = MATCH[f.match];
+      const url = f.src === 'recall' ? 'https://api.fda.gov/drug/enforcement.json?search=' + encodeURIComponent('recall_number:"' + (f.rec.recall_number || '') + '"')
+        : f.src === 'shortage' ? 'https://api.fda.gov/drug/shortages.json?search=' + encodeURIComponent('generic_name:"' + (f.rec.generic_name || '') + '"')
+        : 'https://api.fda.gov/drug/ndc.json?search=' + encodeURIComponent('product_ndc:"' + (f.rec.product_ndc || '') + '"');
+      return {
+        n: i + 1, sev: f.s, sevLabel: s.label, sevColor: s.c, item: f.item, ndc: f.ndc,
+        source: SRC[f.src], matchLabel: m.label, matchFg: m.fg, matchBg: m.bg, matchBd: m.bd,
+        basis: f.basis, hasAi: !!f.ai, aiRationale: f.ai || null,
+        row: rows[f.s] + i, recordRows: Object.entries(f.rec).map(([k, v]) => ({ k: k.replace(/_/g, ' '), v: String(v) })), fdaUrl: url,
+      };
+    });
+    const actions = [
+      { n: 1, lead: 'Verify lots for Cefazolin Sodium for Injection', rest: ' (NDC 25021-0101-10) against recall D-0142-2026 and quarantine affected stock.', sevTag: 'Class I recall', sev: 'critical', verb: 'Quarantine', status: 'Open · due today' },
+      { n: 2, lead: 'Verify lots for Sodium Chloride 0.9%', rest: ' (0338-0049-04); 22 recall records, particulate matter.', sevTag: 'Class I recall', sev: 'critical', verb: 'Quarantine', status: 'Open · due today' },
+      { n: 3, lead: 'Verify lots for Heparin Sodium 5,000 units/mL', rest: ' (63323-0540-01) against the recall record; quarantine affected stock.', sevTag: 'Class I recall', sev: 'critical', verb: 'Quarantine', status: 'Open · due today' },
+      { n: 6, lead: 'Confirm supply plan for Lorazepam Injection', rest: ' (0641-6002-25); exact NDC match to an active shortage.', sevTag: 'Active shortage', sev: 'high', verb: 'Escalate', status: 'Open' },
+      { n: 7, lead: 'Review Oxycodone HCl', rest: ' (0406-0512-01); Class II recall with exact NDC match to stocked inventory.', sevTag: 'Class II recall', sev: 'high', verb: 'Review', status: 'Open' },
+      { n: 11, lead: 'Verify product identity for Metformin HCl ER', rest: ' (68382-0730-10); AI-matched to a Class II recall, not yet verified.', sevTag: 'AI: verify', sev: 'moderate', verb: 'Verify match', status: 'Needs verification' },
+      { n: 12, lead: 'Confirm reorder for Diltiazem HCl ER', rest: ' (0591-0795-01); NDC discontinued in the directory.', sevTag: 'NDC status', sev: 'moderate', verb: 'Confirm', status: 'Open' },
+    ];
+    const manualReview = [
+      { name: 'Potassium Chloride ER 20 mEq', row: 331, reason: 'Name overlaps a recall record; AI did not return a verdict this run.' },
+      { name: 'Fentanyl Citrate 50 mcg/mL', row: 588, reason: 'Multiple shortage records share the ingredient; manual disambiguation needed.' },
+      { name: 'Insulin Glargine 100 units/mL', row: 742, reason: 'Ambiguous 10-digit NDC; excluded from the automated match by design.' },
+    ];
+    const quarantined = [
+      { row: 39, reason: 'Missing item name.' },
+      { row: 57, reason: "NDC 'BADNDC99' is not a valid 10 or 11 digit NDC." },
+    ];
+    const summary = [
+      'This sweep checked 42 formulary line items against FDA recall, drug shortage, and NDC directory data for the trailing 24 months. It returned 55 findings. Five are Class I recalls that require immediate verification and quarantine: cefazolin for injection [1], sodium chloride 0.9 percent injection across 22 recall records [2], heparin sodium 5,000 units per mL [3], epinephrine 1 mg per mL [4], and sterile water for injection [5].',
+      'Fifteen findings are high severity. Lorazepam injection matches an active shortage by exact NDC [6], and oxycodone HCl carries a Class II recall with an exact NDC match to stocked inventory [7]. Metformin hydrochloride extended release is an AI-matched Class II candidate that is not yet verified [11]. Verify every finding against its FDA source record before acting.',
+    ];
+    const counts = { all: 55, critical: 5, high: 15, moderate: 26, info: 9 };
+    this._data = { findings, actions, manualReview, quarantined, summary, counts, SEV };
+    return this._data;
+  }
+
+  scenarioData(sc) {
+    const d = this.data();
+    if (sc === 'clean') {
+      return { ...d, findings: [], actions: [], manualReview: [], quarantined: d.quarantined.slice(0, 1),
+        counts: { all: 0, critical: 0, high: 0, moderate: 0, info: 0 }, uncheckedList: [], outage: false,
+        summary: [
+          'This sweep checked 42 formulary line items against FDA recall, drug shortage, and NDC directory data for the trailing 24 months. It returned no findings. No stocked item matched an open recall, an active shortage, or a discontinued NDC in the window.',
+          'A clean result is still a record. Export the memo from the run record to document this sweep. One row was quarantined during ingest and is listed in the Quarantined register; review it to confirm coverage.',
+        ] };
+    }
+    if (sc === 'outage') {
+      const findings = d.findings.filter((f) => f.source !== 'NDC status').map((f, i) => ({ ...f, n: i + 1 }));
+      const actions = d.actions.filter((a) => a.n !== 12);
+      return { ...d, findings, actions, outage: true,
+        counts: { all: 54, critical: 5, high: 15, moderate: 25, info: 9 },
+        uncheckedList: ['Diltiazem HCl ER 120 mg capsule · not checked against the NDC directory', 'Atorvastatin 40 mg tablet · not checked against the NDC directory', 'Lisinopril 10 mg tablet · not checked against the NDC directory', 'Pantoprazole 40 mg DR tablet · not checked against the NDC directory', 'Amlodipine 5 mg tablet · not checked against the NDC directory', 'Plus 7 more items. The full list is in findings.csv and the audit log.'],
+        summary: [d.summary[0], 'Fifteen findings are high severity. Lorazepam injection matches an active shortage by exact NDC [6], and oxycodone HCl carries a Class II recall with an exact NDC match to stocked inventory [7]. The NDC directory was unreachable this run: 12 items are unchecked and should be treated as unknown, not clear. Verify every finding against its FDA source record before acting.'] };
+    }
+    return { ...d, uncheckedList: [], outage: false };
+  }
+
+  reply(q) {
+    const s = q.toLowerCase(); const d = this.scenarioData(this.state.scenario);
+    if (this.state.scenario === 'clean') {
+      if (/memo|brief|summary|huddle/.test(s)) return d.summary.join('\n\n');
+      return 'This sweep returned no findings, so there is nothing to prioritize. 42 items were checked against FDA recalls, drug shortages, and the NDC directory. One quarantined ingest row is listed in the Quarantined register. Export the memo to document the clean result.';
+    }
+    if (/verif|unverif|first|need/.test(s)) return 'Two findings need verification before action. Metformin HCl ER [11] is an AI-matched Class II candidate, not an exact NDC match; open it and confirm product identity against the FDA record. The five Class I recalls [1][2][3][4][5] are name or exact matches to stocked items and should move to lot verification and quarantine now.';
+    if (/exact/.test(s)) return 'Three findings are exact NDC matches to stocked inventory. Heparin sodium is a Class I recall at an exact NDC match [3]. Oxycodone HCl [7] and amoxicillin and clavulanate [8] carry Class II recalls at the exact stocked NDC. Lorazepam injection matches an active shortage by exact NDC [6].';
+    if (/shortage|alternative|supply/.test(s)) return 'Active shortages on stocked items include lorazepam injection [6], dextrose 5 percent injection [9], and cefazolin [10]. Lorazepam matches by exact NDC. Confirm supply plans and substitute availability before the next order cycle.';
+    if (/memo|brief|huddle|critical|summary/.test(s)) return d.summary.join('\n\n');
+    return 'This sweep covers 55 findings across FDA recalls, shortages, and NDC status. I answer only from those findings, with citations. For anything outside this run, check the FDA source record linked in each finding.';
+  }
+
+  acceptFile(f) { if (!f) return; if (!/\.csv$/i.test(f.name)) { this.setState({ uploadError: "RxSweep could not read '" + f.name + "'. Provide a CSV file with columns for NDC and drug name. Nothing was uploaded.", fileName: null, fileSize: null }); return; } this.setState({ fileName: f.name, fileSize: (f.size / 1024).toFixed(1), scenario: 'findings', uploadError: null }); }
+  onFile = (e) => { this.acceptFile(e.target.files && e.target.files[0]); };
+  onDropFile = (e) => { e.preventDefault(); this.setState({ dragOver: false }); this.acceptFile(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]); };
+  onDragOver = (e) => { e.preventDefault(); if (!this.state.dragOver) this.setState({ dragOver: true }); };
+  onDragLeave = () => { if (this.state.dragOver) this.setState({ dragOver: false }); };
+  removeFile = (e) => { if (e && e.preventDefault) e.preventDefault(); if (e && e.stopPropagation) e.stopPropagation(); this.setState({ fileName: null, fileSize: null, uploadError: null, scenario: 'findings' }); };
+  pickSample = (e, name, sc) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ fileName: name, fileSize: '2.3', scenario: sc, uploadError: null }); };
+  setMonths = (e) => { this.setState({ monthsBack: Number(e.target.value) || 24 }); };
+  toggleAi = () => { this.setState((s) => ({ useAi: !s.useAi })); };
+  toggleTheme = () => { this.setState((s) => { const t = s.theme === 'light' ? 'dark' : 'light'; document.documentElement.dataset.theme = t; return { theme: t }; }); };
+
+  runSweep = () => {
+    if (!this.state.fileName) return;
+    const ai = this.state.useAi;
+    clearInterval(this._t);
+    this.setState({ phase: 'progress', ranAi: ai, pItems: 0, pFda: 0, pAi: 0, progPct: 0, progPhase: 'Reading formulary' });
+    this._start = Date.now(); const DUR = 4200;
+    this._t = setInterval(() => {
+      const p = Math.min(1, (Date.now() - this._start) / DUR);
+      const items = Math.round(42 * Math.min(1, p / 0.28));
+      const fda = Math.round(9 * Math.max(0, Math.min(1, (p - 0.24) / 0.42)));
+      const aiN = ai ? Math.round(4 * Math.max(0, Math.min(1, (p - 0.68) / 0.26))) : 0;
+      let ph = 'Reading formulary';
+      if (p > 0.28) ph = 'Checking FDA recalls';
+      if (p > 0.40) ph = 'Checking drug shortages';
+      if (p > 0.52) ph = 'Checking the NDC directory';
+      if (p > 0.62) ph = 'Matching against your formulary';
+      if (p > 0.72) ph = ai ? 'AI adjudication of candidates' : 'Finalizing report';
+      if (p > 0.88) ph = ai ? 'Drafting the cited summary' : 'Finalizing report';
+      this.setState({ pItems: items, pFda: fda, pAi: aiN, progPct: Math.round(p * 100), progPhase: ph });
+      if (p >= 1) { clearInterval(this._t); this.setState({ phase: 'dashboard', panelOpen: window.innerWidth >= 1100 }); }
+    }, 90);
+  };
+
+  reset = () => { clearInterval(this._t); this.setState({ phase: 'upload', selected: null, messages: [], sevFilter: null, flash: null, chatInput: '', checked: {}, exportMsg: null, panelMode: 'chat', fileName: null, fileSize: null, uploadError: null, scenario: 'findings' }); };
+  setFilter = (k) => { this.setState((s) => ({ sevFilter: s.sevFilter === k ? null : k })); };
+  toggleAction = (n) => { this.setState((s) => ({ checked: { ...s.checked, [n]: !s.checked[n] } })); };
+  openFinding = (f) => { this.setState({ selected: f }); };
+  closeDrawer = () => { this.setState({ selected: null }); };
+  onInput = (e) => { this.setState({ chatInput: e.target.value }); };
+  togglePanel = () => { this.setState((s) => ({ panelOpen: !s.panelOpen })); };
+  seamDown = (e) => {
+    if (!this.state.panelOpen) return;
+    e.preventDefault();
+    this.setState({ dragging: true });
+    const move = (ev) => { const w = Math.max(280, Math.min(560, window.innerWidth - ev.clientX - 10)); this.setState({ panelWidth: w }); };
+    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); this.setState({ dragging: false }); };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+  setChatMode = () => { this.setState({ panelMode: 'chat', panelOpen: true }); };
+  setRecordMode = () => { this.setState({ panelMode: 'record', panelOpen: true }); };
+  doExport = (label) => { this.setState({ exportMsg: label + ' prepared in runs/20260710T143000Z/' }); clearTimeout(this._x); this._x = setTimeout(() => this.setState({ exportMsg: null }), 3200); };
+  openMemo = (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ phase: 'memo', selected: null }); };
+  backToDash = () => { this.setState({ phase: 'dashboard' }); };
+  printMemo = () => { window.print(); };
+
+  push(role, text, meterText, billed) {
+    this.setState((s) => ({ messages: [...s.messages, { role, text, meterText: meterText || null, billed: !!billed }], chatInput: '' }));
+    requestAnimationFrame(() => { const l = document.querySelector('[data-clog]'); if (l) l.scrollTop = l.scrollHeight; });
+  }
+  ask = (q) => { const question = (q || '').trim(); if (!question) return; this.push('user', question, null, false); this.push('assistant', this.reply(question), 'claude-haiku-4-5 · 1,204 in / 388 out tokens · ~$0.0031', true); };
+  onSubmit = (e) => { e.preventDefault(); this.ask(this.state.chatInput); };
+  briefMe = () => { this.push('assistant', this.scenarioData(this.state.scenario).summary.join('\n\n'), 'Drafted during the sweep by claude-haiku-4-5 · no additional API call', false); };
+
+  clickCite = (n) => {
+    this.setState({ sevFilter: null, flash: n });
+    setTimeout(() => { const el = document.getElementById('row-' + n); if (el) { const r = el.getBoundingClientRect(); window.scrollTo(0, window.scrollY + r.top - 130); } }, 60);
+    setTimeout(() => this.setState((s) => (s.flash === n ? { flash: null } : null)), 1900);
+  };
+
+  renderVals() {
+    const st = this.state; const d = this.scenarioData(st.scenario);
+    const all = d.findings;
+    const findings = (st.sevFilter ? all.filter((f) => f.sev === st.sevFilter) : all).map((f) => ({
+      ...f, rowBg: st.flash === f.n ? 'var(--focus-row)' : 'transparent',
+      rowBar: st.flash === f.n ? 'inset 3px 0 0 var(--accent)' : 'none',
+      rowTrans: st.flash === f.n ? 'none' : 'background .7s ease',
+      onOpen: () => this.openFinding(f),
+    }));
+    const findById = (n) => all.find((x) => x.n === n);
+    const requiredActions = d.actions.map((a, i) => {
+      const done = !!st.checked[a.n];
+      const col = a.sev === 'moderate' ? 'var(--moderate)' : 'var(--critical)';
+      const stDot = /due/.test(a.status) ? 'var(--critical)' : /verification/.test(a.status) ? 'var(--moderate)' : 'var(--ink-faint)';
+      return { num: i + 1, n: a.n, lead: a.lead, rest: a.rest, sevTag: a.sevTag, sevColor: col, verb: a.verb, status: a.status, stDot,
+        isChecked: done, strike: done ? 'line-through' : 'none', textColor: done ? 'var(--ink-faint)' : 'var(--ink)',
+        onToggle: () => this.toggleAction(a.n), onOpen: (e) => { if (e && e.stopPropagation) e.stopPropagation(); const f = findById(a.n); if (f) this.openFinding(f); } };
+    });
+    const fdefs = [['all', 'All findings', null, 'var(--accent)'], ['critical', 'Critical', 'critical', 'var(--critical)'], ['high', 'High', 'high', 'var(--critical)'], ['moderate', 'Moderate', 'moderate', 'var(--moderate)'], ['info', 'Info', 'info', 'var(--info)']];
+    const filters = fdefs.map(([key, label, sv, dot]) => {
+      const active = (sv === null && !st.sevFilter) || (sv !== null && st.sevFilter === sv);
+      return { label, count: d.counts[key], active, dot, dotShow: sv === null ? 'none' : 'inline-block',
+        fg: active ? 'var(--btn-ink)' : 'var(--ink-soft)', bg: active ? 'var(--accent)' : 'var(--paper)', bd: active ? 'var(--accent)' : 'var(--line-soft)',
+        onClick: () => this.setFilter(sv) };
+    });
+    const messagesView = st.messages.map((m) => ({
+      align: m.role === 'user' ? 'flex-end' : 'flex-start',
+      bg: m.role === 'user' ? 'var(--accent-soft)' : 'var(--ground)',
+      fg: m.role === 'user' ? 'var(--accent-ink)' : 'var(--ink)',
+      border: m.role === 'user' ? '1px solid var(--accent)' : '1px solid var(--line-soft)',
+      hasMeter: !!m.meterText, meterText: m.meterText, billed: m.billed, parts: this.splitCites(m.text),
+    }));
+    const suggestions = [
+      'Which recalls have exact NDC matches?',
+      'What needs verification first?',
+      'Which shortages have no alternative?',
+      'Draft a memo for the critical findings',
+    ].map((label) => ({ label, onClick: () => this.ask(label) }));
+    const runKv = [
+      { k: 'File', v: 'rxsweep_formulary.csv' }, { k: 'Items checked', v: '42' }, { k: 'Recall window', v: '24 months' },
+      { k: 'Run id', v: '20260710T143000Z' }, { k: 'Started', v: '2026-07-10 14:30' },
+    ];
+    const modelKv = st.ranAi ? [
+      { k: 'Model', v: 'claude-haiku-4-5' }, { k: 'AI calls', v: '6' }, { k: 'Tokens', v: '8,412 in / 2,930 out' }, { k: 'Est. cost', v: '~$0.019' },
+    ] : [
+      { k: 'Model', v: 'off · deterministic' }, { k: 'AI calls', v: '0' }, { k: 'Tokens', v: '0' }, { k: 'Est. cost', v: '$0.00' },
+    ];
+    const exportsList = [
+      { file: 'findings.csv', desc: 'Flat register for spreadsheets and imports.' },
+      { file: 'findings.xlsx', desc: 'Severity-tinted workbook with frozen header and autofilter.' },
+      { file: 'findings.md', desc: 'Markdown interchange for your AI tools.' },
+      { file: 'memo.html', desc: 'Institutional memorandum; prints to letter PDF.' },
+      { file: 'audit.jsonl', desc: 'Verbatim log of every request, prompt, and completion.' },
+    ].map((x) => ({ ...x, onClick: x.file === 'memo.html' ? this.openMemo : (e) => { if (e && e.preventDefault) e.preventDefault(); this.doExport(x.file); } }));
+    const sel = st.selected;
+    const registerNote = d.counts.all === 0 ? '' : (st.sevFilter ? ('Filtered to ' + d.SEV[st.sevFilter].label + '. ' + findings.length + ' shown; clear the filter to see all.') : ('Showing ' + findings.length + ' of ' + d.counts.all + '. Further rows continue in the exported register.'));
+    const isDash = st.phase === 'dashboard';
+    const isMemo = st.phase === 'memo';
+    const overlay = isDash && st.winW < 1100;
+    const aiOff = !st.ranAi;
+    const memoSev = { critical: '#9a3a2e', high: '#9a3a2e', moderate: '#8a5d0b', info: '#256b43' };
+    return {
+      isUpload: st.phase === 'upload', isProgress: st.phase === 'progress', isDashboard: isDash,
+      themeIcon: st.theme === 'light' ? '☾' : '☀', themeAria: st.theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme',
+      shellPad: isDash ? ('10px ' + ((st.panelOpen ? st.panelWidth : 44) + 20) + 'px 10px 10px') : '26px 24px 64px',
+      frameMargin: isDash ? '0' : '0 auto',
+      frameMax: isDash ? 'none' : '1240px',
+      frameMinH: isDash ? 'calc(100vh - 74px)' : 'auto',
+      seamRight: ((st.panelOpen ? st.panelWidth : 44) + 10) + 'px',
+      panelTrans: st.dragging ? 'none' : 'width .2s ease',
+      seamDown: this.seamDown,
+      seamShow: isDash && !overlay, panelVisible: !overlay || st.panelOpen, overlayBackdrop: overlay && st.panelOpen,
+      panelZ: overlay ? '34' : '30', panelShadow: overlay ? '0 14px 44px rgba(0,0,0,.4)' : 'none',
+      showMastheadToggle: overlay,
+      isMemo, aiOff, outage: !!d.outage, uploadError: st.uploadError,
+      samples: [
+        { label: 'findings (55)', onClick: (e) => this.pickSample(e, 'sample_formulary.csv', 'findings') },
+        { label: 'clean sweep', onClick: (e) => this.pickSample(e, 'clean_formulary.csv', 'clean') },
+        { label: 'NDC source outage', onClick: (e) => this.pickSample(e, 'sample_formulary.csv', 'outage') },
+      ],
+      actionsHeadNote: d.counts.all === 0 ? '(none)' : ('(' + d.counts.critical + ' critical · ' + d.counts.high + ' high)'),
+      noActions: d.actions.length === 0, hasFindings: d.counts.all > 0, noFindings: d.counts.all === 0,
+      registerCount: d.counts.all, manualCount: d.manualReview.length, manualZero: d.manualReview.length === 0,
+      quarCount: d.quarantined.length,
+      uncheckedCount: d.outage ? 12 : 0, uncheckedZero: !d.outage, uncheckedList: d.uncheckedList || [],
+      showChips: st.messages.length === 0 && !aiOff,
+      askBg: aiOff ? 'var(--line)' : 'var(--accent)', askCursor: aiOff ? 'not-allowed' : 'pointer',
+      askPlaceholder: aiOff ? 'AI is off for this sweep' : 'Ask about these findings',
+      memoRe: 'Formulary sweep findings: ' + (st.fileName || 'rxsweep_formulary.csv') + ' (42 items, 24 month recall window)',
+      memoParas: st.ranAi ? d.summary : ['AI summary was off for this sweep. Deterministic findings are listed below with their FDA source records. Run the sweep with AI triage enabled to draft a cited narrative summary.'],
+      memoActions: d.actions.map((a) => a.lead + a.rest),
+      memoFindings: d.findings.map((f) => ({ ...f, memoSevColor: memoSev[f.sev] })),
+      fileName: st.fileName, fileSize: st.fileSize,
+      noFile: !st.fileName, hasFile: !!st.fileName,
+      zoneBorder: st.dragOver ? 'var(--accent)' : 'var(--line)',
+      zoneBg: st.dragOver ? 'var(--accent-soft)' : 'var(--paper)',
+      removeFile: this.removeFile, onDragLeave: this.onDragLeave,
+      useSample: (e) => this.pickSample(e, 'sample_formulary.csv', 'findings'),
+      monthsBack: st.monthsBack, useAi: st.useAi, aiToggleBg: st.useAi ? 'var(--accent)' : 'var(--line)', aiKnobLeft: st.useAi ? '22px' : '2px',
+      runDisabled: !st.fileName, runBg: st.fileName ? 'var(--accent)' : 'var(--line)', runCursor: st.fileName ? 'pointer' : 'not-allowed',
+      progPhase: st.progPhase, pItemsFmt: st.pItems.toLocaleString('en-US'), pFda: st.pFda, pAi: st.pAi, progPct: st.progPct,
+      requiredActions, findings, filters, registerNote,
+      manualReview: d.manualReview, quarantined: d.quarantined,
+      panelOpen: st.panelOpen, panelClosed: !st.panelOpen, panelW: st.panelOpen ? (st.panelWidth + 'px') : '44px',
+      panelTitle: st.panelMode === 'chat' ? 'Sweep assistant' : 'Run record',
+      isChatMode: st.panelMode === 'chat', isRecordMode: st.panelMode === 'record',
+      chatIconBar: st.panelMode === 'chat' ? 'inset 0 -2px 0 var(--band-ink)' : 'none', chatIconOp: st.panelMode === 'chat' ? '1' : '.55',
+      gearIconBar: st.panelMode === 'record' ? 'inset 0 -2px 0 var(--band-ink)' : 'none', gearIconOp: st.panelMode === 'record' ? '1' : '.55',
+      chatEmpty: st.messages.length === 0, messagesView, suggestions, chatInput: st.chatInput,
+      runKv, modelKv, exportsList, exportMsg: st.exportMsg,
+      drawerOpen: !!sel, sel,
+      toggleTheme: this.toggleTheme, onFile: this.onFile, onDropFile: this.onDropFile, onDragOver: this.onDragOver, useSample: this.useSample,
+      setMonths: this.setMonths, toggleAi: this.toggleAi, runSweep: this.runSweep, reset: this.reset,
+      briefMe: this.briefMe, onSubmit: this.onSubmit, onInput: this.onInput, closeDrawer: this.closeDrawer,
+      togglePanel: this.togglePanel, setChatMode: this.setChatMode, setRecordMode: this.setRecordMode,
+      openMemo: this.openMemo, backToDash: this.backToDash, printMemo: this.printMemo,
+      openChatMode: this.setChatMode, openRecordMode: this.setRecordMode,
+    };
+  }
+}
+</script>
+</body>
+</html>
