@@ -6,7 +6,7 @@ RxSweep automates that reconciliation without automating away the judgment. You 
 
 The tool does the sweeping so the pharmacist can do the verifying. That division of labor is the entire design.
 
-*Status: v0.2, working and verified against live FDA data. 80 automated tests. CLI, local web app, four-format export suite.*
+*Status: v0.2, demo-stable, verified against live FDA data. 84 automated tests plus a tested web event reducer. CLI, local web app, five-artifact export suite, recorded dispositions.*
 
 ## Try it
 
@@ -22,7 +22,9 @@ Add `ANTHROPIC_API_KEY=sk-ant-...` to a `.env` file and drop the `--no-ai` flag,
 
 The web app opens on a drop zone, and from the moment your CSV lands you can watch the sweep work: items read, FDA requests, AI calls, all counting live because the progress display reads the same event stream as the audit log. When the sweep finishes you get a **Required Actions** queue, verb-led and severity-ordered, so the first thing on screen is what to do rather than what the software produced.
 
-Below the queue sits the findings register, sortable by column, with every row opening a drawer that puts the AI's match reasoning next to the FDA record and one click from the primary source. A docked assistant answers questions grounded only in that run's findings, cites its claims by finding number, and jumps you to the row when you click a citation. "Brief me for the huddle" surfaces the run's summary without spending another token.
+The queue also records what you decide. Click Quarantine and the row asks who is signing (two or three initials, once per session), then writes the disposition to the run's audit log with the action and the time. AI-matched candidates resolve two ways, verified or dismissed with a written reason, and undo appends a reversal rather than erasing anything, because a recall log that forgets its corrections is not a recall log. The memo prints whatever is true at that moment: 4 of 11 actions recorded, 7 remain open, each with its signature.
+
+Below the queue sits the findings register in citation order, with every row opening a drawer that puts the AI's match reasoning next to the FDA record and one click from the primary source. A docked assistant answers questions grounded only in that run's findings, cites its claims by finding number, and jumps you to the row when you click a citation. "Prepare the executive briefing" surfaces the run's summary without spending another token.
 
 When you're done, take the work with you. Every run writes:
 
@@ -30,9 +32,9 @@ When you're done, take the work with you. Every run writes:
 - `findings.xlsx`, severity-tinted and filterable, for circulation
 - `findings.md` for your own AI assistant, citations and disclaimer included
 - `report.html`, an institutional memorandum with a pharmacist verification line, formatted to print cleanly to PDF
-- `audit.jsonl`, the complete trail for your compliance file
+- `audit.jsonl`, the complete trail for your compliance file, dispositions included
 
-The CLI (`rxsweep check your_formulary.csv`) produces the same artifacts without the browser.
+All five download from the app's run record view. The CLI (`rxsweep check your_formulary.csv`) produces the same artifacts without the browser.
 
 ## How this is governed
 
@@ -40,7 +42,7 @@ Most tools in this space treat governance as the disclaimer at the bottom of the
 
 Start with where the AI is allowed to work. Claude gets exactly three jobs: judging the fuzzy matches deterministic code can't resolve, drafting the cited brief, and answering questions grounded in a single run's findings. Exact NDC matches never touch a model, and everything the model does touch is written verbatim into `runs/<timestamp>/audit.jsonl` alongside its token counts and cost, so any claim in any report can be traced back to the exact exchange that produced it.
 
-The judgment calls stay human, and the repo says whose. The severity rubric that decides whether a Class II recall outranks an active shortage is clinical reasoning, not code, so a pharmacist authored it and [the system card](docs/SYSTEM_CARD.md) names him. Changing that table takes re-approval, not a quiet commit.
+The judgment calls stay human, and the repo says whose. The severity rubric that decides whether a Class II recall outranks an active shortage is clinical reasoning, not code, so a pharmacist authored it and [the system card](docs/SYSTEM_CARD.md) names him. Changing that table takes re-approval, not a quiet commit. And since the pharmacist's verification is the judgment that matters most, it is now part of the record too: every disposition lands in the same audit trail, initials-signed and timestamped, with corrections appended rather than erased.
 
 And when something breaks, the tool discloses instead of degrading silently. An unreachable FDA source becomes a visible unchecked-items register rather than a mysteriously shorter report, malformed CSV rows quarantine in the open, and openFDA's own disclaimer prints verbatim on every artifact, because propagating your upstream's terms is what governance looks like in practice.
 
@@ -67,12 +69,13 @@ The data has lag built in. FDA enforcement reports publish on FDA's schedule, sh
 ## Development
 
 ```bash
-uv run pytest              # 80 tests, recorded fixtures, no live calls
+uv run pytest              # 84 tests, recorded fixtures, no live calls
 uv run pytest -m live      # optional live smoke against openFDA
 cd web && npm run dev      # frontend dev loop, proxies /api to :8555
+cd web && npm test         # web unit tests (the disposition event reducer)
 ```
 
-The engine lives in `src/rxsweep/` (ingest, matching, sources, triage, pipeline), the web app in `web/` with its built bundle shipped inside the package, and the design system in `design/styleguide/`. Read [JOURNAL.md](docs/JOURNAL.md) for the lessons the build left behind, including the macOS quirk that silently breaks Python virtualenvs.
+The engine lives in `src/rxsweep/` (ingest, matching, sources, triage, pipeline), the web app in `web/` with its built bundle shipped inside the package, and the binding design contract in `design/design_handoff_federal_register/` with the dispositions addendum beside it. Read [JOURNAL.md](docs/JOURNAL.md) for the lessons the build left behind, including the macOS quirk that silently breaks Python virtualenvs.
 
 ## Related
 

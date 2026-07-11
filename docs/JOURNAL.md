@@ -134,3 +134,12 @@ the ingest card reads Excluded rows. Verified live against real FDA data includi
 genuinely AI-adjudicated fuzzy matches crafted for the walkthrough; the audit trail
 reads quarantined, reopened, dismissed-with-reason, verified, re-recorded under an
 edited operator. 84 pytest + 5 vitest (new web test runner for the event reducer).
+
+**2026-07-11 — v0.2.0: merged to main, demo-stable.** Travis deemed the build stable for
+demo and called the merge train: PR #3 (dispositions) into explore, PR #2 (React Aria +
+Federal Register redesign) into phase-3, PR #1 into main, all with merge commits and the
+release narrated on PR #1. The design agent's diff re-check of the disposition round was
+superseded by the demo-stable call and can run against main. README trued up for the
+release: disposition workflow paragraph, register no longer described as sortable, the
+renamed briefing chip, five downloadable artifacts, current test counts, and the design
+contract replacing the retired styleguide as the named design authority. Tagged v0.2.0.
