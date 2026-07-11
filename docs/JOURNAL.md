@@ -109,3 +109,14 @@ sorting was deliberately dropped per the contract; the required-actions queue ex
 report.py rule with AI-matched moderates. The 2026-07-10 audit's row-flash finding recurred
 in the rewritten table and was fixed by declaring the flash state in the RAC collection's
 dependencies. DECISIONS.md gains D10 recording the contract adoption.
+
+**2026-07-11 — design-QA round closed.** The design agent reviewed the implementation
+against the contract: approve pending 1 must-fix and 4 polish items, plus two additions
+Travis approved. Landed same-day: outage notice copy no longer contradicts the Unchecked
+card (the pipeline records one line per failed source, and the copy now says so),
+audit.jsonl joined the export manifest as a real download, the served report.html memo
+queue gained AI-matched moderates to match the web memo word-for-word, run phase labels
+render sentence case, the AI-off composer shows off instead of a model id, memo rows avoid
+print page breaks, and the register's no-findings statement got v5's roomier block.
+Re-verified live including a genuinely failed sweep (openFDA egress blocked through a dead
+proxy) to render the outage and zero-findings states with real data. 82 tests.
