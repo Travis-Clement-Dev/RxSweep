@@ -157,6 +157,7 @@ def create_app(runs_root: Path = Path("runs")) -> FastAPI:
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         ),
         "md": ("findings.md", "text/markdown"),
+        "audit": ("audit.jsonl", "application/x-ndjson"),
     }
 
     @app.get("/api/sweeps/{sweep_id}/export/{fmt}")

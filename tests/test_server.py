@@ -59,6 +59,11 @@ def test_sweep_lifecycle(tmp_path, monkeypatch):
     report = client.get(f"/api/sweeps/{sweep_id}/report")
     assert report.status_code == 200 and "pharmacist verifies" in report.text
 
+    audit = client.get(f"/api/sweeps/{sweep_id}/export/audit")
+    assert audit.status_code == 200
+    assert "audit.jsonl" in audit.headers["content-disposition"]
+    assert '"kind": "run_start"' in audit.text.splitlines()[0].replace('"kind":"', '"kind": "')
+
 
 def test_unknown_sweep_404(tmp_path):
     client = TestClient(create_app(runs_root=tmp_path))

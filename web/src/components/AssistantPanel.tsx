@@ -187,7 +187,7 @@ export default function AssistantPanel({
     { file: "findings.xlsx", desc: "Severity-tinted workbook with frozen header and autofilter.", href: `/api/sweeps/${sweepId}/export/xlsx` },
     { file: "findings.md", desc: "Markdown interchange for your AI tools.", href: `/api/sweeps/${sweepId}/export/md` },
     { file: "memo.html", desc: "Institutional memorandum; prints to letter PDF." },
-    { file: "audit.jsonl", desc: "Verbatim log of every request, prompt, and completion." },
+    { file: "audit.jsonl", desc: "Verbatim log of every request, prompt, and completion.", href: `/api/sweeps/${sweepId}/export/audit` },
   ];
 
   const showChips = messages.length === 0 && !aiOff;
@@ -354,12 +354,8 @@ export default function AssistantPanel({
                       <button className="aslink" onClick={onOpenMemo}>
                         {x.file}
                       </button>
-                    ) : x.href ? (
-                      <a href={x.href}>{x.file}</a>
                     ) : (
-                      <span className="mono" style={{ fontSize: 12, fontWeight: 600 }}>
-                        {x.file}
-                      </span>
+                      <a href={x.href}>{x.file}</a>
                     )}
                     <div className="desc">{x.desc}</div>
                   </div>
