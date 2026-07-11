@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { sendChat, type SweepResultData } from "../api";
+import { fmtRunTs } from "../format";
 
 // Right-docked assistant panel (contract D6, shell rounds 6-7): a floating
 // card with a band header whose icons switch between the Assistant transcript
@@ -166,7 +167,7 @@ export default function AssistantPanel({
     ["Items checked", String(meta.items_checked)],
     ["Recall window", `${meta.months_back} months`],
     ["Run id", result.run_id],
-    ["Started", meta.run_ts],
+    ["Started", fmtRunTs(meta.run_ts)],
   ];
   const modelKv: [string, string][] = aiOff
     ? [

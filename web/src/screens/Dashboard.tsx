@@ -5,16 +5,10 @@ import ActionQueue from "../components/ActionQueue";
 import FindingsTable from "../components/FindingsTable";
 import FindingDrawer from "../components/FindingDrawer";
 import AssistantPanel from "../components/AssistantPanel";
+import { fmtRunTs } from "../format";
 
 const TIERS = ["critical", "high", "moderate", "info"] as const;
 type Tier = (typeof TIERS)[number];
-
-function fmtRunTs(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
-}
 
 // unchecked strings arrive as one line per failed source:
 //   "ndc directory source unavailable: 42 items unchecked against ndc directory"
