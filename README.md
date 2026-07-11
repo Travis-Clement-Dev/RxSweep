@@ -8,6 +8,10 @@ The tool does the sweeping so the pharmacist can do the verifying. That division
 
 *Status: v0.2, demo-stable, verified against live FDA data. 84 automated tests plus a tested web event reducer. CLI, local web app, five-artifact export suite, recorded dispositions.*
 
+![RxSweep dashboard: a severity-ranked Required Actions queue with verb-led dispositions on the left and a docked assistant panel, grounded in the run's findings, on the right.](docs/screenshots/02-dashboard.png)
+
+*After a sweep: what to do first, every finding one click from its FDA source, an assistant that answers only from this run.*
+
 ## Try it
 
 ```bash
@@ -19,13 +23,25 @@ uv run rxsweep serve               # the web app, at 127.0.0.1:8555
 
 Add `ANTHROPIC_API_KEY=sk-ant-...` to a `.env` file and drop the `--no-ai` flag, and the AI triage turns on: your key, your cost meter, every call logged. You need [`uv`](https://docs.astral.sh/uv/) and nothing else; the web frontend ships prebuilt inside the package.
 
+![RxSweep upload screen: an attached formulary CSV with its detected columns, beside sweep options and an AI-triage toggle noting your key, your cost, every call logged.](docs/screenshots/01-upload.png)
+
+*The screen you land on. Drop a CSV or use the bundled sample; the AI toggle spends your key and meters every call.*
+
 ## What a sweep hands you
 
 The web app opens on a drop zone, and from the moment your CSV lands you can watch the sweep work: items read, FDA requests, AI calls, all counting live because the progress display reads the same event stream as the audit log. When the sweep finishes you get a **Required Actions** queue, verb-led and severity-ordered, so the first thing on screen is what to do rather than what the software produced.
 
-The queue also records what you decide. Click Quarantine and the row asks who is signing (two or three initials, once per session), then writes the disposition to the run's audit log with the action and the time. AI-matched candidates resolve two ways, verified or dismissed with a written reason, and undo appends a reversal rather than erasing anything, because a recall log that forgets its corrections is not a recall log. The memo prints whatever is true at that moment: 4 of 11 actions recorded, 7 remain open, each with its signature.
+The queue also records what you decide. Click Quarantine and the row asks who is signing (two or three initials, once per session), then writes the disposition to the run's audit log with the action and the time. AI-matched candidates resolve two ways, verified or dismissed with a written reason, and undo appends a reversal rather than erasing anything, because a recall log that forgets its corrections is not a recall log. The memo prints whatever is true at that moment: which actions were recorded, who signed each, and how many remain open.
+
+![The Required Actions queue with four dispositions recorded, each sentence struck through and signed with initials and time; the Run Record panel shows a dispositions ledger reading Recorded 4 of 8 and an audit note that nothing is erased.](docs/screenshots/03-dispositions.png)
+
+*Recorded dispositions strike the row and sign it; the run record keeps the ledger, and every decision and reversal lands in the audit log.*
 
 Below the queue sits the findings register in citation order, with every row opening a drawer that puts the AI's match reasoning next to the FDA record and one click from the primary source. A docked assistant answers questions grounded only in that run's findings, cites its claims by finding number, and jumps you to the row when you click a citation. "Prepare the executive briefing" surfaces the run's summary without spending another token.
+
+![A finding drawer showing a Class I recall's full FDA enforcement record, beside the rubric reasoning, with a button to open the source record on api.fda.gov.](docs/screenshots/04-drawer.png)
+
+*Every finding opens to its FDA enforcement record. The number in the register is a citation, not a claim.*
 
 When you're done, take the work with you. Every run writes:
 
@@ -36,6 +52,10 @@ When you're done, take the work with you. Every run writes:
 - `audit.jsonl`, the complete trail for your compliance file, dispositions included
 
 All five download from the app's run record view. The CLI (`rxsweep check your_formulary.csv`) produces the same artifacts without the browser.
+
+![The institutional memorandum export: a letter-format sheet with a TO/FROM/DATE/RE docket and an AI-drafted summary that cites each finding by number.](docs/screenshots/05-memo.png)
+
+*The memo export, letter-formatted and ready to print. The summary cites every finding it names.*
 
 ## How this is governed
 
