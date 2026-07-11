@@ -1,6 +1,6 @@
 from rxsweep.ingest import FormularyItem, QuarantinedRow
 from rxsweep.matching import Candidate, normalize_ndc
-from rxsweep.report import render_report, source_url
+from rxsweep.report import action_queue, render_report, source_url
 from rxsweep.triage import Finding
 
 
@@ -37,6 +37,32 @@ def test_report_contains_scope_banner_and_finding():
     assert "Cefazolin Sodium" in html
     assert "sev-high" in html
     assert "api.fda.gov/drug/enforcement.json" in html
+
+
+def test_action_queue_includes_ai_matched_moderates():
+    crit = _finding(severity="critical", label="name_match", citation=1)
+    ai_mod = _finding(
+        item_name="Metformin HCl ER",
+        item_ndc="68382-0730-10",
+        severity="moderate",
+        label="ai_matched",
+        citation=2,
+    )
+    plain_mod = _finding(severity="moderate", label="name_match", citation=3)
+    queue = action_queue([crit, ai_mod, plain_mod])
+    assert [a["citation"] for a in queue] == [1, 2]
+    assert queue[1]["text"] == (
+        "Verify product identity for Metformin HCl ER (68382-0730-10); "
+        "AI-matched to the FDA record, not yet verified."
+    )
+    assert queue[1]["tag"] == "AI: verify"
+
+
+def test_action_queue_cap_applies_across_rules():
+    finds = [
+        _finding(severity="moderate", label="ai_matched", citation=i) for i in range(1, 10)
+    ]
+    assert len(action_queue(finds)) == 7
 
 
 def test_ai_matched_label_shows_needs_verification():

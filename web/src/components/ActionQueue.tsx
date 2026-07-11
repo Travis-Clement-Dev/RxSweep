@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { Finding } from "../api";
 
-// Required actions (contract §6): the verb-led disposition queue. Extends
-// report.py action_queue() — criticals plus exact-NDC highs, capped at 7 —
-// with the AI-matched moderates the design's "Verify match" action covers
-// (handoff README). Kept in citation order so [n] references stay stable.
+// Required actions (contract §6): the verb-led disposition queue — criticals
+// plus exact-NDC highs plus AI-matched moderates, citation order, capped.
+// Mirrors report.py action_queue() rule-for-rule and word-for-word so the
+// served memo and the app read the same.
 export function buildQueue(findings: Finding[], cap = 7): Finding[] {
   return findings
     .filter(
@@ -27,8 +27,8 @@ export interface ActionRow {
   dot: "critical" | "moderate" | "faint";
 }
 
-// Sentence wording mirrors report.py _QUEUE_VERBS so the web queue reads the
-// same as the server-rendered memo; the AI-matched row is the one addition.
+// Sentence wording mirrors report.py so the web queue reads the same as the
+// server-rendered memo.
 export function actionRow(f: Finding): ActionRow {
   const ndc = f.item_ndc ? ` (${f.item_ndc})` : "";
   if (f.label === "ai_matched") {

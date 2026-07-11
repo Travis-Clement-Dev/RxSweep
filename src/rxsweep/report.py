@@ -40,11 +40,16 @@ _QUEUE_VERBS = {
 
 
 def action_queue(findings: list[Finding], cap: int = 7) -> list[dict]:
-    """Verb-led actions from the highest-severity findings (memo + UI hero)."""
+    """Verb-led actions from the findings a pharmacist must disposition.
+
+    Criticals plus exact-NDC highs plus AI-matched moderates, citation order,
+    capped. Wording is mirrored by the web queue (web/src/components/
+    ActionQueue.tsx) so the served memo and the app read the same.
+    """
     queue: list[dict] = []
     for f in findings:
+        ndc = f" ({f.item_ndc})" if f.item_ndc else ""
         if f.severity == "critical" or (f.severity == "high" and f.label == "exact_ndc"):
-            ndc = f" ({f.item_ndc})" if f.item_ndc else ""
             rec_class = f.record.get("classification")
             tag = rec_class if f.source == "recall" and rec_class else (
                 "Active shortage" if f.source == "shortage" else "NDC status"
@@ -54,6 +59,18 @@ def action_queue(findings: list[Finding], cap: int = 7) -> list[dict]:
                     "text": _QUEUE_VERBS[f.source].format(item=f.item_name, ndc=ndc),
                     "severity": f.severity,
                     "tag": tag,
+                    "citation": f.citation,
+                }
+            )
+        elif f.severity == "moderate" and f.label == "ai_matched":
+            queue.append(
+                {
+                    "text": (
+                        f"Verify product identity for {f.item_name}{ndc}; "
+                        "AI-matched to the FDA record, not yet verified."
+                    ),
+                    "severity": f.severity,
+                    "tag": "AI: verify",
                     "citation": f.citation,
                 }
             )
