@@ -321,7 +321,7 @@ export default function AssistantPanel({
                     aria-label="Ask about these findings"
                   />
                   <div className="util">
-                    <span className="modelid">{meta.model}</span>
+                    <span className="modelid">{aiOff ? "off" : meta.model}</span>
                     <button className="askbtn" disabled={aiOff || busy || !input.trim()}>
                       Ask
                     </button>

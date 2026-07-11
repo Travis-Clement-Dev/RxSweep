@@ -253,6 +253,8 @@ code, .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, mono
   background: conic-gradient(from 0deg, transparent 0 290deg, color-mix(in srgb, var(--accent) 30%, transparent) 350deg, var(--accent) 360deg);
   animation: radar 2s linear infinite; }
 .runphase { font: 800 18px "Public Sans", sans-serif; }
+/* Server phase strings arrive lowercase; v5 shows sentence case. */
+.runphase::first-letter { text-transform: uppercase; }
 .runtrack { width: min(440px, 80vw); height: 4px; background: var(--line-soft); }
 .runtrack .fill { height: 100%; background: var(--accent); transition: width .18s linear; }
 .runcounts { display: flex; gap: 46px; text-align: center; }
@@ -294,6 +296,8 @@ code, .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, mono
 .qrow .qstatus .dot.faint { background: var(--ink-faint); }
 .statement { border: 1px solid var(--line); padding: 14px 16px; font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); }
 .statement b { font-weight: 700; color: var(--ink); }
+/* The register's no-findings block sits roomier in v5 than the queue's. */
+.statement.roomy { padding: 18px 20px; line-height: 1.6; }
 
 /* ---- dashboard: findings register ---- */
 .regfilters { display: flex; gap: 7px; flex-wrap: wrap; }
@@ -478,7 +482,7 @@ code, .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, mono
 .memo-sheet .mrule { border: none; border-top: 3px solid #1b1b1b; margin: 10px 0 0; }
 .memo-sheet .mrule.thin { border-top: 1px solid #a9aeb1; margin: 2px 0 0; }
 .memo-sheet .docket { display: grid; grid-template-columns: 64px 1fr; gap: 6px 14px;
-                      margin: 16px 0 0; font-size: 13.5px; line-height: 1.5; }
+                      margin: 16px 0 0; font-size: 13.5px; line-height: 1.5; break-inside: avoid; }
 .memo-sheet .docket .k { font: 800 10px "Public Sans", sans-serif; letter-spacing: .08em;
                          color: #565c65; padding-top: 3px; }
 .memo-sheet .scope { font: italic 400 12px/1.6 Georgia, serif; color: #565c65; margin: 12px 0 0; }
@@ -490,7 +494,7 @@ code, .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, mono
 .memo-sheet ol li { margin-bottom: 6px; }
 .memo-sheet .frow { display: grid; grid-template-columns: 30px 78px minmax(0, 1.35fr) 96px 76px minmax(0, 1.5fr);
                     gap: 0 10px; border-bottom: 1px solid #dfe1e2; padding: 6px 0;
-                    font: 400 11.5px/1.5 Georgia, serif; }
+                    font: 400 11.5px/1.5 Georgia, serif; break-inside: avoid; }
 .memo-sheet .frow .n { color: #71767a; }
 .memo-sheet .frow .sv { font: 700 9.5px/1.8 "Public Sans", sans-serif; letter-spacing: .05em; text-transform: uppercase; }
 .memo-sheet .frow .ndc { font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: #565c65; }

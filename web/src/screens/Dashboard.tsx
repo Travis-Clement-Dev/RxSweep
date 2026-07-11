@@ -187,7 +187,7 @@ export default function Dashboard({
         {hasFindings ? (
           <FindingsTable findings={filtered} flashRow={flashRow} onSelect={setSelected} />
         ) : (
-          <div className="statement">
+          <div className="statement roomy">
             <b>No findings.</b> {meta.items_checked} items were checked against FDA recalls,
             drug shortages, and the NDC directory over the trailing {meta.months_back} months.
             A clean result is still a record: export the memo from the run record to file this
