@@ -58,11 +58,13 @@ def test_action_queue_includes_ai_matched_moderates():
     assert queue[1]["tag"] == "AI: verify"
 
 
-def test_action_queue_cap_applies_across_rules():
+def test_action_queue_lists_every_disposition_row():
+    # Contract v1.3 (D11): the queue is uncapped — hiding disposition-required
+    # findings contradicts worklist-first.
     finds = [
         _finding(severity="moderate", label="ai_matched", citation=i) for i in range(1, 10)
     ]
-    assert len(action_queue(finds)) == 7
+    assert len(action_queue(finds)) == 9
 
 
 def test_ai_matched_label_shows_needs_verification():
@@ -74,7 +76,7 @@ def test_ai_matched_label_shows_needs_verification():
 def test_quarantine_and_unchecked_sections():
     q = QuarantinedRow(row=5, reason="invalid ndc: 'BADNDC'", raw={})
     html = render_report([], [q], [], ["shortages source unavailable"], None, META)
-    assert "Quarantined rows (1)" in html
+    assert "Excluded rows (1)" in html
     assert "Unchecked items (1)" in html
     assert "Treat them as unknown, not clear" in html
 

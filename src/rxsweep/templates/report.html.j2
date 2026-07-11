@@ -161,7 +161,7 @@
 
   <h2>Disclosures</h2>
   {% if quarantined %}
-  <p class="meta">Quarantined rows ({{ quarantined|length }}). Rows we could not fully process. Shown, never silently dropped.</p>
+  <p class="meta">Excluded rows ({{ quarantined|length }}). Rows the sweep could not read are disclosed here; nothing is silently dropped.</p>
   <div class="tablewrap">
     <table class="ex">
       <thead><tr><th>CSV line</th><th>Reason</th></tr></thead>

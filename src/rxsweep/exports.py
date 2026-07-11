@@ -128,7 +128,7 @@ def write_markdown(result: SweepResult, path: Path) -> Path:
             for c in result.manual_review
         ] + [""]
     if result.quarantined:
-        lines += ["## Quarantined rows", ""]
+        lines += ["## Excluded rows", ""]
         lines += [f"- CSV line {q.row}: {q.reason}" for q in result.quarantined] + [""]
     if result.unchecked:
         lines += ["## Unchecked (treat as unknown, not clear)", ""]

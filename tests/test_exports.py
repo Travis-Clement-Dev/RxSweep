@@ -88,13 +88,13 @@ def test_markdown_is_ai_ready(tmp_path):
     assert "pharmacist verifies" in md.lower() or "pharmacist" in md
 
 
-def test_action_queue_verbs_and_cap():
+def test_action_queue_verbs_uncapped():
     findings = [_finding(1)] + [
         _finding(i, severity="high", source="shortage", label="exact_ndc")
         for i in range(2, 12)
     ]
     queue = action_queue(findings)
-    assert len(queue) == 7  # capped
+    assert len(queue) == 11  # uncapped (contract v1.3, D11)
     assert queue[0]["text"].startswith("Verify lots for Cefazolin Sodium")
     assert queue[0]["tag"] == "Class I"
     assert queue[1]["text"].startswith("Confirm supply plan")
