@@ -150,4 +150,27 @@ lives in [`JOURNAL.md`](./JOURNAL.md); this file is the *why* of the choices.
 
 ---
 
+## D11 — Round-13 disposition contract adopted (2026-07-11)
+
+- **Context:** Travis's hands-on review of the implemented app found the verb
+  buttons opened the drawer but recorded nothing: the one event RxSweep never
+  logged was the pharmacist's own verification, and the ingest card's
+  "Quarantined" collided with the Quarantine action.
+- **Options:** Keep disposition external to the tool (status quo, defensible via
+  the scope banner); local-only persistence; a recorded, audit-logged workflow.
+- **Decision:** Contract v1.3 (design rounds 11-13) adopted wholesale: the verb
+  button records the disposition as an append-only `disposition` event in the
+  run's audit.jsonl (operator initials + server time; reversals via `reopened`,
+  nothing erased); AI matches resolve to verified or dismissed-with-reason; the
+  queue cap is retired (a worklist that hides disposition-required findings
+  contradicts D5); the ingest card renames to "Excluded rows" (display only).
+  No auth and no identity chrome, per the standing contract.
+- **Rationale:** Recall-response documentation (action, actor, time) is the
+  compliance artifact this audience is measured on; recording it turns the
+  governance story from aspiration into record. Initials-on-the-record mirrors
+  pharmacy log convention without becoming user identity.
+- **Status:** Implemented on `feat/dispositions`; design re-check before merge.
+
+---
+
 *Template for new entries: date, Context, Options, Decision, Rationale, Status.*

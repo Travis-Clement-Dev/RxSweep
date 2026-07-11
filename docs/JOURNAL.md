@@ -120,3 +120,17 @@ render sentence case, the AI-off composer shows off instead of a model id, memo 
 print page breaks, and the register's no-findings statement got v5's roomier block.
 Re-verified live including a genuinely failed sweep (openFDA egress blocked through a dead
 proxy) to render the outage and zero-findings states with real data. 82 tests.
+
+**2026-07-11 — round 13: recorded dispositions.** Travis's product decision (the queue
+recorded nothing; the pharmacist's verification was the one unlogged event) came back
+from the design workspace as contract v1.3 with a v6 prototype, approved same day.
+Implemented on feat/dispositions: a disposition endpoint appending verbatim audit
+events (enum-validated, initials-signed, dismissals require a reason, reopened as the
+append-only undo), the queue's verb buttons now record (initials gate on first use,
+two-outcome AI verification, inline strip only when input is needed), register rows
+fade and strike on dismissal, the drawer and run record surface the record, and the
+memo states the honest partial state per item. The queue cap is retired end to end and
+the ingest card reads Excluded rows. Verified live against real FDA data including
+genuinely AI-adjudicated fuzzy matches crafted for the walkthrough; the audit trail
+reads quarantined, reopened, dismissed-with-reason, verified, re-recorded under an
+edited operator. 84 pytest + 5 vitest (new web test runner for the event reducer).
