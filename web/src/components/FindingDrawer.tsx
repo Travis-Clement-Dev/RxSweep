@@ -1,5 +1,7 @@
 import { Button, Dialog, Heading, Modal, ModalOverlay } from "react-aria-components";
-import { sourceUrl, type Finding } from "../api";
+import { sourceUrl, type Disposition, type Finding } from "../api";
+import { fmtHM } from "../format";
+import { DISP_LABEL } from "./ActionQueue";
 
 // React Aria Modal + Dialog: focus trap, restore, Esc dismiss.
 // https://react-aria.adobe.com/Modal · /Dialog
@@ -23,12 +25,19 @@ const MATCH: Record<Finding["label"], { label: string; cls: string }> = {
 
 export default function FindingDrawer({
   finding,
+  disposition,
   onClose,
 }: {
   finding: Finding | null;
+  disposition: Disposition | undefined;
   onClose: () => void;
 }) {
   const url = finding ? sourceUrl(finding) : null;
+  // The AI caution asks for verification; once the match is verified or
+  // dismissed, the ask is answered and the caution retires.
+  const cautionAnswered =
+    disposition !== undefined &&
+    (disposition.action === "verified" || disposition.action === "dismissed");
   return (
     <ModalOverlay
       className="overlay"
@@ -69,6 +78,21 @@ export default function FindingDrawer({
                 </span>
               </div>
 
+              {disposition && (
+                <div className="dispblock">
+                  <div className="k">Disposition</div>
+                  <div className="line">
+                    {DISP_LABEL[disposition.action]} · {disposition.operator} ·{" "}
+                    {fmtHM(disposition.ts)}
+                  </div>
+                  {disposition.note && <div className="reason">Reason: {disposition.note}</div>}
+                  <div className="note">
+                    Recorded in this run's audit log. Corrections append a reversal; nothing is
+                    erased.
+                  </div>
+                </div>
+              )}
+
               <h3>Why it's flagged</h3>
               <p className="prose">{finding.severity_rationale}</p>
 
@@ -76,10 +100,12 @@ export default function FindingDrawer({
                 <>
                   <h3>AI match reasoning</h3>
                   <p className="prose">{finding.ai_rationale}</p>
-                  <div className="caution" role="note">
-                    AI-matched: needs verification. Confirm this reasoning against the FDA record
-                    below before acting.
-                  </div>
+                  {!cautionAnswered && (
+                    <div className="caution" role="note">
+                      AI-matched: needs verification. Confirm this reasoning against the FDA
+                      record below before acting.
+                    </div>
+                  )}
                 </>
               )}
 

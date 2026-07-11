@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { SweepResultData } from "./api";
+import type { Disposition, SweepResultData } from "./api";
 import Upload from "./screens/Upload";
 import Progress from "./screens/Progress";
 import Dashboard from "./screens/Dashboard";
@@ -49,6 +49,11 @@ export default function App() {
   const [winW, setWinW] = useState(() => window.innerWidth);
   const [panelOpen, setPanelOpen] = useState(true);
   const [panelWidth, setPanelWidth] = useState(340);
+  // Disposition audit events (append-only) and the operator initials that
+  // sign this session's dispositions (contract v1.3 D11). Held here so the
+  // dashboard, panel, and memo all read one source of truth.
+  const [dispositions, setDispositions] = useState<Disposition[]>([]);
+  const [operator, setOperator] = useState("");
 
   useEffect(() => {
     const onResize = () => setWinW(window.innerWidth);
@@ -119,6 +124,7 @@ export default function App() {
               sweepId={phase.sweepId}
               onDone={(result, aiCalls) => {
                 setPhase({ name: "dashboard", sweepId: phase.sweepId, result, aiCalls });
+                setDispositions(result.dispositions ?? []);
                 // A run finishing on a narrow window keeps the overlay closed.
                 setPanelOpen(window.innerWidth >= 1100);
               }}
@@ -144,7 +150,14 @@ export default function App() {
                   sweepId={phase.sweepId}
                   result={phase.result}
                   aiCalls={phase.aiCalls}
-                  onReset={() => setPhase({ name: "upload" })}
+                  dispositions={dispositions}
+                  onDisposition={(e) => setDispositions((d) => [...d, e])}
+                  operator={operator}
+                  onOperatorChange={setOperator}
+                  onReset={() => {
+                    setPhase({ name: "upload" });
+                    setDispositions([]);
+                  }}
                   onOpenMemo={() => setPhase({ ...phase, name: "memo" })}
                   overlay={overlay}
                   panelOpen={panelOpen}
@@ -161,6 +174,7 @@ export default function App() {
               <div className="frame">
                 <Memo
                   result={phase.result}
+                  dispositions={dispositions}
                   onBack={() => setPhase({ ...phase, name: "dashboard" })}
                 />
                 <FrameFooter />

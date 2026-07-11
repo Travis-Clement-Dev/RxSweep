@@ -1,6 +1,7 @@
-import type { SweepResultData } from "../api";
-import { actionRow, buildQueue } from "../components/ActionQueue";
+import { reduceDispositions, type Disposition, type SweepResultData } from "../api";
+import { actionRow, buildQueue, DISP_LABEL } from "../components/ActionQueue";
 import Logomark from "../components/Logomark";
+import { fmtHM } from "../format";
 
 // The institutional memorandum (contract §4: Georgia belongs to the memo
 // only). The sheet is always a white letter page with fixed light-palette
@@ -28,13 +29,35 @@ function longDate(iso: string): string {
 
 export default function Memo({
   result,
+  dispositions,
   onBack,
 }: {
   result: SweepResultData;
+  dispositions: Disposition[];
   onBack: () => void;
 }) {
   const meta = result.meta;
   const actions = buildQueue(result.findings).map(actionRow);
+  const reduced = reduceDispositions(dispositions);
+  const recorded = actions.filter((a) => reduced.has(a.finding.citation)).length;
+  const asOf = fmtHM(new Date().toISOString());
+  // The memo states the honest partial truth: what was recorded when it was
+  // printed, and what remains open.
+  const stateLine =
+    actions.length === 0
+      ? null
+      : recorded === 0
+        ? `No dispositions recorded as of ${asOf}; all ${actions.length} actions remain open.`
+        : recorded === actions.length
+          ? `All ${actions.length} actions recorded as of ${asOf}. None remain open.`
+          : `${recorded} of ${actions.length} actions recorded as of ${asOf}; ${actions.length - recorded} remain open.`;
+
+  function statusClause(a: ReturnType<typeof actionRow>): string {
+    const d = reduced.get(a.finding.citation);
+    if (!d) return /due/.test(a.status) ? "Open, due today." : "Open.";
+    const note = d.note ? `: ${d.note.replace(/\.+$/, "")}` : "";
+    return `${DISP_LABEL[d.action]}${note}. ${d.operator}, ${fmtHM(d.ts)}.`;
+  }
   const paragraphs = result.summary
     ? result.summary.split(/\n\n+/).filter(Boolean)
     : [
@@ -98,14 +121,22 @@ export default function Memo({
         ))}
 
         <div className="mh">Required actions</div>
+        {stateLine && <p className="stateline">{stateLine}</p>}
         {actions.length === 0 ? (
           <p className="para">None. This sweep returned no findings.</p>
         ) : (
           <ol>
             {actions.map((a) => (
               <li key={a.finding.citation}>
-                {a.lead}
-                {a.rest}
+                <span
+                  style={{
+                    textDecoration: reduced.has(a.finding.citation) ? "line-through" : "none",
+                  }}
+                >
+                  {a.lead}
+                  {a.rest}
+                </span>{" "}
+                <span className="status">({statusClause(a)})</span>
               </li>
             ))}
           </ol>
