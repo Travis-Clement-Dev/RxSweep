@@ -48,6 +48,13 @@ Chronological narrative + cumulative lessons. Design reference →
   output — catch it in the same degradation path as API errors or a truncated model reply
   crashes the run.
 
+### Deployment
+- **A cached index.html is a stale deployment nobody can see.** Vite's hashed assets are
+  immutable, but the browser happily caches the entry page on localhost; after the React
+  Aria port, a previously-open browser showed the old build and read as a failed deploy
+  (2026-07-10). Server now sends `Cache-Control: no-cache` on all HTML. When "none of the
+  changes are there," compare disk vs served vs rendered before touching code.
+
 ### Product / governance
 - **Disclose, never mask, source failures**: an NDC-directory outage must not read as
   "NDC not found in directory" — a `None` sentinel (source failed) is not `{}` (source
@@ -86,3 +93,44 @@ drawer during testing). Local validation by Travis: engine and governance strong
 **2026-07-09 — v0.1.0 checkpoint.** Docs trued up, this journal created, tag cut. Phase 3
 (regulatory-instrument UX + action queue + export suite) proceeds on a branch via PR — design
 comps gate first, HeroUI as the agreed fallback if the custom direction misses.
+
+**2026-07-11 — Federal Register implementation.** The Claude Design exploration closed:
+handoff package committed under design/design_handoff_federal_register/ (binding contract,
+implementation README, navy token drop-in, v5 prototype as acceptance reference; the
+package's kickoff prompt was reconstructed from the design workspace after the download
+omitted it). Implemented on the explore branch in per-screen commits: token migration with
+a manual theme toggle, masthead band + floating-card shell, document-receipt upload,
+radar run screen on real server phases, dashboard canvas (run-meta strip, outage notice,
+verb-led required actions, fixed-grid register, disclosure cards), finding-record drawer,
+right-docked assistant panel with run record and seam resize (ChatPanel retired), letter
+memo view with print CSS. Browser-verified live in both themes including metered chat,
+zero-cost briefing, AI-off degradation, and the sub-1100px overlay. Register column
+sorting was deliberately dropped per the contract; the required-actions queue extends the
+report.py rule with AI-matched moderates. The 2026-07-10 audit's row-flash finding recurred
+in the rewritten table and was fixed by declaring the flash state in the RAC collection's
+dependencies. DECISIONS.md gains D10 recording the contract adoption.
+
+**2026-07-11 — design-QA round closed.** The design agent reviewed the implementation
+against the contract: approve pending 1 must-fix and 4 polish items, plus two additions
+Travis approved. Landed same-day: outage notice copy no longer contradicts the Unchecked
+card (the pipeline records one line per failed source, and the copy now says so),
+audit.jsonl joined the export manifest as a real download, the served report.html memo
+queue gained AI-matched moderates to match the web memo word-for-word, run phase labels
+render sentence case, the AI-off composer shows off instead of a model id, memo rows avoid
+print page breaks, and the register's no-findings statement got v5's roomier block.
+Re-verified live including a genuinely failed sweep (openFDA egress blocked through a dead
+proxy) to render the outage and zero-findings states with real data. 82 tests.
+
+**2026-07-11 — round 13: recorded dispositions.** Travis's product decision (the queue
+recorded nothing; the pharmacist's verification was the one unlogged event) came back
+from the design workspace as contract v1.3 with a v6 prototype, approved same day.
+Implemented on feat/dispositions: a disposition endpoint appending verbatim audit
+events (enum-validated, initials-signed, dismissals require a reason, reopened as the
+append-only undo), the queue's verb buttons now record (initials gate on first use,
+two-outcome AI verification, inline strip only when input is needed), register rows
+fade and strike on dismissal, the drawer and run record surface the record, and the
+memo states the honest partial state per item. The queue cap is retired end to end and
+the ingest card reads Excluded rows. Verified live against real FDA data including
+genuinely AI-adjudicated fuzzy matches crafted for the walkthrough; the audit trail
+reads quarantined, reopened, dismissed-with-reason, verified, re-recorded under an
+edited operator. 84 pytest + 5 vitest (new web test runner for the event reducer).

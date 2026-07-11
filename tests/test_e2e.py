@@ -35,7 +35,7 @@ def test_check_end_to_end_no_ai(tmp_path, monkeypatch):
     assert result.exit_code == 0, result.output
     run_dir = next(tmp_path.iterdir())
     html = (run_dir / "report.html").read_text()
-    assert "Quarantined rows" in html
+    assert "Excluded rows" in html
     assert "pharmacist verifies" in html
     kinds = [json.loads(line)["kind"] for line in (run_dir / "audit.jsonl").read_text().splitlines()]
     assert kinds[0] == "run_start" and kinds[-1] == "run_end"
@@ -80,4 +80,4 @@ def test_demo_command(tmp_path, monkeypatch):
     _mock_openfda()
     result = runner.invoke(app, ["demo", "--out", str(tmp_path), "--no-ai"])
     assert result.exit_code == 0, result.output
-    assert "Report:" in result.output
+    assert "Memo:" in result.output and "findings.xlsx" in result.output

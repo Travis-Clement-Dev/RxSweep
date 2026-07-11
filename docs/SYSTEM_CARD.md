@@ -19,7 +19,10 @@ and [`chat.py`](../src/rxsweep/chat.py):
    a formulary item and an FDA record that share partial name text — refers to the
    same product. The prompt instructs conservatism: when in doubt, not a match.
 2. **Summary drafting** (`summarize()`): a two-paragraph executive summary in which
-   every drug mentioned carries a `[n]` citation to its finding.
+   every drug mentioned carries a `[n]` citation to its finding. Placement is
+   deliberate: the summary appears in the **memo export** and on demand via the
+   chat's "Brief me" action — never as unsolicited prose on the triage dashboard,
+   whose hero is the verb-led action queue.
 3. **Run-grounded chat** (`chat_reply()`, web app only): answering pharmacist
    questions strictly from one run's numbered findings, with mandatory citations;
    questions beyond the findings are declined and redirected to primary sources.
@@ -37,6 +40,10 @@ deterministic `exact_ndc` and `name_match` labels.
 - Override: `RXSWEEP_MODEL` environment variable.
 - API key: `ANTHROPIC_API_KEY` environment variable only — never a config file,
   never the repository. Users bring their own key.
+- **Usage metering:** every AI call's token counts land in the audit log; the UI
+  shows model, tokens, and an estimated cost from a dated pricing table
+  ([`pricing.py`](../src/rxsweep/pricing.py)). Unknown models show tokens only —
+  the tool never guesses a dollar figure.
 
 ## Human-in-the-loop boundary
 

@@ -1,0 +1,407 @@
+<title>RxSweep Phase 3 — Design Comps</title>
+<style>
+  /* ============ shared ============ */
+  :root {
+    --teal: #0e7c6b; --teal-ink: #0a5a4e; --teal-soft: #e2f0ec;
+    --critical: #9a3a2e; --high: #9a3a2e; --moderate: #8a5d0b; --info: #256b43;
+    --usa-ink: #1b1b1b; --usa-border: #a9aeb1; --usa-gray: #565c65; --usa-bg: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e8eaed; color: #1b1b1b;
+         font-family: "Public Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+
+  .switcher {
+    position: sticky; top: 0; z-index: 50; display: flex; gap: 0; justify-content: center;
+    background: #14201c; padding: 10px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    flex-wrap: wrap; align-items: center;
+  }
+  .switcher .lbl { color: #9fb3ac; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; margin-right: 14px; }
+  .switcher button {
+    font: 600 13px/1 inherit; color: #cfe0da; background: transparent;
+    border: 1px solid #3c4f48; padding: 9px 18px; cursor: pointer; margin-left: -1px;
+  }
+  .switcher button:first-of-type { border-radius: 3px 0 0 3px; }
+  .switcher button:last-of-type { border-radius: 0 3px 3px 0; }
+  .switcher button[aria-pressed="true"] { background: var(--teal); color: #fff; border-color: var(--teal); }
+  .switcher button:focus-visible { outline: 2px solid #7fd3c3; outline-offset: 2px; }
+  .comp { display: none; }
+  .comp.active { display: block; }
+  .comp-note { max-width: 860px; margin: 14px auto 0; padding: 0 16px; font-size: 12.5px; color: #4b5550; }
+
+  /* ============ VARIANT A — Federal Register ============ */
+  .va { background: var(--usa-bg); min-height: 100vh; padding-bottom: 80px; }
+  .va-band { background: var(--usa-ink); color: #fff; padding: 10px 0; border-bottom: 4px solid var(--teal); }
+  .va-band .inner, .va .inner { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+  .va-band .inner { display: flex; justify-content: space-between; align-items: baseline; }
+  .va-band .brand { font-weight: 800; letter-spacing: .02em; font-size: 15px; }
+  .va-band .tag { font-size: 12px; color: #cfd4d1; }
+  .va h1 { font-size: 26px; font-weight: 800; margin: 28px 0 4px; letter-spacing: -.01em; }
+  .va .docket { font-size: 13px; color: var(--usa-gray); margin: 0 0 2px; }
+  .va .rule { border: none; border-top: 3px solid var(--usa-ink); margin: 14px 0 0; }
+  .va .rule.thin { border-top: 1px solid var(--usa-border); margin-top: 3px; }
+  .va .noticebar { font-size: 13px; padding: 10px 14px; background: #f0f0f0; border-left: 4px solid var(--usa-ink); margin: 18px 0; }
+  .va .exports { font-size: 13.5px; margin: 14px 0 4px; color: var(--usa-gray); }
+  .va .exports a { color: var(--teal-ink); font-weight: 600; text-decoration: underline; margin-right: 4px; }
+  .va h2 { font-size: 15px; letter-spacing: .08em; text-transform: uppercase; margin: 30px 0 10px; }
+  .va ol.queue { margin: 0; padding: 0; list-style: none; counter-reset: q; }
+  .va ol.queue li {
+    counter-increment: q; display: grid; grid-template-columns: 30px 22px 1fr auto; gap: 10px;
+    align-items: baseline; padding: 11px 4px; border-bottom: 1px solid var(--usa-border); font-size: 15px;
+  }
+  .va ol.queue li::before { content: counter(q) "."; font-weight: 800; }
+  .va ol.queue input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--teal); }
+  .va ol.queue li.done .act { text-decoration: line-through; color: var(--usa-gray); }
+  .va .sev { font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding-left: 10px; border-left: 3px solid; }
+  .va .sev.c { color: var(--critical); border-color: var(--critical); }
+  .va .sev.h { color: var(--high); border-color: var(--high); }
+  .va .sev.m { color: var(--moderate); border-color: var(--moderate); }
+  .va table { border-collapse: collapse; width: 100%; font-size: 13.5px; margin-top: 8px; }
+  .va th, .va td { border: 1px solid var(--usa-border); padding: 7px 9px; text-align: left; vertical-align: top; }
+  .va thead th { background: #f0f0f0; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; }
+  .va .num { font-variant-numeric: tabular-nums; }
+  .va td .svt { font-weight: 800; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; }
+  .va .svt.c { color: var(--critical); } .va .svt.h { color: var(--high); }
+  .va .svt.m { color: var(--moderate); } .va .svt.i { color: var(--info); }
+  .va a.src { color: var(--teal-ink); }
+  .va .askbar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--usa-ink); color: #fff;
+    padding: 10px 24px; display: flex; gap: 12px; align-items: center; font-size: 13.5px; }
+  .va .askbar input { flex: 1; max-width: 560px; padding: 8px 10px; border: 1px solid #555; background: #2b2b2b; color: #fff; font: inherit; }
+  .va .askbar .hint { color: #b8c2bd; }
+  .va .askbar .brief { background: var(--teal); border: none; color: #fff; font: 600 13px/1 inherit; padding: 9px 14px; cursor: pointer; }
+
+  /* ============ VARIANT B — Clinical console ============ */
+  .vb { background: #f4f6f5; min-height: 100vh; display: grid; grid-template-columns: 224px 1fr 304px; font-size: 13px; }
+  .vb * { border-radius: 0; }
+  .vb .rail { background: #17211d; color: #c9d6d1; padding: 18px 0; min-height: 100vh; }
+  .vb .rail .brand { color: #fff; font-weight: 800; font-size: 15px; padding: 0 18px 14px; border-bottom: 1px solid #2c3a34; letter-spacing: .02em; }
+  .vb .rail .brand em { color: #6fd3bf; font-style: normal; }
+  .vb .rail h3 { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: #7e938c; padding: 16px 18px 6px; margin: 0; }
+  .vb .rail .kv { padding: 3px 18px; font-size: 12px; display: flex; justify-content: space-between; gap: 8px; }
+  .vb .rail .kv b { color: #e8efec; font-weight: 600; }
+  .vb .rail .filter { display: flex; justify-content: space-between; padding: 7px 18px; cursor: pointer; border-left: 3px solid transparent; }
+  .vb .rail .filter.active { background: #21302a; border-left-color: #6fd3bf; color: #fff; }
+  .vb .rail .filter .n { font-variant-numeric: tabular-nums; }
+  .vb .rail a { color: #9fd8ca; text-decoration: none; }
+  .vb .rail .exp { padding: 4px 18px; font-size: 12.5px; }
+  .vb main { padding: 0 0 40px; }
+  .vb .topstrip { display: flex; gap: 0; align-items: stretch; background: #fff; border-bottom: 2px solid #17211d; }
+  .vb .stat { padding: 12px 18px; border-right: 1px solid #dde3e0; }
+  .vb .stat .n { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .vb .stat .l { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #67736e; }
+  .vb .stat.c .n { color: var(--critical); } .vb .stat.h .n { color: var(--high); }
+  .vb .stat.m .n { color: var(--moderate); } .vb .stat.i .n { color: var(--info); }
+  .vb .stat.meta { margin-left: auto; border-right: none; color: #67736e; font-size: 11.5px; align-self: center; padding-right: 18px; }
+  .vb h2 { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #4b5550; margin: 18px 18px 6px; }
+  .vb .queue { margin: 0 18px; background: #fff; border: 1px solid #ccd3d0; }
+  .vb .qrow { display: grid; grid-template-columns: 20px 1fr auto auto; gap: 12px; align-items: center;
+    padding: 8px 12px; border-bottom: 1px solid #e4e8e6; font-size: 13px; }
+  .vb .qrow:last-child { border-bottom: none; }
+  .vb .qrow input { accent-color: var(--teal); }
+  .vb .qrow .meta2 { color: #67736e; font-size: 11.5px; font-variant-numeric: tabular-nums; }
+  .vb .qrow.done span.qact { text-decoration: line-through; color: #9aa5a0; }
+  .vb .worklist { margin: 0 18px; background: #fff; border: 1px solid #ccd3d0; overflow-x: auto; }
+  .vb table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  .vb th, .vb td { padding: 6px 10px; border-bottom: 1px solid #e4e8e6; text-align: left; white-space: nowrap; }
+  .vb thead th { position: sticky; top: 0; background: #eef1f0; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #4b5550; border-bottom: 2px solid #17211d; }
+  .vb td.ndc { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px; }
+  .vb tr.focus td { background: #e6f4f0; box-shadow: inset 3px 0 0 var(--teal); }
+  .vb .svdot { display: inline-block; width: 8px; height: 8px; margin-right: 6px; }
+  .vb .svdot.c { background: var(--critical); } .vb .svdot.h { background: var(--high); }
+  .vb .svdot.m { background: var(--moderate); } .vb .svdot.i { background: var(--info); }
+  .vb .why { white-space: normal; max-width: 320px; color: #38423d; }
+  .vb .chat { background: #fff; border-left: 1px solid #ccd3d0; padding: 16px; min-height: 100vh; }
+  .vb .chat h2 { margin: 0 0 4px; }
+  .vb .chat .sub { font-size: 11.5px; color: #67736e; margin: 0 0 12px; }
+  .vb .chip { display: inline-block; font-size: 11.5px; font-weight: 600; border: 1px solid var(--teal);
+    color: var(--teal-ink); padding: 5px 10px; cursor: pointer; margin: 0 6px 6px 0; background: var(--teal-soft); }
+  .vb .msg { border: 1px solid #dde3e0; padding: 8px 10px; font-size: 12.5px; margin-top: 10px; background: #fafbfa; }
+  .vb .msg .cit { color: var(--teal-ink); font-weight: 700; font-family: ui-monospace, Menlo, monospace; }
+  .vb .ask { display: flex; gap: 6px; margin-top: 12px; }
+  .vb .ask input { flex: 1; border: 1px solid #ccd3d0; padding: 7px 9px; font: inherit; }
+  .vb .ask button { background: var(--teal); color: #fff; border: none; font: 600 12px/1 inherit; padding: 8px 14px; cursor: pointer; }
+  /* explicit table color: quirks-mode-proof (raw file has no doctype) */
+  .vb table, .vb td { color: #263029; }
+  @media (prefers-color-scheme: dark) {
+    .vb { background: #101815; }
+    .vb .topstrip, .vb .queue, .vb .worklist, .vb .chat, .vb .msg { background: #17211d; color: #d7e0dc; }
+    .vb table, .vb td { color: #d7e0dc; }
+    .vb thead th { background: #1d2a25; color: #9fb3ac; }
+    .vb th, .vb td { border-bottom-color: #24322c; }
+    .vb .queue, .vb .worklist, .vb .chat { border-color: #2c3a34; }
+    .vb .why { color: #b6c4be; }
+    .vb tr.focus td { background: #1e332c; }
+    .vb .topstrip { border-bottom-color: #6fd3bf; }
+    .vb .stat { border-right-color: #24322c; }
+    .vb .ask input { background: #101815; border-color: #2c3a34; color: #d7e0dc; }
+    .vb .msg { border-color: #2c3a34; }
+  }
+
+  /* ============ VARIANT C — Memo-first ============ */
+  .vc { background: #efece6; min-height: 100vh; padding: 34px 16px 90px; }
+  .vc .sheet { max-width: 820px; margin: 0 auto; background: #fbfaf7; color: #23211c;
+    box-shadow: 0 2px 14px rgba(40,35,20,.18); padding: 52px 62px 44px; }
+  .vc .lh { display: flex; justify-content: space-between; align-items: baseline; }
+  .vc .wordmark { font: 800 21px/1 Georgia, "Times New Roman", serif; letter-spacing: .01em; }
+  .vc .wordmark span { color: var(--teal-ink); }
+  .vc .lh .cls { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #6d675c; }
+  .vc hr.lhrule { border: none; border-top: 2.5px solid var(--teal-ink); margin: 10px 0 22px; }
+  .vc .memotitle { font: 700 14px/1.3 Georgia, serif; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 18px; }
+  .vc table.head { font-size: 13.5px; border-collapse: collapse; margin-bottom: 20px; }
+  .vc table.head td { padding: 2.5px 0; vertical-align: baseline; }
+  .vc table.head td.k { font-weight: 700; width: 84px; letter-spacing: .04em; }
+  .vc .purpose { font-size: 14.5px; line-height: 1.6; }
+  .vc h2 { font: 700 13px/1.3 Georgia, serif; letter-spacing: .12em; text-transform: uppercase;
+    border-bottom: 1px solid #c9c2b4; padding-bottom: 5px; margin: 26px 0 10px; }
+  .vc ol.actions { margin: 0; padding-left: 22px; font-size: 14px; line-height: 1.55; }
+  .vc ol.actions li { margin-bottom: 7px; }
+  .vc ol.actions .svt { font-weight: 700; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+  .vc .svt.c { color: var(--critical); } .vc .svt.h { color: var(--high); } .vc .svt.m { color: var(--moderate); }
+  .vc table.ex { border-collapse: collapse; width: 100%; font-size: 12.5px; margin-top: 6px; }
+  .vc table.ex th, .vc table.ex td { border: 1px solid #c9c2b4; padding: 6px 8px; text-align: left; }
+  .vc table.ex thead th { background: #f0ede5; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; }
+  .vc .stamp { display: inline-block; border: 2px solid var(--teal-ink); color: var(--teal-ink);
+    font: 700 11px/1 "Public Sans", Helvetica, sans-serif; letter-spacing: .12em; text-transform: uppercase;
+    padding: 6px 10px; transform: rotate(-2deg); margin-right: 10px; }
+  .vc .verif { margin-top: 34px; font-size: 13.5px; display: flex; gap: 40px; }
+  .vc .verif .line { border-bottom: 1px solid #23211c; min-width: 220px; display: inline-block; height: 18px; }
+  .vc .foot { font-size: 11px; color: #6d675c; margin-top: 26px; line-height: 1.5; }
+  .vc .margin-ask { position: fixed; right: 18px; bottom: 18px; width: 264px; background: #fbfaf7;
+    border: 1px solid #c9c2b4; box-shadow: 0 2px 10px rgba(40,35,20,.2); padding: 14px; }
+  .vc .margin-ask h3 { font: 700 12px/1 Georgia, serif; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 8px; }
+  .vc .margin-ask .chip { display: block; text-align: left; width: 100%; background: var(--teal-soft); color: var(--teal-ink);
+    border: 1px solid var(--teal); font: 600 12px/1.3 inherit; padding: 7px 9px; cursor: pointer; margin-bottom: 6px; }
+  .vc .margin-ask input { width: 100%; border: 1px solid #c9c2b4; padding: 7px 8px; font: inherit; font-size: 12.5px; background: #fff; }
+</style>
+
+<div class="switcher" role="tablist" aria-label="Design variant">
+  <span class="lbl">RxSweep Phase 3 comps</span>
+  <button role="tab" aria-pressed="true" data-comp="a">A · Federal Register</button>
+  <button role="tab" aria-pressed="false" data-comp="b">B · Clinical console</button>
+  <button role="tab" aria-pressed="false" data-comp="c">C · Memo-first</button>
+</div>
+
+<!-- ================= VARIANT A ================= -->
+<section class="comp active" id="comp-a">
+<div class="va">
+  <div class="va-band"><div class="inner">
+    <span class="brand">RxSweep</span>
+    <span class="tag">Formulary surveillance · FDA public data · pharmacist verifies</span>
+  </div></div>
+  <div class="inner">
+    <p class="docket">Sweep 20260709T231706Z · sample_formulary.csv · 39 items · recall window 24 months · AI: claude-haiku-4-5</p>
+    <h1>Formulary Sweep Findings</h1>
+    <hr class="rule"><hr class="rule thin">
+    <p class="exports">Export:
+      <a href="#">CSV</a> ·
+      <a href="#">Excel (XLSX)</a> ·
+      <a href="#">Markdown for AI</a> ·
+      <a href="#">Memo (print to PDF)</a>
+      &nbsp;·&nbsp; audit trail: <code>runs/20260709T231706Z/audit.jsonl</code>
+    </p>
+    <div class="noticebar">
+      Informational tool. A pharmacist verifies every finding before action. Not clinical advice.
+      openFDA: "assume all results are unvalidated."
+    </div>
+
+    <h2>Required actions (5 critical · 15 high)</h2>
+    <ol class="queue">
+      <li><input type="checkbox" aria-label="Mark action 1 done"><span class="act"><strong>Verify lots for Cefazolin Sodium</strong> (NDC 0409-4058-01) against recall D-0628-2025 and quarantine affected stock. <a class="src" href="#">[1] FDA record</a></span><span class="sev c">Class I recall</span></li>
+      <li><input type="checkbox" aria-label="Mark action 2 done"><span class="act"><strong>Verify lots for Sodium Chloride 0.9%</strong> (0338-0049-04), 22 recall records, B. Braun particulate matter. <a class="src" href="#">[2] FDA record</a></span><span class="sev c">Class I recall</span></li>
+      <li><input type="checkbox" aria-label="Mark action 3 done"><span class="act"><strong>Verify lots for Epinephrine</strong> (0409-1178-05), 17 recall records; also under active shortage. <a class="src" href="#">[3] FDA record</a></span><span class="sev c">Class I recall</span></li>
+      <li><input type="checkbox" aria-label="Mark action 4 done"><span class="act"><strong>Confirm supply plan for Lorazepam injection</strong> (0641-6001-25), exact NDC match to active shortage. <a class="src" href="#">[8] FDA record</a></span><span class="sev h">Active shortage</span></li>
+      <li><input type="checkbox" aria-label="Mark action 5 done"><span class="act"><strong>Review Oxycodone HCl</strong> (0406-0512-01), Class II recall with exact NDC match to stocked inventory. <a class="src" href="#">[17] FDA record</a></span><span class="sev h">Class II recall</span></li>
+    </ol>
+
+    <h2>Findings register (55)</h2>
+    <table>
+      <thead><tr><th class="num">#</th><th>Severity</th><th>Item</th><th>NDC</th><th>Source</th><th>Match</th><th>Basis</th></tr></thead>
+      <tbody>
+        <tr><td class="num">[1]</td><td><span class="svt c">Critical</span></td><td>Cefazolin Sodium</td><td class="num">0409-4058-01</td><td>Recall</td><td>Name match</td><td>Class I recall: reasonable probability of serious harm</td></tr>
+        <tr><td class="num">[2]</td><td><span class="svt c">Critical</span></td><td>Sodium Chloride 0.9%</td><td class="num">0338-0049-04</td><td>Recall</td><td>Name match</td><td>Class I recall (+21 more records)</td></tr>
+        <tr><td class="num">[3]</td><td><span class="svt c">Critical</span></td><td>Epinephrine</td><td class="num">0409-1178-05</td><td>Recall</td><td>Name match</td><td>Class I recall (+16 more records)</td></tr>
+        <tr><td class="num">[6]</td><td><span class="svt h">High</span></td><td>Lidocaine HCl</td><td class="num">0143-9575-01</td><td>Shortage</td><td>Name match</td><td>Active shortage on a stocked item (+2 more records)</td></tr>
+        <tr><td class="num">[8]</td><td><span class="svt h">High</span></td><td>Lorazepam</td><td class="num">0641-6001-25</td><td>Shortage</td><td><strong>Exact NDC</strong></td><td>Active shortage on a stocked item</td></tr>
+        <tr><td class="num">[17]</td><td><span class="svt h">High</span></td><td>Oxycodone HCl</td><td class="num">0406-0512-01</td><td>Recall</td><td><strong>Exact NDC</strong></td><td>Class II recall with exact NDC match to a stocked item</td></tr>
+        <tr><td class="num">[21]</td><td><span class="svt m">Moderate</span></td><td>Lidocaine HCl</td><td class="num">0143-9575-01</td><td>Recall</td><td>Name match</td><td>Class II recall, name-level match. Verify product identity. (+19 more records)</td></tr>
+        <tr><td class="num">[46]</td><td><span class="svt i">Info</span></td><td>Sodium Chloride 0.9%</td><td class="num">0338-0049-04</td><td>Shortage</td><td>Name match</td><td>Shortage record with status 'To Be Discontinued'</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12.5px;color:var(--usa-gray)">… 47 further rows. Quarantined rows (2) and unchecked items (0) are disclosed in their own registers below.</p>
+  </div>
+  <div class="askbar">
+    <button class="brief">Brief me for the huddle</button>
+    <input placeholder="Ask about these findings (answers cite the register)" aria-label="Ask about these findings">
+    <span class="hint">AI answers cite [n] · pharmacist verifies</span>
+  </div>
+</div>
+</section>
+
+<!-- ================= VARIANT B ================= -->
+<section class="comp" id="comp-b">
+<div class="vb">
+  <nav class="rail">
+    <div class="brand">Rx<em>Sweep</em></div>
+    <h3>Run</h3>
+    <div class="kv"><span>File</span><b>sample_formulary.csv</b></div>
+    <div class="kv"><span>Items</span><b>39</b></div>
+    <div class="kv"><span>Window</span><b>24 mo</b></div>
+    <div class="kv"><span>AI</span><b>haiku-4-5</b></div>
+    <h3>Severity</h3>
+    <div class="filter active"><span>All findings</span><span class="n">55</span></div>
+    <div class="filter"><span>Critical</span><span class="n">5</span></div>
+    <div class="filter"><span>High</span><span class="n">15</span></div>
+    <div class="filter"><span>Moderate</span><span class="n">26</span></div>
+    <div class="filter"><span>Info</span><span class="n">10</span></div>
+    <h3>Registers</h3>
+    <div class="exp">Manual review (0)</div>
+    <div class="exp">Quarantined (2)</div>
+    <div class="exp">Unchecked (0)</div>
+    <h3>Export</h3>
+    <div class="exp"><a href="#">findings.csv</a></div>
+    <div class="exp"><a href="#">findings.xlsx</a></div>
+    <div class="exp"><a href="#">findings.md · for your AI</a></div>
+    <div class="exp"><a href="#">memo.html · print to PDF</a></div>
+    <div class="exp"><a href="#">audit.jsonl</a></div>
+  </nav>
+
+  <main>
+    <div class="topstrip">
+      <div class="stat c"><div class="n">5</div><div class="l">Critical</div></div>
+      <div class="stat h"><div class="n">15</div><div class="l">High</div></div>
+      <div class="stat m"><div class="n">26</div><div class="l">Moderate</div></div>
+      <div class="stat i"><div class="n">10</div><div class="l">Info</div></div>
+      <div class="stat meta">Sweep 20260709T231706Z · pharmacist verifies every finding · openFDA data, unvalidated by definition</div>
+    </div>
+
+    <h2>Action queue</h2>
+    <div class="queue">
+      <div class="qrow"><input type="checkbox" aria-label="done"><span class="qact"><b>Verify lots</b> · Cefazolin Sodium · recall D-0628-2025</span><span class="meta2">Class I · 1 record</span><span class="meta2">[1]</span></div>
+      <div class="qrow"><input type="checkbox" aria-label="done"><span class="qact"><b>Verify lots</b> · Sodium Chloride 0.9% · B. Braun particulate matter</span><span class="meta2">Class I · 22 records</span><span class="meta2">[2]</span></div>
+      <div class="qrow"><input type="checkbox" aria-label="done"><span class="qact"><b>Verify lots</b> · Epinephrine · also under active shortage</span><span class="meta2">Class I · 17 records</span><span class="meta2">[3]</span></div>
+      <div class="qrow"><input type="checkbox" aria-label="done"><span class="qact"><b>Confirm supply plan</b> · Lorazepam injection · exact NDC shortage match</span><span class="meta2">High · exact_ndc</span><span class="meta2">[8]</span></div>
+      <div class="qrow"><input type="checkbox" aria-label="done"><span class="qact"><b>Review</b> · Oxycodone HCl · Class II recall, exact NDC in stock</span><span class="meta2">High · exact_ndc</span><span class="meta2">[17]</span></div>
+    </div>
+
+    <h2>Worklist</h2>
+    <div class="worklist">
+      <table>
+        <thead><tr><th>#</th><th>Sev</th><th>Item</th><th>NDC</th><th>Source</th><th>Match</th><th>Why flagged</th></tr></thead>
+        <tbody>
+          <tr><td>[1]</td><td><span class="svdot c"></span>CRIT</td><td>Cefazolin Sodium</td><td class="ndc">0409-4058-01</td><td>recall</td><td>name</td><td class="why">Class I recall: reasonable probability of serious harm</td></tr>
+          <tr class="focus"><td>[2]</td><td><span class="svdot c"></span>CRIT</td><td>Sodium Chloride 0.9%</td><td class="ndc">0338-0049-04</td><td>recall</td><td>name</td><td class="why">Class I recall (+21 more records) — row focused: Enter opens record</td></tr>
+          <tr><td>[3]</td><td><span class="svdot c"></span>CRIT</td><td>Epinephrine</td><td class="ndc">0409-1178-05</td><td>recall</td><td>name</td><td class="why">Class I recall (+16 more records)</td></tr>
+          <tr><td>[6]</td><td><span class="svdot h"></span>HIGH</td><td>Lidocaine HCl</td><td class="ndc">0143-9575-01</td><td>shortage</td><td>name</td><td class="why">Active shortage on a stocked item (+2 more records)</td></tr>
+          <tr><td>[8]</td><td><span class="svdot h"></span>HIGH</td><td>Lorazepam</td><td class="ndc">0641-6001-25</td><td>shortage</td><td><b>exact</b></td><td class="why">Active shortage on a stocked item</td></tr>
+          <tr><td>[17]</td><td><span class="svdot h"></span>HIGH</td><td>Oxycodone HCl</td><td class="ndc">0406-0512-01</td><td>recall</td><td><b>exact</b></td><td class="why">Class II recall with exact NDC match to a stocked item</td></tr>
+          <tr><td>[21]</td><td><span class="svdot m"></span>MOD</td><td>Lidocaine HCl</td><td class="ndc">0143-9575-01</td><td>recall</td><td>name</td><td class="why">Class II recall, name-level match. Verify product identity. (+19 more)</td></tr>
+          <tr><td>[46]</td><td><span class="svdot i"></span>INFO</td><td>Sodium Chloride 0.9%</td><td class="ndc">0338-0049-04</td><td>shortage</td><td>name</td><td class="why">Shortage record, status 'To Be Discontinued'</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <aside class="chat">
+    <h2>Ask about this sweep</h2>
+    <p class="sub">Answers come only from this run's findings, with citations. Pharmacist verifies.</p>
+    <button class="chip">Brief me for the huddle</button>
+    <button class="chip">What needs verification first?</button>
+    <button class="chip">Which recalls have exact NDC matches?</button>
+    <div class="msg"><span class="cit">[1][2][3][4][5]</span> carry Class I recalls. Cefazolin Sodium <span class="cit">[1]</span> at NDC 0409-4058-01; Sodium Chloride 0.9% <span class="cit">[2]</span> spans 22 records (B. Braun, particulate matter)…</div>
+    <div class="ask"><input placeholder="Ask about these findings" aria-label="Ask"><button>Ask</button></div>
+  </aside>
+</div>
+</section>
+
+<!-- ================= VARIANT C ================= -->
+<section class="comp" id="comp-c">
+<div class="vc">
+  <div class="sheet">
+    <div class="lh">
+      <div class="wordmark">Rx<span>Sweep</span></div>
+      <div class="cls">Formulary surveillance · not clinical advice</div>
+    </div>
+    <hr class="lhrule">
+    <p class="memotitle">Memorandum — Formulary Sweep Findings</p>
+    <table class="head">
+      <tr><td class="k">TO:</td><td>Pharmacy Operations / Medication Safety</td></tr>
+      <tr><td class="k">FROM:</td><td>RxSweep automated surveillance (pharmacist verification required)</td></tr>
+      <tr><td class="k">DATE:</td><td>2026-07-09 · sweep 20260709T231706Z</td></tr>
+      <tr><td class="k">RE:</td><td>sample_formulary.csv — 39 items vs FDA recalls (24 mo), shortages, NDC directory</td></tr>
+    </table>
+    <div>
+      <span class="stamp">5 critical</span><span class="stamp" style="border-color:var(--moderate);color:var(--moderate)">55 findings</span>
+      <span class="stamp" style="border-color:#6d675c;color:#6d675c">Exports: CSV · XLSX · MD · PDF</span>
+    </div>
+
+    <h2>Purpose</h2>
+    <p class="purpose">This memorandum reports the results of an automated sweep of the referenced
+    formulary against FDA public data. Five Class I recalls require immediate verification and
+    quarantine. All findings cite their FDA source records and require pharmacist verification
+    before action.</p>
+
+    <h2>Actions required</h2>
+    <ol class="actions">
+      <li><b>Verify lots for Cefazolin Sodium</b> (0409-4058-01) against recall D-0628-2025; quarantine affected stock. <span class="svt c">Class I</span> [1]</li>
+      <li><b>Verify lots for Sodium Chloride 0.9%</b> (0338-0049-04); 22 records, B. Braun particulate matter. <span class="svt c">Class I</span> [2]</li>
+      <li><b>Verify lots for Epinephrine</b> (0409-1178-05); 17 records; concurrent active shortage. <span class="svt c">Class I</span> [3]</li>
+      <li><b>Confirm supply plan for Lorazepam injection</b> (0641-6001-25); exact NDC shortage match. <span class="svt h">High</span> [8]</li>
+      <li><b>Review Oxycodone HCl</b> (0406-0512-01); Class II recall, exact NDC in stock. <span class="svt h">High</span> [17]</li>
+    </ol>
+
+    <h2>Exhibit A — Findings register (excerpt of 55)</h2>
+    <table class="ex">
+      <thead><tr><th>#</th><th>Severity</th><th>Item · NDC</th><th>Source</th><th>Basis</th></tr></thead>
+      <tbody>
+        <tr><td>[1]</td><td class="svt c">Critical</td><td>Cefazolin Sodium · 0409-4058-01</td><td>Recall</td><td>Class I: reasonable probability of serious harm</td></tr>
+        <tr><td>[2]</td><td class="svt c">Critical</td><td>Sodium Chloride 0.9% · 0338-0049-04</td><td>Recall</td><td>Class I (+21 more records)</td></tr>
+        <tr><td>[8]</td><td class="svt h">High</td><td>Lorazepam · 0641-6001-25</td><td>Shortage</td><td>Active shortage, exact NDC match</td></tr>
+        <tr><td>[17]</td><td class="svt h">High</td><td>Oxycodone HCl · 0406-0512-01</td><td>Recall</td><td>Class II, exact NDC match to stocked item</td></tr>
+        <tr><td>[46]</td><td class="svt" style="color:var(--info)">Info</td><td>Sodium Chloride 0.9% · 0338-0049-04</td><td>Shortage</td><td>Status 'To Be Discontinued'</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Disclosures</h2>
+    <p class="purpose" style="font-size:13px">Quarantined rows: 2 (invalid NDC 'BADNDC99'; missing item name, line 39).
+    Unchecked items: none — all three FDA sources were reachable. Full audit trail:
+    <code>runs/20260709T231706Z/audit.jsonl</code>.</p>
+
+    <div class="verif">
+      <span>Verified by: <span class="line"></span> PharmD</span>
+      <span>Date: <span class="line" style="min-width:120px"></span></span>
+    </div>
+
+    <p class="foot">Data: openFDA (assume all results are unvalidated — terms at open.fda.gov/terms).
+    Severity rubric human-authored (Travis Clement, PharmD, 2026-07-09). AI adjudication and drafting
+    logged verbatim; every claim cites its FDA source record. Generated by RxSweep v0.1.0.</p>
+  </div>
+
+  <div class="margin-ask">
+    <h3>Inquiries</h3>
+    <button class="chip">Brief me for the huddle</button>
+    <button class="chip">Which items appear in both recall and shortage?</button>
+    <input placeholder="Ask about this memorandum" aria-label="Ask about this memorandum">
+  </div>
+</div>
+</section>
+
+<p class="comp-note">Notes: data shown is the real 2026-07-09 sweep (55 findings, live FDA records).
+Typography approximates Public Sans (A/B) via Helvetica fallback; production embeds the real face.
+Variant B carries a full dark theme; A and C are deliberately paper-light (print-native documents).</p>
+
+<script>
+  const buttons = document.querySelectorAll(".switcher button");
+  buttons.forEach((b) =>
+    b.addEventListener("click", () => {
+      buttons.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      document.querySelectorAll(".comp").forEach((c) => c.classList.remove("active"));
+      document.getElementById("comp-" + b.dataset.comp).classList.add("active");
+      window.scrollTo({ top: 0 });
+    })
+  );
+  document.querySelectorAll('input[type="checkbox"]').forEach((cb) =>
+    cb.addEventListener("change", () => {
+      const row = cb.closest("li, .qrow");
+      if (row) row.classList.toggle("done", cb.checked);
+    })
+  );
+</script>

@@ -1,61 +1,188 @@
-import { useState } from "react";
-import type { SweepResultData } from "./api";
+import { useEffect, useState } from "react";
+import type { Disposition, SweepResultData } from "./api";
 import Upload from "./screens/Upload";
 import Progress from "./screens/Progress";
 import Dashboard from "./screens/Dashboard";
+import Memo from "./screens/Memo";
+import Logomark from "./components/Logomark";
 
 type Phase =
   | { name: "upload" }
   | { name: "progress"; sweepId: string }
-  | { name: "dashboard"; sweepId: string; result: SweepResultData };
+  | { name: "dashboard"; sweepId: string; result: SweepResultData; aiCalls: number }
+  | { name: "memo"; sweepId: string; result: SweepResultData; aiCalls: number };
+
+type Theme = "light" | "dark";
+
+// The openFDA strip travels with every frame (contract: the disclaimer
+// accompanies every artifact).
+function FrameFooter() {
+  return (
+    <div className="framefoot" data-noprint="">
+      <div className="inner">
+        openFDA: do not rely on these data to make decisions regarding medical care; assume
+        all results are unvalidated.{" "}
+        <a href="https://open.fda.gov/terms/" target="_blank" rel="noreferrer">
+          Terms
+        </a>{" "}
+        ·{" "}
+        <a href="https://open.fda.gov/license/" target="_blank" rel="noreferrer">
+          License
+        </a>{" "}
+        · Severity rubric human-authored (Travis Clement, PharmD) ·{" "}
+        <a href="https://github.com/Travis-Clement-Dev/RxSweep" target="_blank" rel="noreferrer">
+          RxSweep on GitHub
+        </a>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [phase, setPhase] = useState<Phase>({ name: "upload" });
+  // index.html applies the stored theme before first paint; read it back here.
+  const [theme, setTheme] = useState<Theme>(() => {
+    const set = document.documentElement.dataset.theme;
+    if (set === "light" || set === "dark") return set;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+  const [winW, setWinW] = useState(() => window.innerWidth);
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelWidth, setPanelWidth] = useState(340);
+  // Disposition audit events (append-only) and the operator initials that
+  // sign this session's dispositions (contract v1.3 D11). Held here so the
+  // dashboard, panel, and memo all read one source of truth.
+  const [dispositions, setDispositions] = useState<Disposition[]>([]);
+  const [operator, setOperator] = useState("");
+
+  useEffect(() => {
+    const onResize = () => setWinW(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  function toggleTheme() {
+    const next: Theme = theme === "light" ? "dark" : "light";
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem("rxsweep-theme", next);
+    setTheme(next);
+  }
+
+  // Below 1100px the assistant panel overlays the canvas instead of reserving
+  // width; a masthead icon toggles it (contract round 9).
+  const overlay = winW < 1100;
+  const onWorkspace = phase.name === "dashboard" || phase.name === "memo";
+  const isMemo = phase.name === "memo";
 
   return (
-    <div className="mx-auto max-w-[1180px] px-5 pb-16 pt-8">
-      <header className="mb-6 flex items-baseline justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="display text-2xl font-bold m-0">RxSweep</h1>
-          <p className="meta m-0">
-            Sweep a formulary against FDA recalls, shortages, and discontinued NDCs.
-          </p>
+    <>
+      <header className="band" data-noprint="">
+        <div className="inner">
+          <span className="left">
+            <Logomark width={15} height={14} fill="#7fa0cf" />
+            <span className="brand">RxSweep</span>
+            <span className="tag">
+              Formulary surveillance · FDA public data · pharmacist verifies
+            </span>
+          </span>
+          <span className="right">
+            {phase.name === "dashboard" && overlay && (
+              <button
+                className="iconbtn"
+                onClick={() => setPanelOpen((o) => !o)}
+                aria-label="Toggle assistant panel"
+                title="Assistant"
+              >
+                <span className="glyph-chat" />
+              </button>
+            )}
+            <button
+              className="iconbtn"
+              onClick={toggleTheme}
+              aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
+              title={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
+            >
+              {theme === "light" ? "☾" : "☀"}
+            </button>
+          </span>
         </div>
-        {phase.name === "dashboard" && (
-          <button className="btn btn-quiet" onClick={() => setPhase({ name: "upload" })}>
-            New sweep
-          </button>
-        )}
       </header>
 
-      <div className="banner mb-6" role="note">
-        Informational tool. A pharmacist verifies every finding before action. Not
-        clinical advice.
-      </div>
-
       {phase.name === "upload" && (
-        <Upload onStarted={(sweepId) => setPhase({ name: "progress", sweepId })} />
-      )}
-      {phase.name === "progress" && (
-        <Progress
-          sweepId={phase.sweepId}
-          onDone={(result) => setPhase({ name: "dashboard", sweepId: phase.sweepId, result })}
-          onReset={() => setPhase({ name: "upload" })}
-        />
-      )}
-      {phase.name === "dashboard" && (
-        <Dashboard sweepId={phase.sweepId} result={phase.result} />
+        <div className="shellpad">
+          <div className="frame">
+            <Upload onStarted={(sweepId) => setPhase({ name: "progress", sweepId })} />
+            <FrameFooter />
+          </div>
+        </div>
       )}
 
-      <footer className="faint mt-14 border-t pt-4 text-[0.8rem]" style={{ borderColor: "var(--line)" }}>
-        Data source notice (openFDA): "Do not rely on openFDA to make decisions
-        regarding medical care. While we make every effort to ensure that data is
-        accurate, you should assume all results are unvalidated."{" "}
-        <a href="https://open.fda.gov/terms/">Terms</a> ·{" "}
-        <a href="https://open.fda.gov/license/">License</a> · Severity rubric
-        human-authored (Travis Clement, PharmD) ·{" "}
-        <a href="https://github.com/Travis-Clement-Dev/RxSweep">RxSweep on GitHub</a>
-      </footer>
-    </div>
+      {phase.name === "progress" && (
+        <div className="shellpad">
+          <div className="frame">
+            <Progress
+              sweepId={phase.sweepId}
+              onDone={(result, aiCalls) => {
+                setPhase({ name: "dashboard", sweepId: phase.sweepId, result, aiCalls });
+                setDispositions(result.dispositions ?? []);
+                // A run finishing on a narrow window keeps the overlay closed.
+                setPanelOpen(window.innerWidth >= 1100);
+              }}
+              onReset={() => setPhase({ name: "upload" })}
+            />
+            <FrameFooter />
+          </div>
+        </div>
+      )}
+
+      {onWorkspace && (
+        <>
+          {/* The dashboard stays mounted (hidden) behind the memo so checked
+              actions, filters, and the assistant transcript survive the trip. */}
+          <div
+            className="shellpad split"
+            hidden={isMemo}
+            style={{ paddingRight: overlay ? 10 : (panelOpen ? panelWidth : 44) + 20 }}
+          >
+            <div className="frame split">
+              <div className="canvas-body">
+                <Dashboard
+                  sweepId={phase.sweepId}
+                  result={phase.result}
+                  aiCalls={phase.aiCalls}
+                  dispositions={dispositions}
+                  onDisposition={(e) => setDispositions((d) => [...d, e])}
+                  operator={operator}
+                  onOperatorChange={setOperator}
+                  onReset={() => {
+                    setPhase({ name: "upload" });
+                    setDispositions([]);
+                  }}
+                  onOpenMemo={() => setPhase({ ...phase, name: "memo" })}
+                  overlay={overlay}
+                  panelOpen={panelOpen}
+                  onPanelOpenChange={setPanelOpen}
+                  panelWidth={panelWidth}
+                  onPanelWidthChange={setPanelWidth}
+                />
+              </div>
+              <FrameFooter />
+            </div>
+          </div>
+          {isMemo && (
+            <div className="shellpad">
+              <div className="frame">
+                <Memo
+                  result={phase.result}
+                  dispositions={dispositions}
+                  onBack={() => setPhase({ ...phase, name: "dashboard" })}
+                />
+                <FrameFooter />
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </>
   );
 }

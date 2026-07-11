@@ -1,0 +1,111 @@
+/* RxSweep — Federal Register theme tokens (design contract v1.1, rounds 1–10)
+   Drop-in replacement for the token blocks in web/src/theme.css.
+
+   Strategy change: the design has a MANUAL theme toggle (icon in the masthead),
+   so tokens key off [data-theme] on <html>, with prefers-color-scheme as the
+   no-preference fallback. Toggle sets document.documentElement.dataset.theme
+   and persists to localStorage("rxsweep-theme").
+
+   Notes vs the old theme.css:
+   - accent family is NAVY (contract D1); teal is retired everywhere.
+   - all interactive blues share the band's ~218° hue: chrome darkest,
+     action mid, tint light (contract round 8).
+   - new tokens: --panel (assistant panel surface), --elev (composer card),
+     --field (inputs). --card is kept as an alias of --paper for compatibility.
+   - dark values follow Vercel-style value discipline (contract v1.1):
+     near-black ground, surfaces exactly one step up, crisp hairlines. */
+
+:root,
+:root[data-theme="light"] {
+  --paper: #ffffff;
+  --ground: #f3f4f4;
+  --ink: #1b1b1b;
+  --ink-soft: #565c65;
+  --ink-faint: #71767a;
+  --line: #a9aeb1;
+  --line-soft: #dfe1e2;
+  --card: #ffffff;          /* alias of --paper (legacy class compat) */
+  --panel: #ffffff;         /* assistant panel surface */
+  --elev: #f6f7f8;          /* composer floating card (one step off paper) */
+  --field: #ffffff;         /* inputs */
+  --band: #12203a;          /* masthead navy-black (carries brand into chrome) */
+  --band-ink: #ffffff;
+  --accent: #1e3f63;        /* primary actions, band rule, focus, active filter */
+  --accent-ink: #16324f;    /* links, quiet-button text */
+  --accent-soft: #e7edf4;   /* tints: quiet buttons, focus row, user bubbles */
+  --critical: #9a3a2e;
+  --high: #9a3a2e;          /* shared red with critical (contract §3) */
+  --moderate: #8a5d0b;
+  --info: #256b43;
+  --critical-soft: #f6e4e1;
+  --high-soft: #f6e4e1;
+  --moderate-soft: #f5ebd8;
+  --info-soft: #e3f0e8;
+  --focus-row: #eaf0f6;
+  --btn-ink: #ffffff;
+}
+
+:root[data-theme="dark"] {
+  --paper: #131416;
+  --ground: #0a0b0c;
+  --ink: #ececef;
+  --ink-soft: #a3a7ad;
+  --ink-faint: #74787e;
+  --line: #34363b;
+  --line-soft: #26282c;
+  --card: #131416;
+  --panel: #131416;
+  --elev: #1b1d21;
+  --field: #101113;
+  --band: #0e1626;
+  --band-ink: #f2f4f6;
+  --accent: #6d9ae8;
+  --accent-ink: #9bb9ee;
+  --accent-soft: #13233d;
+  --critical: #f0705f;
+  --high: #f0705f;
+  --moderate: #e8b04b;
+  --info: #4cc38a;
+  --critical-soft: #401f19;
+  --high-soft: #401f19;
+  --moderate-soft: #3a2d13;
+  --info-soft: #123122;
+  --focus-row: #142337;
+  --btn-ink: #0a0b0c;
+}
+
+/* System fallback when the user has never touched the toggle. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --paper: #131416;
+    --ground: #0a0b0c;
+    --ink: #ececef;
+    --ink-soft: #a3a7ad;
+    --ink-faint: #74787e;
+    --line: #34363b;
+    --line-soft: #26282c;
+    --card: #131416;
+    --panel: #131416;
+    --elev: #1b1d21;
+    --field: #101113;
+    --band: #0e1626;
+    --band-ink: #f2f4f6;
+    --accent: #6d9ae8;
+    --accent-ink: #9bb9ee;
+    --accent-soft: #13233d;
+    --critical: #f0705f;
+    --high: #f0705f;
+    --moderate: #e8b04b;
+    --info: #4cc38a;
+    --critical-soft: #401f19;
+    --high-soft: #401f19;
+    --moderate-soft: #3a2d13;
+    --info-soft: #123122;
+    --focus-row: #142337;
+    --btn-ink: #0a0b0c;
+  }
+}
+
+/* Logomark fills (not custom properties in the prototype, listed for reference):
+   masthead band logomark  #7fa0cf
+   memo letterhead mark    #1e3f63 (fixed; the memo sheet is always white) */
