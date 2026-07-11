@@ -41,7 +41,9 @@ export default function FindingsTable({
           <Column className="center">Match</Column>
           <Column>Basis</Column>
         </TableHeader>
-        <TableBody items={findings}>
+        {/* dependencies: the row className reads flashRow, and RAC caches
+            collection rows — without this the citation flash never renders. */}
+        <TableBody items={findings} dependencies={[flashRow]}>
           {(f: Finding) => (
             <Row
               id={f.citation}
