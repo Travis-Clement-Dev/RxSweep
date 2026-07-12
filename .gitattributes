@@ -1,0 +1,5 @@
+# Language stats: the design prototypes and packaged bundle are artifacts,
+# not the codebase. Keep the repo badge honest (Python + TypeScript).
+design/** linguist-vendored
+src/rxsweep/webapp/static/** linguist-generated
+docs/screenshots/** linguist-vendored
